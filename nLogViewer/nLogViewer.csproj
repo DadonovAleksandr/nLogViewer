@@ -16,4 +16,9 @@
       <Folder Include="Views\Styles" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="NLog" Version="5.0.4" />
+      <PackageReference Include="NLog.Config" Version="4.7.15" />
+    </ItemGroup>
+
 </Project>
