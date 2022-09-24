@@ -7,4 +7,13 @@
         <UseWPF>true</UseWPF>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="Infrastructure\Common" />
+      <Folder Include="Infrastructure\Convertors" />
+      <Folder Include="Infrastructure\Resources" />
+      <Folder Include="Model" />
+      <Folder Include="Views\DataTemplates" />
+      <Folder Include="Views\Styles" />
+    </ItemGroup>
+
 </Project>
