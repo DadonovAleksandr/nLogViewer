@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:nLogViewer.ViewModels"
         xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
+        xmlns:view="clr-namespace:nLogViewer.Views"
         xmlns:local="clr-namespace:nLogViewer"
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d"
@@ -136,7 +137,7 @@
                 <!-- Фильтры -->
                 <RibbonGroup Header="Фильтр">                                
                     <RibbonToggleButton Label="Trace"
-                                        IsChecked="{Binding EnableTrace}"
+                                        IsChecked="{Binding EnableTraceEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Trace.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Trace.png"
@@ -145,7 +146,7 @@
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Trace.png"
                     />
                     <RibbonToggleButton Label="Debug"
-                                        IsChecked="{Binding EnableDebug}"
+                                        IsChecked="{Binding EnableDebugEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Debug.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Debug.png"
@@ -154,7 +155,7 @@
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Debug.png"
                                         />
                     <RibbonToggleButton Label="Info"
-                                        IsChecked="{Binding EnableInfo}"
+                                        IsChecked="{Binding EnableInfoEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Info.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Info.png"
@@ -163,7 +164,7 @@
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Info.png"
                                         />
                     <RibbonToggleButton Label="Warn"
-                                        IsChecked="{Binding EnableWarn}"
+                                        IsChecked="{Binding EnableWarnEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Warning.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Warning.png"
@@ -172,7 +173,7 @@
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Warning.png"
                                         />
                     <RibbonToggleButton Label="Error"
-                                        IsChecked="{Binding EnableError}"
+                                        IsChecked="{Binding EnableErrorEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Error.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Error.png"
@@ -181,7 +182,7 @@
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Error.png"
                                         />
                     <RibbonToggleButton Label="Fatal"
-                                        IsChecked="{Binding EnableFatal}"
+                                        IsChecked="{Binding EnableFatalEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Fatal.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Fatal.png"
@@ -201,7 +202,9 @@
             
         </Ribbon>
         <TabControl>
-            
+            <TabItem Header="Пример">
+                <view:LogViewerView DataContext="{Binding LogViewer}"/>
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

@@ -102,6 +102,12 @@
       <Resource Include="Infrastructure\Resources\Images\Medium\Fatal.png" />
       <None Remove="Infrastructure\Resources\Images\Large\Fatal.png" />
       <Resource Include="Infrastructure\Resources\Images\Large\Fatal.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\ScrollDown.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\ScrollDown.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Clear.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Clear.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Pause.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Pause.png" />
     </ItemGroup>
 
 </Project>

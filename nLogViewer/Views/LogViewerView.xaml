@@ -1,0 +1,65 @@
+﻿<UserControl x:Class="nLogViewer.Views.LogViewerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vm="clr-namespace:nLogViewer.ViewModels"
+             xmlns:local="clr-namespace:nLogViewer.Views"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="1200">
+    <UserControl.DataContext>
+        <vm:LogViewerViewModel/>
+    </UserControl.DataContext>
+    <DockPanel>
+        <ToolBar DockPanel.Dock="Top">
+            <ToggleButton Command="{Binding AutoscrollCommand}" 
+                          IsChecked="{Binding EnabledAutoscroll}"
+                          MinWidth="120"
+                          >
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Infrastructure/Resources/Images/Small/ScrollDown.png"
+                           Height="20"/>
+                    <TextBlock Text="Автопрокрутка"
+                               VerticalAlignment="Center"
+                               Padding="2,0,0,0"/>
+                </StackPanel>
+            </ToggleButton>
+            <Separator/>
+            <Button Command="{Binding ClearCommand}"
+                    MinWidth="120"
+                    >
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Infrastructure/Resources/Images/Small/Clear.png"
+                           Height="20"/>
+                    <TextBlock Text="Очистить"
+                               VerticalAlignment="Center"
+                               Padding="2,0,0,0"/>
+                </StackPanel>
+            </Button>
+            <Separator/>
+            <ToggleButton Command="{Binding PauseCommand}" 
+                          IsChecked="{Binding EnabledPause}"
+                          MinWidth="120"
+                          >
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Infrastructure/Resources/Images/Small/Pause.png"
+                           Height="20"/>
+                    <TextBlock Text="Пауза"
+                               VerticalAlignment="Center"
+                               Padding="2,0,0,0"/>
+                </StackPanel>
+            </ToggleButton>
+            <Separator/>
+        </ToolBar>
+        <TextBlock DockPanel.Dock="Top" 
+                   Text="Log viewer"
+                   FontWeight="Bold"
+                   Padding="2,0"
+                   Background="CornflowerBlue"
+                   Foreground="White"/>
+        <DataGrid>
+            
+        </DataGrid>
+        
+    </DockPanel>
+</UserControl>

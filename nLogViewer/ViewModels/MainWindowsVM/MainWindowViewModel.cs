@@ -7,7 +7,7 @@ namespace nLogViewer.ViewModels;
 
 internal class MainWindowViewModel : BaseViewModel
 {
-    
+    public LogViewerViewModel LogViewer { get; }
     
     
     public MainWindowViewModel()
@@ -136,64 +136,64 @@ internal class MainWindowViewModel : BaseViewModel
     
     #region Фильтр событий
     
-    private bool _enableTrace;
+    private bool _enableTraceEvent;
     /// <summary>
     /// Trace
     /// </summary>
-    public bool EnableTrace
+    public bool EnableTraceEvent
     {
-        get => _enableTrace;
-        set => Set(ref _enableTrace, value);
+        get => _enableTraceEvent;
+        set => Set(ref _enableTraceEvent, value);
     }
     
-    private bool _enableDebug;
+    private bool _enableDebugEvent;
     /// <summary>
     /// Debug
     /// </summary>
-    public bool EnableDebug
+    public bool EnableDebugEvent
     {
-        get => _enableDebug;
-        set => Set(ref _enableDebug, value);
+        get => _enableDebugEvent;
+        set => Set(ref _enableDebugEvent, value);
     }
     
-    private bool _enableInfo;
+    private bool _enableInfoEvent;
     /// <summary>
     /// Info
     /// </summary>
-    public bool EnableInfo
+    public bool EnableInfoEvent
     {
-        get => _enableInfo;
-        set => Set(ref _enableInfo, value);
+        get => _enableInfoEvent;
+        set => Set(ref _enableInfoEvent, value);
     }
     
-    private bool _enableWarn;
+    private bool _enableWarnEvent;
     /// <summary>
     /// Warning
     /// </summary>
-    public bool EnableWarn
+    public bool EnableWarnEvent
     {
-        get => _enableWarn;
-        set => Set(ref _enableWarn, value);
+        get => _enableWarnEvent;
+        set => Set(ref _enableWarnEvent, value);
     }
     
-    private bool _enableError;
+    private bool _enableErrorEvent;
     /// <summary>
     /// Error
     /// </summary>
-    public bool EnableError
+    public bool EnableErrorEvent
     {
-        get => _enableError;
-        set => Set(ref _enableError, value);
+        get => _enableErrorEvent;
+        set => Set(ref _enableErrorEvent, value);
     }
     
-    private bool _enableFatal;
+    private bool _enableFatalEvent;
     /// <summary>
     /// Fatal
     /// </summary>
-    public bool EnableFatal
+    public bool EnableFatalEvent
     {
-        get => _enableFatal;
-        set => Set(ref _enableFatal, value);
+        get => _enableFatalEvent;
+        set => Set(ref _enableFatalEvent, value);
     }
     #endregion
 
