@@ -8,17 +8,100 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="Infrastructure\Resources\Images\Large\Add.png" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="Infrastructure\Common" />
-      <Folder Include="Infrastructure\Convertors" />
-      <Folder Include="Infrastructure\Resources" />
+      <Folder Include="Infrastructure\Helpers" />
+      <Folder Include="Infrastructure\Resources\Images\Glyphs" />
+      <Folder Include="Infrastructure\Resources\Images\Medium" />
+      <Folder Include="Infrastructure\Resources\Images\Small" />
       <Folder Include="Model" />
       <Folder Include="Views\DataTemplates" />
-      <Folder Include="Views\Styles" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="NLog" Version="5.0.4" />
       <PackageReference Include="NLog.Config" Version="4.7.15" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Resource Include="Infrastructure\Resources\Images\Large\Add.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Open.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Open.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Save.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Save.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Export.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Export.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Settings.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Settings.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Info.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Info.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Exit.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Exit.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Add.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Add.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Export.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Export.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Settings.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Settings.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Info.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Info.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Exception.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Exception.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Exception.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Exception.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Thread.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Thread.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Thread.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Thread.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Network.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Network.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Network.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Network.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Network.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Network.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\DebugSource.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\DebugSource.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\DebugSource.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\DebugSource.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Context.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Context.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Context.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Context.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Trace.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Trace.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Trace.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Trace.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Trace.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Trace.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Debug.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Debug.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Debug.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Debug.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Debug.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Debug.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Info.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Info.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Warning.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Warning.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Warning.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Warning.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Warning.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Warning.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Error.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Error.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Error.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Error.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Error.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Error.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Fatal.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\Fatal.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Fatal.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Fatal.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Fatal.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Fatal.png" />
     </ItemGroup>
 
 </Project>
