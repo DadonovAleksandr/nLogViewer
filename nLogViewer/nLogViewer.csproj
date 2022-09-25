@@ -17,7 +17,6 @@
       <Folder Include="Infrastructure\Resources\Images\Glyphs" />
       <Folder Include="Infrastructure\Resources\Images\Medium" />
       <Folder Include="Infrastructure\Resources\Images\Small" />
-      <Folder Include="Model" />
       <Folder Include="Views\DataTemplates" />
     </ItemGroup>
 
