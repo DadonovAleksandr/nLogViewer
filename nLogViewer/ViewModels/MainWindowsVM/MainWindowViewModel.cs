@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,9 +19,9 @@ internal class MainWindowViewModel : BaseViewModel
     public MainWindowViewModel()
     {
         logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
-        
         _title = "Просмоторщик логов";
         
+        DeleteTempFileLog();
         
         
         #region commands
@@ -139,6 +140,7 @@ internal class MainWindowViewModel : BaseViewModel
             } 
         };
         window.LogViewersControl.Items.Add(newTabLogViewer);
+        window.LogViewersControl.SelectedIndex = window.LogViewersControl.Items.Count - 1;
     }
     private bool CanAddExecute(object p) => true;
     #endregion
@@ -221,4 +223,24 @@ internal class MainWindowViewModel : BaseViewModel
     }
     #endregion
 
+    //TODO: Нужно делать сохранение настроек
+    /// <summary>
+    /// Удаление воеменных файл-логов
+    /// </summary>
+    private void DeleteTempFileLog()
+    {
+        var appDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var tempDir = Path.Combine(appDir, "LogViewer", "temp");
+        
+        if(!Directory.Exists(tempDir))
+            return;
+        
+        var dirInfo = new DirectoryInfo(tempDir);
+        foreach (FileInfo file in dirInfo.GetFiles())
+        {
+            file.Delete();
+        }
+    }
+    
+    
 }

@@ -49,7 +49,7 @@ public class LogViewerViewModel : BaseViewModel
                 App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Clear(); });
                 var data = _reader.GetAll();
                 foreach (var entry in data)
-                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Add(new LogEntryView(entry)); });
+                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Insert(0, new LogEntryView(entry)); });
                 _logger.Trace($"Считывание всех событий");
                 _state = LogViewerState.ReadNewMsg;
                 _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
@@ -57,7 +57,7 @@ public class LogViewerViewModel : BaseViewModel
             case LogViewerState.ReadNewMsg:
                 var newData = _reader.GetNew();
                 foreach (var entry in newData)
-                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Add(new LogEntryView(entry)); });
+                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Insert(0, new LogEntryView(entry)); });
                 _logger.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:
@@ -107,8 +107,7 @@ public class LogViewerViewModel : BaseViewModel
     #endregion
 
     #endregion
-    
-    
+
     #region Toolbar
     
     private bool _autoscroll;

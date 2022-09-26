@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using NLog;
 
 namespace nLogViewer.Model;
@@ -18,10 +17,10 @@ internal class FileLogReader : ILogReader
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
         _sourcePath = path;
-        var destDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        _tempPath = Path.Combine(destDir, "temp", Guid.NewGuid().ToString());
-        if (!Directory.Exists(Path.Combine(destDir, "temp")))
-            Directory.CreateDirectory(Path.Combine(destDir, "temp"));
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        _tempPath = Path.Combine(appDataPath, "LogViewer", "temp", Guid.NewGuid().ToString());
+        if (!Directory.Exists(Path.Combine(appDataPath, "LogViewer", "temp")))
+            Directory.CreateDirectory(Path.Combine(appDataPath, "LogViewer", "temp"));
     }
 
 
@@ -60,6 +59,7 @@ internal class FileLogReader : ILogReader
             return Enumerable.Empty<string>();
         }
 
+        var path = @"X:\projects\_WIP\nLogViewer\nLogViewer\bin\Debug\net6.0-windows\logs\2022-09-26.log";
         File.Copy(_sourcePath, _tempPath, true);
         return File.ReadAllLines(_tempPath);
     }

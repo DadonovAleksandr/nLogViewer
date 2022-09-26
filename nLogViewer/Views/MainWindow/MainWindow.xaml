@@ -204,9 +204,7 @@
             
         </Ribbon>
         <TabControl x:Name="LogViewersControl">
-            <TabItem Header="Пример">
-                <view:LogViewerView DataContext="{Binding LogViewer}"/>
-            </TabItem>
+            
         </TabControl>
     </DockPanel>
 </Window>
