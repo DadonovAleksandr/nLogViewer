@@ -4,12 +4,16 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vm="clr-namespace:nLogViewer.ViewModels"
+             xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
              xmlns:local="clr-namespace:nLogViewer.Views"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="1200">
-    <UserControl.DataContext>
+    <d:UserControl.DataContext>
         <vm:LogViewerViewModel/>
-    </UserControl.DataContext>
+    </d:UserControl.DataContext>
+    <UserControl.Resources>
+        <c:LogEntryTypeToStringConvertor x:Key="EntryTypeToString"></c:LogEntryTypeToStringConvertor>
+    </UserControl.Resources>
     <DockPanel>
         <ToolBar DockPanel.Dock="Top">
             <ToggleButton Command="{Binding AutoscrollCommand}" 
@@ -57,8 +61,29 @@
                    Padding="2,0"
                    Background="CornflowerBlue"
                    Foreground="White"/>
-        <DataGrid>
-            
+        <DataGrid ItemsSource="{Binding LogEntries}"
+                  SelectedItem="{Binding SelectedEntry}"
+                  SelectedIndex="{Binding SelectedIndex}"
+                  AutoGenerateColumns="False"
+                  ScrollViewer.CanContentScroll="True"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <DataGrid.Resources>
+                
+            </DataGrid.Resources>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header=" Дата и время " 
+                                    Binding="{Binding EventDateTime}"
+                                    Width="Auto"/>
+                <DataGridTextColumn Header=" Важность " 
+                                    Binding="{Binding EntryType, Converter={StaticResource EntryTypeToString}}"
+                                    Width="Auto"/>
+                <DataGridTextColumn Header=" Описание " 
+                                    Binding="{Binding Message}"
+                                    Width="*"/>
+                <DataGridTextColumn Header=" Источник " 
+                                    Binding="{Binding Source}"
+                                    Width="Auto"/>
+            </DataGrid.Columns>
         </DataGrid>
         
     </DockPanel>

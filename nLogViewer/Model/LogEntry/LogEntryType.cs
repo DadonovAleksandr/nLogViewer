@@ -1,6 +1,6 @@
 ﻿namespace nLogViewer.Model;
 
-internal enum LogEntryType
+public enum LogEntryType
 {
     Fatal = 1,
     Error = 2,

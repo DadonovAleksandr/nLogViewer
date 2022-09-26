@@ -1,7 +1,11 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.ViewModels.Base;
+using nLogViewer.Views;
 
 namespace nLogViewer.ViewModels;
 
@@ -42,7 +46,7 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand NewSession { get; }
     private void OnNewSessionExecuted(object p)
     {
-        Application.Current.Shutdown();
+        MessageBox.Show("Hello!");
     }
     private bool CanNewSessionExecute(object p) => true;
     #endregion
@@ -114,7 +118,25 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand Add { get; }
     private void OnAddExecuted(object p)
     {
-        Application.Current.Shutdown();
+        var ofd = new OpenFileDialog
+        {
+            DefaultExt = "log",
+            Filter = "log files (*.log)|*.log|All files (*.*)|*.*",
+            Title = "Выберите лог-файл"
+        };
+        if(ofd.ShowDialog() == false)
+            return;
+        if(!(p is MainWindow window))
+            return;
+        var newTabLogViewer = new TabItem
+        {
+            Header = ofd.FileName,
+            Content = new LogViewerView
+            {
+                DataContext = new LogViewerViewModel(ofd.FileName)
+            } 
+        };
+        window.LogViewersControl.Items.Add(newTabLogViewer);
     }
     private bool CanAddExecute(object p) => true;
     #endregion

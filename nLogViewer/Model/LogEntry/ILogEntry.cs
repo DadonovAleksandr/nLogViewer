@@ -2,10 +2,25 @@
 
 namespace nLogViewer.Model;
 
-internal interface ILogEntry
+public interface ILogEntry
 {
+    /// <summary>
+    /// Дата и время события
+    /// </summary>
     public DateTime EventDateTime { get; }
+    
+    /// <summary>
+    /// Важность события
+    /// </summary>
     public LogEntryType EntryType { get; }
+    
+    /// <summary>
+    /// Сообщение (описание события)
+    /// </summary>
     public string Message { get; }
+    
+    /// <summary>
+    /// Источник события
+    /// </summary>
     public string Source { get; }
 }

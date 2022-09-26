@@ -2,7 +2,7 @@
 
 namespace nLogViewer.Model;
 
-internal class LogEntry : ILogEntry
+public class LogEntry : ILogEntry
 {
     public DateTime EventDateTime { get; }
     public LogEntryType EntryType { get; }

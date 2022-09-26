@@ -13,6 +13,8 @@ internal class LogViewer
     
     private readonly ILogReader _reader;
     private LogViewerState _state;
+
+    public LogViewerState State => _state;
     public bool Pause { get; set; }
     public bool Clear { get; set; }
     public List<ILogEntry> LogEntries { get; private set; }
@@ -29,7 +31,10 @@ internal class LogViewer
         Timer timer = new Timer(tm, null, 0, 1000);
     }
 
-
+    public void Start() => _state = LogViewerState.ReadAllMsg; 
+    
+    public void Stop() => _state = LogViewerState.Stop;
+    
     private void Process(object? obj)
     {
         _logger.Trace($"Просмотрщик лога в состоянии {_state}");
@@ -37,7 +42,6 @@ internal class LogViewer
         switch (_state)
         {
             case LogViewerState.Stop:
-                _state = LogViewerState.ReadAllMsg;
                 break;
             case LogViewerState.ReadAllMsg:
                 LogEntries = _reader.GetAll().ToList();
