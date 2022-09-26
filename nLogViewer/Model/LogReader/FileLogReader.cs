@@ -34,7 +34,7 @@ internal class FileLogReader : ILogReader
         return entries;
     }
 
-    public IEnumerable<ILogEntry> GetMew()
+    public IEnumerable<ILogEntry> GetNew()
     {
         _logger.Debug($"Получение новых записей из файла {_path}");
         
@@ -64,7 +64,7 @@ internal class FileLogReader : ILogReader
             var parts = item.Split("|").Select(x=>x.Trim()).ToArray();
             logEntries.Add(new LogEntry(DateTime.Parse(parts[0]), ParseStringToLogEntryType(parts[1]), parts[2], parts[3]));
         }
-        return Enumerable.Empty<ILogEntry>();
+        return logEntries;
     }
 
     private LogEntryType ParseStringToLogEntryType(string type)
@@ -81,5 +81,8 @@ internal class FileLogReader : ILogReader
         };
     }
 
-
+    public override string ToString()
+    {
+        return $"Объект чтения лога из файла {_path}";
+    }
 }

@@ -14,5 +14,6 @@ internal interface ILogReader
     /// Получить новые записи
     /// </summary>
     /// <returns></returns>
-    IEnumerable<ILogEntry> GetMew();
+    IEnumerable<ILogEntry> GetNew();
+
 }
