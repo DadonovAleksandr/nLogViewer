@@ -16,14 +16,14 @@ public class LogViewerViewModel : BaseViewModel
     private LogViewerState _state;
     private Timer _timer;
 
-    public ObservableCollection<ILogEntry> LogEntries { get; private set; }
+    public ObservableCollection<LogEntryView> LogEntries { get; private set; }
     public LogEntry SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
     public LogViewerViewModel() { }
     public LogViewerViewModel(string path)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами (файл: {path})");
-        LogEntries = new ObservableCollection<ILogEntry>();
+        LogEntries = new ObservableCollection<LogEntryView>();
         _reader = new FileLogReader(path);
         
         _timer = new Timer(new TimerCallback(Process), null, 0, 1000);
@@ -49,7 +49,7 @@ public class LogViewerViewModel : BaseViewModel
                 App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Clear(); });
                 var data = _reader.GetAll();
                 foreach (var entry in data)
-                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Add(entry); });
+                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Add(new LogEntryView(entry)); });
                 _logger.Trace($"Считывание всех событий");
                 _state = LogViewerState.ReadNewMsg;
                 _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
@@ -57,7 +57,7 @@ public class LogViewerViewModel : BaseViewModel
             case LogViewerState.ReadNewMsg:
                 var newData = _reader.GetNew();
                 foreach (var entry in newData)
-                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Add(entry); });
+                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Add(new LogEntryView(entry)); });
                 _logger.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:

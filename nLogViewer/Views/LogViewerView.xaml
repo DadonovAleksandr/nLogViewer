@@ -64,6 +64,9 @@
         <DataGrid ItemsSource="{Binding LogEntries}"
                   SelectedItem="{Binding SelectedEntry}"
                   SelectedIndex="{Binding SelectedIndex}"
+                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                  RowStyle="{DynamicResource DataGridRowStyle}"
+                  CellStyle="{DynamicResource DataGridCellStyle}"
                   AutoGenerateColumns="False"
                   ScrollViewer.CanContentScroll="True"
                   ScrollViewer.VerticalScrollBarVisibility="Auto">
