@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Media;
 using nLogViewer.Model;
 
@@ -18,7 +19,7 @@ public class LogEntryView : ILogEntry
         EventDateTime = entry.EventDateTime;
         EntryType = entry.EntryType;
         Message = entry.Message;
-        Source = entry.Source;
+        Source = entry.Source.Split(".").Last();
 
         Background = entry.EntryType switch
         {

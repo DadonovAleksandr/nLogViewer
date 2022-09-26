@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -130,7 +131,8 @@ internal class MainWindowViewModel : BaseViewModel
             return;
         var newTabLogViewer = new TabItem
         {
-            Header = ofd.FileName,
+            Header = Path.GetFileName(ofd.FileName),
+            ToolTip = ofd.FileName,
             Content = new LogViewerView
             {
                 DataContext = new LogViewerViewModel(ofd.FileName)
