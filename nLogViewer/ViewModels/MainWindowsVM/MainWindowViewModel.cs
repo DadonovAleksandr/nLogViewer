@@ -21,9 +21,6 @@ internal class MainWindowViewModel : BaseViewModel
         logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
         
-        DeleteTempFileLog();
-        
-        
         #region commands
         NewSession = new LambdaCommand(OnNewSessionExecuted, CanNewSessionExecute);
         LoadSession = new LambdaCommand(OnLoadSessionExecuted, CanLoadSessionExecute);
@@ -222,25 +219,5 @@ internal class MainWindowViewModel : BaseViewModel
         set => Set(ref _enableFatalEvent, value);
     }
     #endregion
-
-    //TODO: Нужно делать сохранение настроек
-    /// <summary>
-    /// Удаление воеменных файл-логов
-    /// </summary>
-    private void DeleteTempFileLog()
-    {
-        var appDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var tempDir = Path.Combine(appDir, "LogViewer", "temp");
-        
-        if(!Directory.Exists(tempDir))
-            return;
-        
-        var dirInfo = new DirectoryInfo(tempDir);
-        foreach (FileInfo file in dirInfo.GetFiles())
-        {
-            file.Delete();
-        }
-    }
-    
     
 }

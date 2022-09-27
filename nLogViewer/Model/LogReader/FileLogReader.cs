@@ -9,24 +9,19 @@ namespace nLogViewer.Model;
 internal class FileLogReader : ILogReader
 {
     private static Logger _logger = LogManager.GetCurrentClassLogger();
-    private readonly string _sourcePath;
-    private readonly string _tempPath;
+    private readonly string _path;
     private int _count;
 
     public FileLogReader(string path)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
-        _sourcePath = path;
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        _tempPath = Path.Combine(appDataPath, "LogViewer", "temp", Guid.NewGuid().ToString());
-        if (!Directory.Exists(Path.Combine(appDataPath, "LogViewer", "temp")))
-            Directory.CreateDirectory(Path.Combine(appDataPath, "LogViewer", "temp"));
+        _path = path;
     }
 
 
     public IEnumerable<ILogEntry> GetAll()
     {
-        _logger.Debug($"Получение всех записей из файла {_sourcePath}");
+        _logger.Debug($"Получение всех записей из файла {_path}");
 
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;
@@ -36,7 +31,7 @@ internal class FileLogReader : ILogReader
     
     public IEnumerable<ILogEntry> GetNew()
     {
-        _logger.Debug($"Получение новых записей из файла {_sourcePath}");
+        _logger.Debug($"Получение новых записей из файла {_path}");
         
         string[] data = ReadLogFile().ToArray();
         if (data.Length > _count)
@@ -53,12 +48,12 @@ internal class FileLogReader : ILogReader
 
     private IEnumerable<string> ReadLogFile()
     {
-        if (!File.Exists(_sourcePath))
+        if (!File.Exists(_path))
         {
-            _logger.Error($"Файл {_sourcePath} не существует");
+            _logger.Error($"Файл {_path} не существует");
             return Enumerable.Empty<string>();
         }
-        FileInfo file = new FileInfo(_sourcePath);
+        FileInfo file = new FileInfo(_path);
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         List<string> data = new List<string>();
         while (sr.ReadLine() is { } line)
@@ -93,8 +88,6 @@ internal class FileLogReader : ILogReader
         };
     }
 
-    public override string ToString()
-    {
-        return $"Объект чтения лога из файла {_sourcePath}";
-    }
+    public override string ToString() => $"Объект чтения лога из файла {_path}";
+    
 }
