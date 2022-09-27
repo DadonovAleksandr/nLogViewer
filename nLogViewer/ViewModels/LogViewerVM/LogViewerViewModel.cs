@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows.Input;
+using System.Windows.Threading;
 using NLog;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
@@ -14,28 +15,32 @@ public class LogViewerViewModel : BaseViewModel
     private static Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly ILogReader _reader;
     private LogViewerState _state;
-    private Timer _timer;
+    private DispatcherTimer _timer;
 
     public ObservableCollection<LogEntryView> LogEntries { get; private set; }
     public LogEntry SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
-    public LogViewerViewModel() { }
+    
+     public LogViewerViewModel() { }
     public LogViewerViewModel(string path)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами (файл: {path})");
         LogEntries = new ObservableCollection<LogEntryView>();
         _reader = new FileLogReader(path);
         
-        _timer = new Timer(new TimerCallback(Process), null, 0, 1000);
-
+        _timer = new DispatcherTimer();
+        _timer.Tick += new EventHandler(Process);
+        _timer.Interval = new TimeSpan(0,0,2);
+        _timer.Start();
+        
         #region commands
         AutoscrollCommand = new LambdaCommand(OnEnableAutoscrollCommandExecuted, CanEnableAutoscrollCommandExecute);
         ClearCommand = new LambdaCommand(OnClearCommandExecuted, CanClearCommandExecute);
         PauseCommand = new LambdaCommand(OnPauseCommandExecuted, CanPauseCommandExecute);
         #endregion
     }
-    
-    private void Process(object? obj)
+
+    private void Process(object sender, EventArgs e)
     {
         _logger.Trace($"Просмотрщик лога в состоянии {_state}");
 
@@ -46,10 +51,10 @@ public class LogViewerViewModel : BaseViewModel
                 _state = LogViewerState.ReadAllMsg;    
                 break;
             case LogViewerState.ReadAllMsg:
-                App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Clear(); });
+                LogEntries.Clear();
                 var data = _reader.GetAll();
                 foreach (var entry in data)
-                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Insert(0, new LogEntryView(entry)); });
+                    LogEntries.Insert(0, new LogEntryView(entry));
                 _logger.Trace($"Считывание всех событий");
                 _state = LogViewerState.ReadNewMsg;
                 _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
@@ -57,7 +62,7 @@ public class LogViewerViewModel : BaseViewModel
             case LogViewerState.ReadNewMsg:
                 var newData = _reader.GetNew();
                 foreach (var entry in newData)
-                    App.Current.Dispatcher.Invoke((Action)delegate { LogEntries.Insert(0, new LogEntryView(entry)); });
+                    LogEntries.Insert(0, new LogEntryView(entry));
                 _logger.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:
