@@ -58,10 +58,14 @@ internal class FileLogReader : ILogReader
             _logger.Error($"Файл {_sourcePath} не существует");
             return Enumerable.Empty<string>();
         }
-
-        var path = @"X:\projects\_WIP\nLogViewer\nLogViewer\bin\Debug\net6.0-windows\logs\2022-09-26.log";
-        File.Copy(_sourcePath, _tempPath, true);
-        return File.ReadAllLines(_tempPath);
+        FileInfo file = new FileInfo(_sourcePath);
+        using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        List<string> data = new List<string>();
+        while (sr.ReadLine() is { } line)
+        {
+            data.Add(line);
+        }
+        return data;
     }
     
     private IEnumerable<ILogEntry> ParseStringsToLogEntries(IEnumerable<string> data)
