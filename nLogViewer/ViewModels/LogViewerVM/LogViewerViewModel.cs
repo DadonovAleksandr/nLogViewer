@@ -77,7 +77,7 @@ public class LogViewerViewModel : BaseViewModel
     public ICommand AutoscrollCommand { get; }
     private void OnEnableAutoscrollCommandExecuted(object p)
     {
-        EnabledAutoscroll = !EnabledAutoscroll;
+        //EnabledAutoscroll = !EnabledAutoscroll;
     }
     private bool CanEnableAutoscrollCommandExecute(object p) => true;
     #endregion
