@@ -14,7 +14,7 @@ public class LogViewerViewModel : BaseViewModel
 {
     private static Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly ILogReader _reader;
-    private LogViewerState _state;
+    private static LogViewerState _state;
     private DispatcherTimer _timer;
 
     public ObservableCollection<LogEntryView> LogEntries { get; private set; }
@@ -96,16 +96,17 @@ public class LogViewerViewModel : BaseViewModel
     public ICommand PauseCommand { get; }
     private void OnPauseCommandExecuted(object p)
     {
-        EnabledPause = !EnabledPause;
         if (EnabledPause)
         {
+            _logger.Debug($"Команда: Включить паузу");
             _logger.Debug($"Переход в состояние {LogViewerState.Pause}");
-            _state = LogViewerState.Pause;    
+            _state = LogViewerState.Pause;
         }
         else
         {
+            _logger.Debug($"Команда: Отключить паузу");
             _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
-            _state = LogViewerState.ReadNewMsg;  
+            _state = LogViewerState.ReadNewMsg;
         }
     }
     private bool CanPauseCommandExecute(object p) => LogEntries.Count > 0;

@@ -41,6 +41,7 @@
                 </StackPanel>
             </Button>
             <Separator/>
+
             <ToggleButton Command="{Binding PauseCommand}" 
                           IsChecked="{Binding EnabledPause}"
                           MinWidth="120"
