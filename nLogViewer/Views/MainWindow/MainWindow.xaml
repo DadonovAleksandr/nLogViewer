@@ -140,6 +140,7 @@
                 <RibbonGroup Header="Фильтр">                                
                     <RibbonToggleButton Label="Trace"
                                         IsChecked="{Binding EnableTraceEvent}"
+                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Trace.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Trace.png"
@@ -149,6 +150,7 @@
                     />
                     <RibbonToggleButton Label="Debug"
                                         IsChecked="{Binding EnableDebugEvent}"
+                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Debug.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Debug.png"
@@ -158,6 +160,7 @@
                                         />
                     <RibbonToggleButton Label="Info"
                                         IsChecked="{Binding EnableInfoEvent}"
+                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Info.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Info.png"
@@ -167,6 +170,7 @@
                                         />
                     <RibbonToggleButton Label="Warn"
                                         IsChecked="{Binding EnableWarnEvent}"
+                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Warning.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Warning.png"
@@ -176,6 +180,7 @@
                                         />
                     <RibbonToggleButton Label="Error"
                                         IsChecked="{Binding EnableErrorEvent}"
+                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Error.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Error.png"
@@ -185,6 +190,7 @@
                                         />
                     <RibbonToggleButton Label="Fatal"
                                         IsChecked="{Binding EnableFatalEvent}"
+                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Fatal.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Fatal.png"

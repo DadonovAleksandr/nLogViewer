@@ -6,20 +6,23 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
+using nLogViewer.Model.Filter;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.Views;
 
 namespace nLogViewer.ViewModels;
 
-internal class MainWindowViewModel : BaseViewModel
+public class MainWindowViewModel : BaseViewModel
 {
     public LogViewerViewModel LogViewer { get; }
-    
+    public LogEntryFilter Filter;
+    public Action RefreshFilter;
     
     public MainWindowViewModel()
     {
         logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
+        Filter = new LogEntryFilter();
         
         #region commands
         NewSession = new LambdaCommand(OnNewSessionExecuted, CanNewSessionExecute);
@@ -31,6 +34,7 @@ internal class MainWindowViewModel : BaseViewModel
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         RecentFiles = new LambdaCommand(OnRecentFilesExecuted, CanRecentFilesExecute);
         Add = new LambdaCommand(OnAddExecuted, CanAddExecute);
+        SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
         #endregion
     }
     
@@ -133,13 +137,19 @@ internal class MainWindowViewModel : BaseViewModel
             ToolTip = ofd.FileName,
             Content = new LogViewerView
             {
-                DataContext = new LogViewerViewModel(ofd.FileName)
+                DataContext = new LogViewerViewModel(ofd.FileName, this)
             } 
         };
         window.LogViewersControl.Items.Add(newTabLogViewer);
         window.LogViewersControl.SelectedIndex = window.LogViewersControl.Items.Count - 1;
     }
     private bool CanAddExecute(object p) => true;
+    #endregion
+    
+    #region SetFilter
+    public ICommand SetFilter { get; }
+    private void OnSetFilterExecuted(object p) => RefreshFilter?.Invoke();
+    private bool CanSetFilterExecute(object p) => true;
     #endregion
     
     #endregion
@@ -158,65 +168,53 @@ internal class MainWindowViewModel : BaseViewModel
     #endregion
     
     #region Фильтр событий
-    
-    private bool _enableTraceEvent;
     /// <summary>
     /// Trace
     /// </summary>
     public bool EnableTraceEvent
     {
-        get => _enableTraceEvent;
-        set => Set(ref _enableTraceEvent, value);
-    }
-    
-    private bool _enableDebugEvent;
+        get => Filter.EnableTraceEvent;
+        set => Set(ref Filter.EnableTraceEvent, value);
+    } 
     /// <summary>
     /// Debug
     /// </summary>
     public bool EnableDebugEvent
     {
-        get => _enableDebugEvent;
-        set => Set(ref _enableDebugEvent, value);
+        get => Filter.EnableDebugEvent;
+        set => Set(ref Filter.EnableDebugEvent, value);
     }
-    
-    private bool _enableInfoEvent;
     /// <summary>
     /// Info
     /// </summary>
     public bool EnableInfoEvent
     {
-        get => _enableInfoEvent;
-        set => Set(ref _enableInfoEvent, value);
+        get => Filter.EnableInfoEvent;
+        set => Set(ref Filter.EnableInfoEvent, value);
     }
-    
-    private bool _enableWarnEvent;
     /// <summary>
     /// Warning
     /// </summary>
     public bool EnableWarnEvent
     {
-        get => _enableWarnEvent;
-        set => Set(ref _enableWarnEvent, value);
+        get => Filter.EnableWarnEvent;
+        set => Set(ref Filter.EnableWarnEvent, value);
     }
-    
-    private bool _enableErrorEvent;
     /// <summary>
     /// Error
     /// </summary>
     public bool EnableErrorEvent
     {
-        get => _enableErrorEvent;
-        set => Set(ref _enableErrorEvent, value);
+        get => Filter.EnableErrorEvent;
+        set => Set(ref Filter.EnableErrorEvent, value);
     }
-    
-    private bool _enableFatalEvent;
     /// <summary>
     /// Fatal
     /// </summary>
     public bool EnableFatalEvent
     {
-        get => _enableFatalEvent;
-        set => Set(ref _enableFatalEvent, value);
+        get => Filter.EnableFatalEvent;
+        set => Set(ref Filter.EnableFatalEvent, value);
     }
     #endregion
     

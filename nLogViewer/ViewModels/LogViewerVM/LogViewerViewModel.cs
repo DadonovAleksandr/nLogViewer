@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using NLog;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
+using nLogViewer.Model.Filter;
 using nLogViewer.ViewModels.Base;
 
 namespace nLogViewer.ViewModels;
@@ -16,17 +17,21 @@ public class LogViewerViewModel : BaseViewModel
     private readonly ILogReader _reader;
     private static LogViewerState _state;
     private DispatcherTimer _timer;
+    private LogEntryFilter _filter;
 
     public ObservableCollection<LogEntryView> LogEntries { get; private set; }
     public LogEntry SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
     
      public LogViewerViewModel() { }
-    public LogViewerViewModel(string path)
+    public LogViewerViewModel(string path, MainWindowViewModel mainVm)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами (файл: {path})");
         LogEntries = new ObservableCollection<LogEntryView>();
         _reader = new FileLogReader(path);
+
+        mainVm.RefreshFilter += RefreshFilter;
+        _filter = mainVm.Filter;
         
         _timer = new DispatcherTimer();
         _timer.Tick += new EventHandler(Process);
@@ -38,6 +43,13 @@ public class LogViewerViewModel : BaseViewModel
         ClearCommand = new LambdaCommand(OnClearCommandExecuted, CanClearCommandExecute);
         PauseCommand = new LambdaCommand(OnPauseCommandExecuted, CanPauseCommandExecute);
         #endregion
+    }
+
+    private void RefreshFilter()
+    {
+        _logger.Debug("Обновление фильтра событий");
+        _logger.Debug($"Переход в состояние {LogViewerState.ReadAllMsg}");
+        _state = LogViewerState.ReadAllMsg;
     }
 
     private void Process(object sender, EventArgs e)
@@ -54,7 +66,10 @@ public class LogViewerViewModel : BaseViewModel
                 LogEntries.Clear();
                 var data = _reader.GetAll();
                 foreach (var entry in data)
-                    LogEntries.Insert(0, new LogEntryView(entry));
+                {
+                    if(_filter.CheckFilter(entry))
+                        LogEntries.Insert(0, new LogEntryView(entry));       
+                }
                 _logger.Trace($"Считывание всех событий");
                 _state = LogViewerState.ReadNewMsg;
                 _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
@@ -62,7 +77,10 @@ public class LogViewerViewModel : BaseViewModel
             case LogViewerState.ReadNewMsg:
                 var newData = _reader.GetNew();
                 foreach (var entry in newData)
-                    LogEntries.Insert(0, new LogEntryView(entry));
+                {
+                    if(_filter.CheckFilter(entry))
+                        LogEntries.Insert(0, new LogEntryView(entry));
+                }
                 _logger.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:
@@ -72,7 +90,17 @@ public class LogViewerViewModel : BaseViewModel
     }
     
     #region Commands
+    
+    #region Установка фильтра
+    public ICommand FilterCommand { get; }
+    private void OnFilterCommandExecuted(object p)
+    {
+        //EnabledAutoscroll = !EnabledAutoscroll;
+    }
+    private bool CanFilterCommandExecute(object p) => true;
+    #endregion
 
+    
     #region Включение автопрокрутки
     public ICommand AutoscrollCommand { get; }
     private void OnEnableAutoscrollCommandExecuted(object p)
