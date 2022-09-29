@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Threading;
 using System.Windows.Input;
 using System.Windows.Threading;
-using NLog;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
 using nLogViewer.Model.Filter;
@@ -13,7 +11,6 @@ namespace nLogViewer.ViewModels;
 
 public class LogViewerViewModel : BaseViewModel
 {
-    private static Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly ILogReader _reader;
     private static LogViewerState _state;
     private DispatcherTimer _timer;

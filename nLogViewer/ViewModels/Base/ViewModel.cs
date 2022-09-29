@@ -6,7 +6,7 @@ namespace nLogViewer.ViewModels.Base;
 
 public class BaseViewModel : INotifyPropertyChanged
 {
-    protected static Logger logger = LogManager.GetCurrentClassLogger();
+    protected static Logger _logger = LogManager.GetCurrentClassLogger();
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string PropertyName = null)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +19,7 @@ public class MainWindowViewModel : BaseViewModel
     
     public MainWindowViewModel()
     {
-        logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
+        _logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
         Filter = new LogEntryFilter();
         
