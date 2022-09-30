@@ -21,7 +21,7 @@
         <Ribbon DockPanel.Dock="Top" SelectedIndex="0" 
                 ShowQuickAccessToolBarOnTop="False" Margin="0,-22,0,0">
             <Ribbon.ApplicationMenu>
-                <RibbonApplicationMenu>
+                <RibbonApplicationMenu Visibility="Collapsed">
                     
                     <RibbonApplicationMenu.SmallImageSource>
                         <DrawingImage>
