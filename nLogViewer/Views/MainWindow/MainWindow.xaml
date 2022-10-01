@@ -58,12 +58,12 @@
                                                KeyTip="S"
                                                />
                     <RibbonApplicationMenuItem Header="Экспорт лога"
-                                               Command="{Binding ExportLogs}"
+                                               Command="{Binding AddFolder}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Export.png"
                                                KeyTip="E"
                                                />
                     <RibbonApplicationMenuItem Header="Настройки"
-                                               Command="{Binding ShowPreferences}"
+                                               Command="{Binding DeleteLog}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Settings.png"
                                                CommandParameter="0"
                                                ToolTip="Открыть диалоговое окно настроек приложения"
@@ -117,22 +117,20 @@
             
             <RibbonTab Header="Главная">
                 <RibbonGroup Header="Общие">
-                    <RibbonButton Label="Добавить лог"
-                                  Command="{Binding Add}"
-                                  CommandParameter="{Binding ElementName=MainWin}"
+                    <RibbonButton Label="Добавить файл"
+                                  Command="{Binding AddFile}"
                                   ToolTip="Добавить новый просмотрщик лога"
                                   SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"
                                   />
-                    <RibbonButton Label="Экспорт лога"
-                                  Command="{Binding ExportLogs}"
-                                  ToolTip="Экспорт текущего лога в файл"
-                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Export.png"
+                    <RibbonButton Label="Добавить папку"
+                                  Command="{Binding AddFile}"
+                                  ToolTip="Добавить новый просмотрщик лога"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"
                     />
-                    <RibbonButton Label="Настройки"
-                                  Command="{Binding ShowPreferences}"
-                                  CommandParameter="0"
-                                  ToolTip="Показать окно с настройками приложения"
-                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Settings.png"
+                    <RibbonButton Label="Удалить лог"
+                                  Command="{Binding DeleteLog}"
+                                  ToolTip="Удалить текущий просмотрщик лога"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/delete.png"
                     />
                 </RibbonGroup>
 

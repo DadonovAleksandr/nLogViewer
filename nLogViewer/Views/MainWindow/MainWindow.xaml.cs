@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using nLogViewer.ViewModels;
 
 namespace nLogViewer
 {
@@ -12,6 +13,11 @@ namespace nLogViewer
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += (sender, args) =>
+            {
+                if(!(DataContext is MainWindowViewModel mainVm)) return;
+                mainVm.InitLogViwerControl(LogViewersControl);
+            };
         }
         
         

@@ -21,7 +21,7 @@ internal class FileLogReader : ILogReader
 
     public IEnumerable<ILogEntry> GetAll()
     {
-        _logger.Debug($"Получение всех записей из файла {_path}");
+        _logger.Trace($"Получение всех записей из файла {_path}");
 
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;
@@ -31,7 +31,7 @@ internal class FileLogReader : ILogReader
     
     public IEnumerable<ILogEntry> GetNew()
     {
-        _logger.Debug($"Получение новых записей из файла {_path}");
+        _logger.Trace($"Получение новых записей из файла {_path}");
         
         string[] data = ReadLogFile().ToArray();
         if (data.Length > _count)

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
@@ -13,7 +14,7 @@ namespace nLogViewer.ViewModels;
 
 public class MainWindowViewModel : BaseViewModel
 {
-    public LogViewerViewModel LogViewer { get; }
+    private Selector _logViewer;
     public LogEntryFilter Filter;
     public Action RefreshFilter;
     
@@ -27,12 +28,12 @@ public class MainWindowViewModel : BaseViewModel
         NewSession = new LambdaCommand(OnNewSessionExecuted, CanNewSessionExecute);
         LoadSession = new LambdaCommand(OnLoadSessionExecuted, CanLoadSessionExecute);
         SaveSession = new LambdaCommand(OnSaveSessionExecuted, CanSaveSessionExecute);
-        ExportLogs = new LambdaCommand(OnExportLogsExecuted, CanExportLogsExecute);
-        ShowPreferences = new LambdaCommand(OnShowPreferencesExecuted, CanShowPreferencesExecute);
+        AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
+        DeleteLog = new LambdaCommand(OnSDeleteLogExecuted, CanDeleteLogExecute);
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         RecentFiles = new LambdaCommand(OnRecentFilesExecuted, CanRecentFilesExecute);
-        Add = new LambdaCommand(OnAddExecuted, CanAddExecute);
+        AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
         SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
         #endregion
     }
@@ -70,25 +71,7 @@ public class MainWindowViewModel : BaseViewModel
     }
     private bool CanSaveSessionExecute(object p) => true;
     #endregion
-    
-    #region ExportLogs
-    public ICommand ExportLogs { get; }
-    private void OnExportLogsExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanExportLogsExecute(object p) => true;
-    #endregion
-    
-    #region ShowPreferences
-    public ICommand ShowPreferences { get; }
-    private void OnShowPreferencesExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanShowPreferencesExecute(object p) => true;
-    #endregion
-    
+
     #region About
     public ICommand About { get; }
     private void OnAboutExecuted(object p)
@@ -116,10 +99,11 @@ public class MainWindowViewModel : BaseViewModel
     private bool CanRecentFilesExecute(object p) => true;
     #endregion
 
-    #region Add
-    public ICommand Add { get; }
-    private void OnAddExecuted(object p)
+    #region Add file
+    public ICommand AddFile { get; }
+    private void OnAddFileExecuted(object p)
     {
+        _logger.Debug("Команда добавить файл лога в просмоторщик");
         var ofd = new OpenFileDialog
         {
             DefaultExt = "log",
@@ -127,9 +111,16 @@ public class MainWindowViewModel : BaseViewModel
             Title = "Выберите лог-файл"
         };
         if(ofd.ShowDialog() == false)
+        {
+            _logger.Debug("Диалог выбора файла завершился отменой");
             return;
-        if(!(p is MainWindow window))
+        }
+
+        if (_logViewer is null)
+        {
+            _logger.Error("Просмоторщик логов не инициализирован");
             return;
+        }
         var newTabLogViewer = new TabItem
         {
             Header = Path.GetFileName(ofd.FileName),
@@ -139,10 +130,29 @@ public class MainWindowViewModel : BaseViewModel
                 DataContext = new LogViewerViewModel(ofd.FileName, this)
             } 
         };
-        window.LogViewersControl.Items.Add(newTabLogViewer);
-        window.LogViewersControl.SelectedIndex = window.LogViewersControl.Items.Count - 1;
+        _logViewer.Items.Add(newTabLogViewer);
+        _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
     }
-    private bool CanAddExecute(object p) => true;
+    
+    private bool CanAddFileExecute(object p) => true;
+    #endregion
+    
+    #region Add folder
+    public ICommand AddFolder { get; }
+    private void OnAddFolderExecuted(object p)
+    {
+        Application.Current.Shutdown();
+    }
+    private bool CanAddFolderExecute(object p) => true;
+    #endregion
+    
+    #region Delete log
+    public ICommand DeleteLog { get; }
+    private void OnSDeleteLogExecuted(object p)
+    {
+        Application.Current.Shutdown();
+    }
+    private bool CanDeleteLogExecute(object p) => true;
     #endregion
     
     #region SetFilter
@@ -216,5 +226,16 @@ public class MainWindowViewModel : BaseViewModel
         set => Set(ref Filter.EnableFatalEvent, value);
     }
     #endregion
-    
+
+
+    public void InitLogViwerControl(object control)
+    {
+        if (!(control is TabControl tabControl))
+        {
+            _logger.Error($"Не возможно ининцилизирвать компонент просмотра лога. Компонент имеет неподходящий тип: {control.GetType().Name}");
+            return;
+        }
+        _logViewer = tabControl;
+        _logger.Trace("Промотрщик лога инициализирован");
+    }
 }

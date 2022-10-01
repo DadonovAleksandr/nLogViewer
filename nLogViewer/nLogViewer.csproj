@@ -107,6 +107,8 @@
       <Resource Include="Infrastructure\Resources\Images\Small\Clear.png" />
       <None Remove="Infrastructure\Resources\Images\Small\Pause.png" />
       <Resource Include="Infrastructure\Resources\Images\Small\Pause.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\delete.png" />
+      <Resource Include="Infrastructure\Resources\Images\Small\delete.png" />
     </ItemGroup>
 
 </Project>
