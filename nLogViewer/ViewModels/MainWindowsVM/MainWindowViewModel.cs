@@ -115,23 +115,12 @@ public class MainWindowViewModel : BaseViewModel
             _logger.Debug("Диалог выбора файла завершился отменой");
             return;
         }
-
         if (_logViewer is null)
         {
             _logger.Error("Просмоторщик логов не инициализирован");
             return;
         }
-        var newTabLogViewer = new TabItem
-        {
-            Header = Path.GetFileName(ofd.FileName),
-            ToolTip = ofd.FileName,
-            Content = new LogViewerView
-            {
-                DataContext = new LogViewerViewModel(ofd.FileName, this)
-            } 
-        };
-        _logViewer.Items.Add(newTabLogViewer);
-        _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
+        AddNewLogViewer(ofd.FileName);
     }
     
     private bool CanAddFileExecute(object p) => true;
@@ -141,7 +130,8 @@ public class MainWindowViewModel : BaseViewModel
     public ICommand AddFolder { get; }
     private void OnAddFolderExecuted(object p)
     {
-        Application.Current.Shutdown();
+        _logger.Debug("Команда добавить директорию лога в просмоторщик");
+        using var ofd = new CommonOpenFileDialog();
     }
     private bool CanAddFolderExecute(object p) => true;
     #endregion
@@ -152,7 +142,7 @@ public class MainWindowViewModel : BaseViewModel
     {
         Application.Current.Shutdown();
     }
-    private bool CanDeleteLogExecute(object p) => true;
+    private bool CanDeleteLogExecute(object p) => !(_logViewer is null) && _logViewer.Items.Count > 0;
     #endregion
     
     #region SetFilter
@@ -227,8 +217,11 @@ public class MainWindowViewModel : BaseViewModel
     }
     #endregion
 
-
-    public void InitLogViwerControl(object control)
+    /// <summary>
+    /// Инициализация просмотощика лога
+    /// </summary>
+    /// <param name="control"></param>
+    public void InitLogViewerControl(object control)
     {
         if (!(control is TabControl tabControl))
         {
@@ -237,5 +230,23 @@ public class MainWindowViewModel : BaseViewModel
         }
         _logViewer = tabControl;
         _logger.Trace("Промотрщик лога инициализирован");
+    }
+    
+    /// <summary>
+    /// Добавление нового просмоторщика
+    /// </summary>
+    /// <param name="filePath"></param>
+    private void AddNewLogViewer(string filePath)
+    {
+        _logViewer.Items.Add(new TabItem
+        {
+            Header = Path.GetFileName(filePath),
+            ToolTip = filePath,
+            Content = new LogViewerView
+            {
+                DataContext = new LogViewerViewModel(filePath, this)
+            } 
+        });
+        _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
     }
 }
