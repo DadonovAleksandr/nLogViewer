@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -9,6 +10,7 @@ using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model.Filter;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.Views;
+using Ookii.Dialogs.Wpf;
 
 namespace nLogViewer.ViewModels;
 
@@ -131,7 +133,34 @@ public class MainWindowViewModel : BaseViewModel
     private void OnAddFolderExecuted(object p)
     {
         _logger.Debug("Команда добавить директорию лога в просмоторщик");
-        using var ofd = new CommonOpenFileDialog();
+        var ofd = new VistaFolderBrowserDialog()
+        {
+            Description = "Выберите директорию логов",
+            UseDescriptionForTitle = true,
+            Multiselect = false
+        };
+        var dialogResult = ofd.ShowDialog();
+        if (!dialogResult ?? false)
+        {
+            _logger.Debug("Диалог выбора директории завершился отменой");
+            return;
+        }
+        var selectedFolder = ofd.SelectedPath;
+        if (!Directory.Exists(selectedFolder))
+        {
+            _logger.Error($"Директория {selectedFolder} несуществует");
+            return;
+        }
+        var directoryInfo = new DirectoryInfo(selectedFolder);
+        var filesInfo = directoryInfo.GetFiles();
+        if (filesInfo.Length == 0 && filesInfo.All(x => x.Extension != ".log"))
+        {
+            _logger.Error($"В директории {selectedFolder} отсутствуют лог-файлы");
+            return;
+        }
+        var lastFile = filesInfo.Where(x => x.Extension == ".log").OrderBy(x => x.LastWriteTime).Last();
+        _logger.Debug($"Последний измененный файл в заданной директории {lastFile.FullName}");
+        AddNewLogViewer(lastFile.FullName);
     }
     private bool CanAddFolderExecute(object p) => true;
     #endregion

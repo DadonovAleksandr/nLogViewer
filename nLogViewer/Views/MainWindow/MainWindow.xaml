@@ -123,7 +123,7 @@
                                   SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"
                                   />
                     <RibbonButton Label="Добавить папку"
-                                  Command="{Binding AddFile}"
+                                  Command="{Binding AddFolder}"
                                   ToolTip="Добавить новый просмотрщик лога"
                                   SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"
                     />
