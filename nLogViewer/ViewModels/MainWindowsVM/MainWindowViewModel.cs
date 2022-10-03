@@ -167,10 +167,7 @@ public class MainWindowViewModel : BaseViewModel
     
     #region Delete log
     public ICommand DeleteLog { get; }
-    private void OnSDeleteLogExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
+    private void OnSDeleteLogExecuted(object p) => _logViewer.Items.Remove(_logViewer.SelectedItem);
     private bool CanDeleteLogExecute(object p) => !(_logViewer is null) && _logViewer.Items.Count > 0;
     #endregion
     
