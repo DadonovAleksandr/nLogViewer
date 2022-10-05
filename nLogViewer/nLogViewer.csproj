@@ -13,7 +13,6 @@
 
     <ItemGroup>
       <Folder Include="Infrastructure\Common" />
-      <Folder Include="Infrastructure\Helpers" />
       <Folder Include="Infrastructure\Resources\Images\Glyphs" />
       <Folder Include="Infrastructure\Resources\Images\Medium" />
       <Folder Include="Infrastructure\Resources\Images\Small" />
