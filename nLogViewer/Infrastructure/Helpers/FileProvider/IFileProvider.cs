@@ -1,6 +1,6 @@
 ﻿namespace nLogViewer.Infrastructure.Helpers.FileProvider;
 
-interface IFileProvider<T> where T : class
+public interface IFileProvider<T> where T : class
 {
         /// <summary>
         /// Загрузка содержимого указанного файла

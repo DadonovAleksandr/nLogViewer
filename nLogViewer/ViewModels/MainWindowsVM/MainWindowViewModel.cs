@@ -7,6 +7,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
+using nLogViewer.Infrastructure.Helpers.FileProvider;
+using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Model.Filter;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.Views;
@@ -17,21 +19,26 @@ namespace nLogViewer.ViewModels;
 public class MainWindowViewModel : BaseViewModel
 {
     private Selector _logViewer;
+    private IRecentLogsRepository _recentLogs;
     public LogEntryFilter Filter;
     public Action RefreshFilter;
+    
     
     public MainWindowViewModel()
     {
         _logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
         Filter = new LogEntryFilter();
+        _recentLogs = InitRecentLogsRepository();
+        if (_recentLogs.Any())
+            ViewRecentLogs();
         
         #region commands
         NewSession = new LambdaCommand(OnNewSessionExecuted, CanNewSessionExecute);
         LoadSession = new LambdaCommand(OnLoadSessionExecuted, CanLoadSessionExecute);
         SaveSession = new LambdaCommand(OnSaveSessionExecuted, CanSaveSessionExecute);
         AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
-        DeleteLog = new LambdaCommand(OnSDeleteLogExecuted, CanDeleteLogExecute);
+        DeleteLog = new LambdaCommand(OnDeleteLogExecuted, CanDeleteLogExecute);
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         RecentFiles = new LambdaCommand(OnRecentFilesExecuted, CanRecentFilesExecute);
@@ -39,8 +46,8 @@ public class MainWindowViewModel : BaseViewModel
         SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
         #endregion
     }
-    
-    
+
+
     #region Pages
     
     #endregion
@@ -123,6 +130,7 @@ public class MainWindowViewModel : BaseViewModel
             return;
         }
         AddNewLogViewer(ofd.FileName);
+        _recentLogs.Add(ofd.FileName);
     }
     
     private bool CanAddFileExecute(object p) => true;
@@ -151,23 +159,25 @@ public class MainWindowViewModel : BaseViewModel
             _logger.Error($"Директория {selectedFolder} несуществует");
             return;
         }
-        var directoryInfo = new DirectoryInfo(selectedFolder);
-        var filesInfo = directoryInfo.GetFiles();
-        if (filesInfo.Length == 0 && filesInfo.All(x => x.Extension != ".log"))
-        {
-            _logger.Error($"В директории {selectedFolder} отсутствуют лог-файлы");
+
+        var filePath = FindLastFileInDirectory(selectedFolder);
+        if (string.IsNullOrEmpty(filePath))
             return;
-        }
-        var lastFile = filesInfo.Where(x => x.Extension == ".log").OrderBy(x => x.LastWriteTime).Last();
-        _logger.Debug($"Последний измененный файл в заданной директории {lastFile.FullName}");
-        AddNewLogViewer(lastFile.FullName);
+        
+        AddNewLogViewer(filePath);
+        _recentLogs.Add(selectedFolder, true);
     }
     private bool CanAddFolderExecute(object p) => true;
     #endregion
     
     #region Delete log
     public ICommand DeleteLog { get; }
-    private void OnSDeleteLogExecuted(object p) => _logViewer.Items.Remove(_logViewer.SelectedItem);
+    private void OnDeleteLogExecuted(object p)
+    {
+        _logger.Debug("Команда удалить текущий лог из просмоторщика");
+        _recentLogs.Remove(_recentLogs[_logViewer.SelectedIndex]);
+        _logViewer.Items.Remove(_logViewer.SelectedItem);
+    }
     private bool CanDeleteLogExecute(object p) => !(_logViewer is null) && _logViewer.Items.Count > 0;
     #endregion
     
@@ -259,6 +269,48 @@ public class MainWindowViewModel : BaseViewModel
     }
     
     /// <summary>
+    /// Действия выполняемые при закрытии основной формы
+    /// </summary>
+    public void OnExit()
+    {
+        _recentLogs?.Save();
+    }
+
+    /// <summary>
+    /// Загрузка ранее сохраненных логов
+    /// </summary>
+    /// <exception cref="NotImplementedException"></exception>
+    private void ViewRecentLogs()
+    {
+        foreach (var entry in _recentLogs)
+        {
+            _logger.Debug($"Открываем ранее {(entry.IsFolder ? "открытую директорию" : "открытый лог-файл")} \"{entry.Path}\"");
+            var path = entry.IsFolder ? FindLastFileInDirectory(entry.Path) : entry.Path;
+
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                _logger.Warn($"Файл \"{path}\" не существует. Удаляем данную запись из списка ранее открытых логов");
+                _recentLogs.Remove(entry);
+            }
+            AddNewLogViewer(path);
+        }
+    }
+
+    private string FindLastFileInDirectory(string dirPath)
+    {
+        var directoryInfo = new DirectoryInfo(dirPath);
+        var filesInfo = directoryInfo.GetFiles();
+        if (filesInfo.Length == 0 && filesInfo.All(x => x.Extension != ".log"))
+        {
+            _logger.Error($"В директории {dirPath} отсутствуют лог-файлы");
+            return string.Empty;
+        }
+        var lastFile = filesInfo.Where(x => x.Extension == ".log").OrderBy(x => x.LastWriteTime).Last();
+        _logger.Debug($"Последний измененный файл в заданной директории {lastFile.FullName}");
+        return lastFile.FullName;
+    }
+    
+    /// <summary>
     /// Добавление нового просмоторщика
     /// </summary>
     /// <param name="filePath"></param>
@@ -275,4 +327,18 @@ public class MainWindowViewModel : BaseViewModel
         });
         _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
     }
+
+    /// <summary>
+    /// Инициализация репозитория списка ранее открытых логов
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    private IRecentLogsRepository InitRecentLogsRepository()
+    {
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var configPath = Path.Combine(appDataPath, "nLogViewer", "recent-logs.json");
+        return new RecentLogsFileRepository(configPath, new JsonFileProvider<RecentLogEntries>());
+    }
+    
+    
 }

@@ -45,4 +45,13 @@ internal class JsonFileProvider<T> : IFileProvider<T> where T : class, new()
             throw new Exception($"При попытке записи в файл {filePath} было вызвано исключение");
         }
     }
+    
+    /// <summary>
+    /// Переопределение ToString() для отображения в логах
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return $"{GetType().Name}";
+    }
 }

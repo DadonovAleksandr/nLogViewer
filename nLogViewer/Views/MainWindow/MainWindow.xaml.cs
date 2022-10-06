@@ -18,6 +18,12 @@ namespace nLogViewer
                 if(!(DataContext is MainWindowViewModel mainVm)) return;
                 mainVm.InitLogViewerControl(LogViewersControl);
             };
+            
+            Closing += (sender, args) =>
+            {
+                if(!(DataContext is MainWindowViewModel mainVm)) return;
+                mainVm.OnExit();
+            };
         }
         
         
