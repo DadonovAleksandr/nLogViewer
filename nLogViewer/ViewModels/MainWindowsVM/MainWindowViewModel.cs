@@ -32,16 +32,12 @@ public class MainWindowViewModel : BaseViewModel
         Filter = new LogEntryFilter();
 
         #region commands
-        NewSession = new LambdaCommand(OnNewSessionExecuted, CanNewSessionExecute);
-        LoadSession = new LambdaCommand(OnLoadSessionExecuted, CanLoadSessionExecute);
-        SaveSession = new LambdaCommand(OnSaveSessionExecuted, CanSaveSessionExecute);
+        AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
         AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
         DeleteLog = new LambdaCommand(OnDeleteLogExecuted, CanDeleteLogExecute);
+        SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
-        RecentFiles = new LambdaCommand(OnRecentFilesExecuted, CanRecentFilesExecute);
-        AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
-        SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
         #endregion
     }
 
@@ -51,61 +47,7 @@ public class MainWindowViewModel : BaseViewModel
     #endregion
     
     #region Commands
-
-    #region NewSession
-    public ICommand NewSession { get; }
-    private void OnNewSessionExecuted(object p)
-    {
-        MessageBox.Show("Hello!");
-    }
-    private bool CanNewSessionExecute(object p) => true;
-    #endregion
     
-    #region LoadSession
-    public ICommand LoadSession { get; }
-    private void OnLoadSessionExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanLoadSessionExecute(object p) => true;
-    #endregion
-
-    #region SaveSession
-    public ICommand SaveSession { get; }
-    private void OnSaveSessionExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanSaveSessionExecute(object p) => true;
-    #endregion
-
-    #region About
-    public ICommand About { get; }
-    private void OnAboutExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanAboutExecute(object p) => true;
-    #endregion
-    
-    #region Exit
-    public ICommand Exit { get; }
-    private void OnExitExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanExitExecute(object p) => true;
-    #endregion
-    
-    #region RecentFiles
-    public ICommand RecentFiles { get; }
-    private void OnRecentFilesExecuted(object p)
-    {
-        Application.Current.Shutdown();
-    }
-    private bool CanRecentFilesExecute(object p) => true;
-    #endregion
-
     #region Add file
     public ICommand AddFile { get; }
     private void OnAddFileExecuted(object p)
@@ -185,6 +127,21 @@ public class MainWindowViewModel : BaseViewModel
     private bool CanSetFilterExecute(object p) => true;
     #endregion
     
+    #region About
+    public ICommand About { get; }
+    private void OnAboutExecuted(object p)
+    {
+        Application.Current.Shutdown();
+    }
+    private bool CanAboutExecute(object p) => true;
+    #endregion
+    
+    #region Exit
+    public ICommand Exit { get; }
+    private void OnExitExecuted(object p) => Application.Current.Shutdown();
+    private bool CanExitExecute(object p) => true;
+    #endregion
+
     #endregion
     
     #region Window title
