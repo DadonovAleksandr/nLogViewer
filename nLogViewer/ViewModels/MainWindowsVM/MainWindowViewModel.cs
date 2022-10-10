@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -29,10 +30,7 @@ public class MainWindowViewModel : BaseViewModel
         _logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
         Filter = new LogEntryFilter();
-        _recentLogs = InitRecentLogsRepository();
-        if (_recentLogs.Any())
-            ViewRecentLogs();
-        
+
         #region commands
         NewSession = new LambdaCommand(OnNewSessionExecuted, CanNewSessionExecute);
         LoadSession = new LambdaCommand(OnLoadSessionExecuted, CanLoadSessionExecute);
@@ -266,6 +264,10 @@ public class MainWindowViewModel : BaseViewModel
         }
         _logViewer = tabControl;
         _logger.Trace("Промотрщик лога инициализирован");
+        
+        _recentLogs = InitRecentLogsRepository();
+        if (_recentLogs.Any())
+            ViewRecentLogs();
     }
     
     /// <summary>
@@ -337,7 +339,7 @@ public class MainWindowViewModel : BaseViewModel
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var configPath = Path.Combine(appDataPath, "nLogViewer", "recent-logs.json");
-        return new RecentLogsFileRepository(configPath, new JsonFileProvider<RecentLogEntries>());
+        return new RecentLogsFileRepository(configPath, new JsonFileProvider<List<RecentLogEntry>>());
     }
     
     

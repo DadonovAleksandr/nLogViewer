@@ -12,10 +12,10 @@ public class RecentLogsFileRepository : IRecentLogsRepository
     private static Logger _logger = LogManager.GetCurrentClassLogger();
     
     private readonly string _path;
-    private IFileProvider<RecentLogEntries> _fileProvider;
-    private RecentLogEntries _entries;
+    private IFileProvider<List<RecentLogEntry>> _fileProvider;
+    private List<RecentLogEntry> _entries;
 
-    public RecentLogsFileRepository(string filePath, IFileProvider<RecentLogEntries> fileProvider)
+    public RecentLogsFileRepository(string filePath, IFileProvider<List<RecentLogEntry>> fileProvider)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами (path: \"{filePath}\", fileProvider: \"{fileProvider}\")");
         _path = filePath;
@@ -75,17 +75,19 @@ public class RecentLogsFileRepository : IRecentLogsRepository
             if (!File.Exists(_path))
             {
                 _logger.Warn($"Файл {_path} не существует. Загружен пустой список ранее открытых логов");
-                _entries = new RecentLogEntries();
+                _entries = new List<RecentLogEntry>();
                 return false;
             }
+
             _entries = _fileProvider.Load(_path);
         }
         catch (Exception e)
         {
             _logger.Error($"При чтении файла {_path} было вызвано исключение: {e.Message}");
-            _entries = new RecentLogEntries();
+            _entries = new List<RecentLogEntry>();
             return false;
         }
+        
 
         return true;
     }
