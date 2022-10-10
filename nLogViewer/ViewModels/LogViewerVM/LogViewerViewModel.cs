@@ -9,7 +9,7 @@ using nLogViewer.ViewModels.Base;
 
 namespace nLogViewer.ViewModels;
 
-public class LogViewerViewModel : BaseViewModel
+internal class LogViewerViewModel : BaseViewModel
 {
     private readonly ILogReader _reader;
     private static LogViewerState _state;

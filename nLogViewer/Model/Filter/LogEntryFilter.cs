@@ -1,6 +1,10 @@
-﻿namespace nLogViewer.Model.Filter;
+﻿using System.Collections.Generic;
+using System.Linq;
+using nLogViewer.Model.AppSettings.AppConfig;
 
-public class LogEntryFilter : ILogEntryFilter
+namespace nLogViewer.Model.Filter;
+
+internal class LogEntryFilter : ILogEntryFilter
 {
     public bool EnableTraceEvent;
     public bool EnableDebugEvent;
@@ -9,14 +13,28 @@ public class LogEntryFilter : ILogEntryFilter
     public bool EnableErrorEvent;
     public bool EnableFatalEvent;
     
-    public LogEntryFilter()
+    public LogEntryFilter(IFilterConfig filterConfig)
     {
-        EnableTraceEvent = true;
-        EnableDebugEvent = true;
-        EnableInfoEvent = true;
-        EnableWarnEvent = true;
-        EnableErrorEvent = true;
-        EnableFatalEvent = true;
+        #region Проверка, что настройик не "пустые"
+        var list = new List<bool>
+        {
+            filterConfig.EnableTraceEvent,    
+            filterConfig.EnableDebugEvent,    
+            filterConfig.EnableInfoEvent,    
+            filterConfig.EnableWarnEvent,    
+            filterConfig.EnableErrorEvent,    
+            filterConfig.EnableFatalEvent,    
+        };
+        var init = list.All(x => x == false);
+        #endregion
+        
+        //Инициализация фильтра из настроек (с учетом того, что сами настройка могут быть неиницилизированны)  
+        EnableTraceEvent = init || filterConfig.EnableTraceEvent;
+        EnableDebugEvent = init || filterConfig.EnableDebugEvent;
+        EnableInfoEvent = init || filterConfig.EnableInfoEvent;
+        EnableWarnEvent = init || filterConfig.EnableWarnEvent;
+        EnableErrorEvent = init || filterConfig.EnableErrorEvent;
+        EnableFatalEvent = init || filterConfig.EnableFatalEvent;
     }
 
     public bool CheckFilter(ILogEntry entry)

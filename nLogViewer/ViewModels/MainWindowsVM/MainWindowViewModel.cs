@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Infrastructure.Helpers.FileProvider;
+using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Model.Filter;
 using nLogViewer.ViewModels.Base;
@@ -17,10 +18,11 @@ using Ookii.Dialogs.Wpf;
 
 namespace nLogViewer.ViewModels;
 
-public class MainWindowViewModel : BaseViewModel
+internal class MainWindowViewModel : BaseViewModel
 {
     private Selector _logViewer;
     private IRecentLogsRepository _recentLogs;
+    private IAppConfig _appConfig;
     public LogEntryFilter Filter;
     public Action RefreshFilter;
     
@@ -29,7 +31,9 @@ public class MainWindowViewModel : BaseViewModel
     {
         _logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
-        Filter = new LogEntryFilter();
+        _appConfig = AppConfig.GetConfigFromDefaultPath();
+        Filter = new LogEntryFilter(_appConfig.FilterConfig);
+        
 
         #region commands
         AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
@@ -233,6 +237,15 @@ public class MainWindowViewModel : BaseViewModel
     public void OnExit()
     {
         _recentLogs?.Save();
+
+        #region Cохранение настроек фильтра
+        _appConfig.FilterConfig.EnableTraceEvent = Filter.EnableTraceEvent;
+        _appConfig.FilterConfig.EnableDebugEvent = Filter.EnableDebugEvent;
+        _appConfig.FilterConfig.EnableInfoEvent = Filter.EnableInfoEvent;
+        _appConfig.FilterConfig.EnableWarnEvent = Filter.EnableWarnEvent;
+        _appConfig.FilterConfig.EnableErrorEvent = Filter.EnableErrorEvent;
+        _appConfig.FilterConfig.EnableFatalEvent = Filter.EnableFatalEvent;
+        #endregion
     }
 
     /// <summary>
