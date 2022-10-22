@@ -88,16 +88,6 @@ internal class LogViewerViewModel : BaseViewModel
     
     #region Commands
     
-    #region Установка фильтра
-    public ICommand FilterCommand { get; }
-    private void OnFilterCommandExecuted(object p)
-    {
-        //EnabledAutoscroll = !EnabledAutoscroll;
-    }
-    private bool CanFilterCommandExecute(object p) => true;
-    #endregion
-
-    
     #region Включение автопрокрутки
     public ICommand AutoscrollCommand { get; }
     private void OnEnableAutoscrollCommandExecuted(object p)
