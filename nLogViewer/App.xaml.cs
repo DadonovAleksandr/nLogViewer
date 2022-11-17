@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using nLogViewer.Services;
 using nLogViewer.ViewModels;
 
 namespace nLogViewer
@@ -42,12 +43,9 @@ namespace nLogViewer
             _host = null;
         }
 
-        public static void ConfigureServices(HostBuilderContext host, IServiceCollection services)
-        {
-            
-            services.AddSingleton<MainWindowViewModel>();
-            services.AddTransient<LogViewerViewModel>();
-        }
+        public static void ConfigureServices(HostBuilderContext host, IServiceCollection services) => services
+            .RegisterServices()
+            .RegisterViewModels();
 
         public static string CurrentDirectory => IsDesighnMode
             ? Path.GetDirectoryName(GetSourceCodePath())
