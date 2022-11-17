@@ -10,10 +10,9 @@
         xmlns:local="clr-namespace:nLogViewer"
         xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="600" Width="1024">
-    <Window.DataContext>
-        <vm:MainWindowViewModel/>
-    </Window.DataContext>
+        Title="{Binding Title}" Height="600" Width="1024"
+        DataContext="{Binding MainWindowViewModel, Source={StaticResource Locator}}"
+        >
     <Window.Resources>
         <c:LongPathToShortPathConvertor x:Key="LongToShortPathConvertor"/>
     </Window.Resources>

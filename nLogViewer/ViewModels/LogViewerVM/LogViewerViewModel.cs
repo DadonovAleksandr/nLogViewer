@@ -11,7 +11,26 @@ namespace nLogViewer.ViewModels;
 
 internal class LogViewerViewModel : BaseViewModel
 {
-    private readonly ILogReader _reader;
+    private ILogReader _reader;
+    public ILogReader Reader
+    {
+        get => _reader;
+        set => _reader = value;
+    }
+
+    private MainWindowViewModel _mainVm;
+
+    public MainWindowViewModel MainVm
+    {
+        get => _mainVm;
+        set
+        {
+            _mainVm = value;
+            _mainVm.RefreshFilter += RefreshFilter;
+            _filter = _mainVm.Filter;
+        }
+    }
+    
     private static LogViewerState _state;
     private DispatcherTimer _timer;
     private LogEntryFilter _filter;
@@ -19,17 +38,12 @@ internal class LogViewerViewModel : BaseViewModel
     public ObservableCollection<LogEntryView> LogEntries { get; private set; }
     public LogEntry SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
-    
-     public LogViewerViewModel() { }
-    public LogViewerViewModel(string path, MainWindowViewModel mainVm)
-    {
-        _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами (файл: {path})");
-        LogEntries = new ObservableCollection<LogEntryView>();
-        _reader = new FileLogReader(path);
 
-        mainVm.RefreshFilter += RefreshFilter;
-        _filter = mainVm.Filter;
-        
+    public LogViewerViewModel()
+    {
+        _logger.Debug($"Вызов конструктора {GetType().Name}");
+        LogEntries = new ObservableCollection<LogEntryView>();
+         
         _timer = new DispatcherTimer();
         _timer.Tick += new EventHandler(Process);
         _timer.Interval = new TimeSpan(0,0,2);
@@ -52,7 +66,12 @@ internal class LogViewerViewModel : BaseViewModel
     private void Process(object sender, EventArgs e)
     {
         _logger.Trace($"Просмотрщик лога в состоянии {_state}");
-
+        if (_reader is null)
+        {
+            _logger.Warn($"Просмоторщик событий не инициализирован");
+            return;
+        }
+        
         switch (_state)
         {
             case LogViewerState.Stop:

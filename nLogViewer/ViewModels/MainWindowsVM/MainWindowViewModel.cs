@@ -6,9 +6,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Infrastructure.Helpers.FileProvider;
+using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Model.Filter;
@@ -288,13 +290,17 @@ internal class MainWindowViewModel : BaseViewModel
     /// <param name="filePath"></param>
     private void AddNewLogViewer(string filePath)
     {
+        var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
+        logViewerVm.Reader = new FileLogReader(filePath);
+        logViewerVm.MainVm = this;
+        
         _logViewer.Items.Add(new TabItem
         {
             Header = Path.GetFileName(filePath),
             ToolTip = filePath,
             Content = new LogViewerView
             {
-                DataContext = new LogViewerViewModel(filePath, this)
+                DataContext = logViewerVm
             } 
         });
         _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
