@@ -112,6 +112,11 @@
       <Resource Include="Infrastructure\Resources\Images\Small\Pause.png" />
       <None Remove="Infrastructure\Resources\Images\Small\delete.png" />
       <Resource Include="Infrastructure\Resources\Images\Small\delete.png" />
+      <None Remove="Infrastructure\Resources\Images\Small\Filter.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\Filter.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\Filter.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\Filter.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\Filter.png" />
     </ItemGroup>
 
 </Project>

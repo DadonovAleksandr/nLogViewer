@@ -7,7 +7,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Views/Styles/RibbonFilterButtonStyle.xaml"/>
+                <ResourceDictionary Source="/Views/Styles/RibbonButtonStyle.xaml"/>
                 <ResourceDictionary Source="/Views/Styles/LogViewerStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <vm:ViewModelLocator x:Key="Locator"/>

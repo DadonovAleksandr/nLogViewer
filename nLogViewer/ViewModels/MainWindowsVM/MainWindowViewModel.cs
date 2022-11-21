@@ -42,6 +42,7 @@ internal class MainWindowViewModel : BaseViewModel
         AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
         DeleteLog = new LambdaCommand(OnDeleteLogExecuted, CanDeleteLogExecute);
         SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
+        SetSearch = new LambdaCommand(OnSetSearchExecuted, CanSetSearchExecute);
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         #endregion
@@ -133,6 +134,17 @@ internal class MainWindowViewModel : BaseViewModel
     private bool CanSetFilterExecute(object p) => true;
     #endregion
     
+    #region SetSearch
+    public ICommand SetSearch { get; }
+
+    private void OnSetSearchExecuted(object p)
+    {
+        
+    }
+
+    private bool CanSetSearchExecute(object p) => true;
+    #endregion
+
     #region About
     public ICommand About { get; }
     private void OnAboutExecuted(object p)
@@ -212,6 +224,20 @@ internal class MainWindowViewModel : BaseViewModel
         get => Filter.EnableFatalEvent;
         set => Set(ref Filter.EnableFatalEvent, value);
     }
+    #endregion
+
+    #region Поиск
+
+    private bool enableSearchEvent;
+    /// <summary>
+    /// Включение поиска
+    /// </summary>
+    public bool EnableSearchEvent
+    {
+        get => enableSearchEvent;
+        set => Set(ref enableSearchEvent, value);
+    } 
+    
     #endregion
 
     /// <summary>

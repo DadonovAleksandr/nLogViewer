@@ -139,7 +139,6 @@
                                         IsChecked="{Binding EnableTraceEvent}"
                                         Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
-                                        SmallImageSource="/Infrastructure/Resources/Images/Small/Trace.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Trace.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Trace&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Trace&quot;"
@@ -149,7 +148,6 @@
                                         IsChecked="{Binding EnableDebugEvent}"
                                         Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
-                                        SmallImageSource="/Infrastructure/Resources/Images/Small/Debug.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Debug.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Debug&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Debug&quot;"
@@ -159,7 +157,6 @@
                                         IsChecked="{Binding EnableInfoEvent}"
                                         Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
-                                        SmallImageSource="/Infrastructure/Resources/Images/Small/Info.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Info.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Info&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Info&quot;"
@@ -169,7 +166,6 @@
                                         IsChecked="{Binding EnableWarnEvent}"
                                         Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
-                                        SmallImageSource="/Infrastructure/Resources/Images/Small/Warning.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Warning.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Warn&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Warn&quot;"
@@ -179,7 +175,6 @@
                                         IsChecked="{Binding EnableErrorEvent}"
                                         Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
-                                        SmallImageSource="/Infrastructure/Resources/Images/Small/Error.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Error.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Error&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Error&quot;"
@@ -200,7 +195,15 @@
                 <RibbonGroup Header="Поиск" IsEnabled="True">
                     <StackPanel Orientation="Horizontal">
                         <RibbonTextBox TextBoxWidth="200" />
-                        <RibbonButton Content="Сброс"/>
+                        <RibbonToggleButton Label="Фильтр"
+                                            IsChecked="{Binding EnableSearchEvent}"
+                                            Command="{Binding SetFilter}"
+                                            Style="{StaticResource SearchButtonStyle}"
+                                            LargeImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"
+                                            ToolTipTitle="Поиск событий соответствующих фильтру"
+                                            ToolTipDescription="Включение/отключение отображения отфильтрованных событий"
+                                            ToolTipImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"/>
+                        
                     </StackPanel>
                 </RibbonGroup>
             </RibbonTab>  
