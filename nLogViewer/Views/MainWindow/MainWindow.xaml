@@ -197,7 +197,7 @@
                         <RibbonTextBox TextBoxWidth="200" />
                         <RibbonToggleButton Label="Фильтр"
                                             IsChecked="{Binding EnableSearchEvent}"
-                                            Command="{Binding SetFilter}"
+                                            Command="{Binding SetSearch}"
                                             Style="{StaticResource SearchButtonStyle}"
                                             LargeImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"
                                             ToolTipTitle="Поиск событий соответствующих фильтру"
