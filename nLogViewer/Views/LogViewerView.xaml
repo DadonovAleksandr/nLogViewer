@@ -15,6 +15,9 @@
         <c:LogEntryTypeToStringConvertor x:Key="EntryTypeToString"></c:LogEntryTypeToStringConvertor>
     </UserControl.Resources>
     <DockPanel>
+        <DockPanel.Resources>
+            <CollectionViewSource x:Key="LogEntryCollection" Source="{Binding LogEntries}"></CollectionViewSource>
+        </DockPanel.Resources>
         <ToolBar DockPanel.Dock="Top">
             <ToggleButton Command="{Binding AutoscrollCommand}" 
                           IsChecked="{Binding EnabledAutoscroll}"
@@ -62,7 +65,7 @@
                    Padding="2,0"
                    Background="CornflowerBlue"
                    Foreground="White"/>
-        <DataGrid ItemsSource="{Binding LogEntries}"
+        <DataGrid ItemsSource="{Binding Source={StaticResource LogEntryCollection}}"
                   SelectedItem="{Binding SelectedEntry}"
                   SelectedIndex="{Binding SelectedIndex}"
                   ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
