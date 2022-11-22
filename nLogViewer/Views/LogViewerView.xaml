@@ -16,7 +16,12 @@
     </UserControl.Resources>
     <DockPanel>
         <DockPanel.Resources>
-            <CollectionViewSource x:Key="LogEntryCollection" Source="{Binding LogEntries}"></CollectionViewSource>
+            <CollectionViewSource x:Key="LogEntryCollection" 
+                                  x:Name="LogEntryCollection"
+                                  Source="{Binding LogEntries}"
+                                  Filter="LogEntryCollection_OnFilter"
+                                  >
+            </CollectionViewSource>
         </DockPanel.Resources>
         <ToolBar DockPanel.Dock="Top">
             <ToggleButton Command="{Binding AutoscrollCommand}" 
@@ -65,6 +70,7 @@
                    Padding="2,0"
                    Background="CornflowerBlue"
                    Foreground="White"/>
+        <TextBox DockPanel.Dock="Top" x:Name="LogFilterText" TextChanged="LogFilterText_OnTextChanged"></TextBox>
         <DataGrid ItemsSource="{Binding Source={StaticResource LogEntryCollection}}"
                   SelectedItem="{Binding SelectedEntry}"
                   SelectedIndex="{Binding SelectedIndex}"
