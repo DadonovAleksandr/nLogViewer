@@ -79,10 +79,14 @@
                   CellStyle="{DynamicResource DataGridCellStyle}"
                   AutoGenerateColumns="False"
                   ScrollViewer.CanContentScroll="True"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  EnableRowVirtualization="True"
+                  
+                  >
             <DataGrid.Resources>
                 
             </DataGrid.Resources>
+            
             <DataGrid.Columns>
                 <DataGridTextColumn Header=" Дата и время " 
                                     Binding="{Binding EventDateTime, StringFormat={}{0:dd.MM.yy HH:mm:ss.fff}}"
