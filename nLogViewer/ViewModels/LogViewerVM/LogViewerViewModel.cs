@@ -1,5 +1,8 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using nLogViewer.Infrastructure.Commands;
@@ -19,7 +22,6 @@ internal class LogViewerViewModel : BaseViewModel
     }
 
     private MainWindowViewModel _mainVm;
-
     public MainWindowViewModel MainVm
     {
         get => _mainVm;
@@ -34,21 +36,25 @@ internal class LogViewerViewModel : BaseViewModel
     private static LogViewerState _state;
     private DispatcherTimer _timer;
     private LogEntryFilter _filter;
-
-    public ObservableCollection<LogEntryView> LogEntries { get; private set; }
+    private List<LogEntryView> _logEntries = new();
+    private readonly CollectionViewSource _filtredLogEntries = new();
+    
+    public ICollectionView FiltredLogEntries => _filtredLogEntries.View;
     public LogEntry SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
 
     public LogViewerViewModel()
     {
         _logger.Debug($"Вызов конструктора {GetType().Name}");
-        LogEntries = new ObservableCollection<LogEntryView>();
          
         _timer = new DispatcherTimer();
         _timer.Tick += new EventHandler(Process);
         _timer.Interval = new TimeSpan(0,0,2);
         _timer.Start();
-        
+
+        _filtredLogEntries.Source = _logEntries;
+        _filtredLogEntries.Filter += LogEntriesFilter;
+
         #region commands
         AutoscrollCommand = new LambdaCommand(OnEnableAutoscrollCommandExecuted, CanEnableAutoscrollCommandExecute);
         ClearCommand = new LambdaCommand(OnClearCommandExecuted, CanClearCommandExecute);
@@ -59,10 +65,17 @@ internal class LogViewerViewModel : BaseViewModel
     private void RefreshFilter()
     {
         _logger.Debug("Обновление фильтра событий");
-        _logger.Debug($"Переход в состояние {LogViewerState.ReadAllMsg}");
-        _state = LogViewerState.ReadAllMsg;
+        _filtredLogEntries.View.Refresh();
     }
-
+    private void LogEntriesFilter(object sender, FilterEventArgs e)
+    {
+        if(!(e.Item is LogEntryView entry)) return;
+          
+        if(_filter.CheckFilter(entry)) return;
+        
+        e.Accepted = false;
+    }
+    
     private void Process(object sender, EventArgs e)
     {
         _logger.Trace($"Просмотрщик лога в состоянии {_state}");
@@ -79,13 +92,13 @@ internal class LogViewerViewModel : BaseViewModel
                 _state = LogViewerState.ReadAllMsg;    
                 break;
             case LogViewerState.ReadAllMsg:
-                LogEntries.Clear();
+                _logEntries.Clear();
                 var data = _reader.GetAll();
                 foreach (var entry in data)
                 {
-                    if(_filter.CheckFilter(entry))
-                        LogEntries.Insert(0, new LogEntryView(entry));       
+                    _logEntries.Insert(0, new LogEntryView(entry));       
                 }
+                _filtredLogEntries.View.Refresh();
                 _logger.Trace($"Считывание всех событий");
                 _state = LogViewerState.ReadNewMsg;
                 _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
@@ -94,9 +107,10 @@ internal class LogViewerViewModel : BaseViewModel
                 var newData = _reader.GetNew();
                 foreach (var entry in newData)
                 {
-                    if(_filter.CheckFilter(entry))
-                        LogEntries.Insert(0, new LogEntryView(entry));
+                    _logEntries.Insert(0, new LogEntryView(entry));
                 }
+                if(newData.Any())
+                    _filtredLogEntries.View.Refresh();
                 _logger.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:
@@ -121,9 +135,9 @@ internal class LogViewerViewModel : BaseViewModel
     private void OnClearCommandExecuted(object p)
     {
         _logger.Debug($"Очистка всех событий");
-        LogEntries.Clear();
+        _logEntries.Clear();
     }
-    private bool CanClearCommandExecute(object p) => LogEntries.Count > 0;
+    private bool CanClearCommandExecute(object p) => _logEntries.Count > 0;
     #endregion
 
     #region Пауза отображения лога
@@ -143,7 +157,7 @@ internal class LogViewerViewModel : BaseViewModel
             _state = LogViewerState.ReadNewMsg;
         }
     }
-    private bool CanPauseCommandExecute(object p) => LogEntries.Count > 0;
+    private bool CanPauseCommandExecute(object p) => _logEntries.Count > 0;
     #endregion
 
     #endregion

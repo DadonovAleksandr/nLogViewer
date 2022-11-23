@@ -194,7 +194,7 @@
                 
                 <RibbonGroup Header="Поиск" IsEnabled="True">
                     <StackPanel Orientation="Horizontal">
-                        <RibbonTextBox TextBoxWidth="200" />
+                        <RibbonTextBox TextBoxWidth="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
                         <RibbonToggleButton Label="Фильтр"
                                             IsChecked="{Binding EnableSearchEvent}"
                                             Command="{Binding SetSearch}"

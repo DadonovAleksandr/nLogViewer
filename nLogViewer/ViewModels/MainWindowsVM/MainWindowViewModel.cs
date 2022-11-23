@@ -136,12 +136,7 @@ internal class MainWindowViewModel : BaseViewModel
     
     #region SetSearch
     public ICommand SetSearch { get; }
-
-    private void OnSetSearchExecuted(object p)
-    {
-        
-    }
-
+    private void OnSetSearchExecuted(object p) => RefreshFilter?.Invoke();
     private bool CanSetSearchExecute(object p) => true;
     #endregion
 
@@ -226,17 +221,25 @@ internal class MainWindowViewModel : BaseViewModel
     }
     #endregion
 
-    #region Поиск
+    #region Поиск по тексту
 
-    private bool enableSearchEvent;
     /// <summary>
     /// Включение поиска
     /// </summary>
     public bool EnableSearchEvent
     {
-        get => enableSearchEvent;
-        set => Set(ref enableSearchEvent, value);
+        get => Filter.EnableTextSearch;
+        set => Set(ref Filter.EnableTextSearch, value);
     } 
+    
+    /// <summary>
+    /// Текст поиска
+    /// </summary>
+    public string SearchText
+    {
+        get => Filter.TextSearch;
+        set => Set(ref Filter.TextSearch, value);
+    }
     
     #endregion
 
@@ -273,6 +276,9 @@ internal class MainWindowViewModel : BaseViewModel
         _appConfig.FilterConfig.EnableWarnEvent = Filter.EnableWarnEvent;
         _appConfig.FilterConfig.EnableErrorEvent = Filter.EnableErrorEvent;
         _appConfig.FilterConfig.EnableFatalEvent = Filter.EnableFatalEvent;
+
+        _appConfig.FilterConfig.EnableTextSearch = Filter.EnableTextSearch;
+        _appConfig.FilterConfig.TextSearch = Filter.TextSearch;
         #endregion
     }
 

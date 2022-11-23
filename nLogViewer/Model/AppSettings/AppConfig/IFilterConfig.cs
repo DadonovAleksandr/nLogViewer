@@ -8,4 +8,7 @@ public interface IFilterConfig
     bool EnableWarnEvent { get; set; }
     bool EnableErrorEvent { get; set; }
     bool EnableFatalEvent { get; set; } 
+    
+    bool EnableTextSearch { get; set; }
+    string TextSearch { get; set; }
 }

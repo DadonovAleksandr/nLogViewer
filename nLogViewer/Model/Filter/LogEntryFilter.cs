@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using nLogViewer.Model.AppSettings.AppConfig;
 
@@ -12,6 +13,9 @@ internal class LogEntryFilter : ILogEntryFilter
     public bool EnableWarnEvent;
     public bool EnableErrorEvent;
     public bool EnableFatalEvent;
+
+    public bool EnableTextSearch;
+    public string TextSearch;
     
     public LogEntryFilter(IFilterConfig filterConfig)
     {
@@ -24,6 +28,7 @@ internal class LogEntryFilter : ILogEntryFilter
             filterConfig.EnableWarnEvent,    
             filterConfig.EnableErrorEvent,    
             filterConfig.EnableFatalEvent,    
+            filterConfig.EnableTextSearch
         };
         var init = list.All(x => x == false);
         #endregion
@@ -35,6 +40,9 @@ internal class LogEntryFilter : ILogEntryFilter
         EnableWarnEvent = init || filterConfig.EnableWarnEvent;
         EnableErrorEvent = init || filterConfig.EnableErrorEvent;
         EnableFatalEvent = init || filterConfig.EnableFatalEvent;
+
+        EnableTextSearch = init || filterConfig.EnableTextSearch;
+        TextSearch = filterConfig.TextSearch ?? String.Empty;
     }
 
     public bool CheckFilter(ILogEntry entry)
@@ -49,7 +57,9 @@ internal class LogEntryFilter : ILogEntryFilter
             LogEntryType.Fatal => EnableFatalEvent,
             _ => false
         };
+
+        var textFilter = !EnableTextSearch || entry.Message.Contains(TextSearch) || entry.Source.Contains(TextSearch);
         
-        return typeFilter;
+        return typeFilter && textFilter;
     }
 }
