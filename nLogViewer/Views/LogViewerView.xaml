@@ -79,16 +79,18 @@
             
             <DataGrid.Columns>
                 <DataGridTextColumn Header=" Дата и время " 
-                                    Binding="{Binding EventDateTime, StringFormat={}{0:dd.MM.yy HH:mm:ss.fff}}"
+                                    Binding="{Binding EventDateTime, 
+                                    StringFormat={}{0:dd.MM.yy HH:mm:ss.fff}, Mode=OneWay}"
                                     Width="Auto"/>
                 <DataGridTextColumn Header=" Важность " 
-                                    Binding="{Binding EntryType, Converter={StaticResource EntryTypeToString}}"
+                                    Binding="{Binding EntryType, 
+                                    Converter={StaticResource EntryTypeToString}, Mode=OneWay}"
                                     Width="Auto"/>
                 <DataGridTextColumn Header=" Описание " 
-                                    Binding="{Binding Message}"
+                                    Binding="{Binding Message, Mode=OneWay}"
                                     Width="*"/>
                 <DataGridTextColumn Header=" Источник " 
-                                    Binding="{Binding Source}"
+                                    Binding="{Binding Source, Mode=OneWay}"
                                     Width="Auto"/>
             </DataGrid.Columns>
         </DataGrid>
