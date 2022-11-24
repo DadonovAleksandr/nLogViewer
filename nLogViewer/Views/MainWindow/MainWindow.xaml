@@ -192,7 +192,7 @@
                                         />
                 </RibbonGroup>
                 
-                <RibbonGroup Header="Поиск" IsEnabled="True">
+                <RibbonGroup Header="Поиск по тексту" IsEnabled="True">
                     <StackPanel Orientation="Horizontal">
                         <RibbonTextBox TextBoxWidth="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
                         <RibbonToggleButton Label="Фильтр"
