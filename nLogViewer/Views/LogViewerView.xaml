@@ -74,7 +74,9 @@
                   EnableRowVirtualization="True"
                   >
             <DataGrid.Resources>
-                
+                <Style TargetType="{x:Type TextBlock}" x:Key="WrapText">
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                </Style>
             </DataGrid.Resources>
             
             <DataGrid.Columns>
@@ -88,6 +90,7 @@
                                     Width="Auto"/>
                 <DataGridTextColumn Header=" Описание " 
                                     Binding="{Binding Message, Mode=OneWay}"
+                                    ElementStyle="{StaticResource WrapText}"
                                     Width="*"/>
                 <DataGridTextColumn Header=" Источник " 
                                     Binding="{Binding Source, Mode=OneWay}"
