@@ -20,8 +20,7 @@
                           IsChecked="{Binding EnabledAutoscroll}"
                           MinWidth="120">
                 <StackPanel Orientation="Horizontal">
-                    <Image Source="/Infrastructure/Resources/Images/Small/ScrollDown.png"
-                           Height="20"/>
+                    <Image Source="/Infrastructure/Resources/Images/Small/ScrollDown.png" Height="20"/>
                     <TextBlock Text="Автопрокрутка"
                                VerticalAlignment="Center"
                                Padding="2,0,0,0"/>

@@ -136,6 +136,7 @@ internal class LogViewerViewModel : BaseViewModel
     {
         _logger.Debug($"Очистка всех событий");
         _logEntries.Clear();
+        _filtredLogEntries.View.Refresh();
     }
     private bool CanClearCommandExecute(object p) => _logEntries.Count > 0;
     #endregion
