@@ -18,8 +18,7 @@
         <ToolBar DockPanel.Dock="Top">
             <ToggleButton Command="{Binding AutoscrollCommand}" 
                           IsChecked="{Binding EnabledAutoscroll}"
-                          MinWidth="120"
-                          >
+                          MinWidth="120">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Infrastructure/Resources/Images/Small/ScrollDown.png"
                            Height="20"/>
@@ -29,12 +28,9 @@
                 </StackPanel>
             </ToggleButton>
             <Separator/>
-            <Button Command="{Binding ClearCommand}"
-                    MinWidth="120"
-                    >
+            <Button Command="{Binding ClearCommand}" MinWidth="120">
                 <StackPanel Orientation="Horizontal">
-                    <Image Source="/Infrastructure/Resources/Images/Small/Clear.png"
-                           Height="20"/>
+                    <Image Source="/Infrastructure/Resources/Images/Small/Clear.png" Height="20"/>
                     <TextBlock Text="Очистить"
                                VerticalAlignment="Center"
                                Padding="2,0,0,0"/>
@@ -44,11 +40,9 @@
 
             <ToggleButton Command="{Binding PauseCommand}" 
                           IsChecked="{Binding EnabledPause}"
-                          MinWidth="120"
-                          >
+                          MinWidth="120" >
                 <StackPanel Orientation="Horizontal">
-                    <Image Source="/Infrastructure/Resources/Images/Small/Pause.png"
-                           Height="20"/>
+                    <Image Source="/Infrastructure/Resources/Images/Small/Pause.png" Height="20"/>
                     <TextBlock Text="Пауза"
                                VerticalAlignment="Center"
                                Padding="2,0,0,0"/>
@@ -97,6 +91,5 @@
                                     Width="Auto"/>
             </DataGrid.Columns>
         </DataGrid>
-        
     </DockPanel>
 </UserControl>

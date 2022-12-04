@@ -4,11 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:nLogViewer.ViewModels"
         xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
-        xmlns:view="clr-namespace:nLogViewer.Views"
-        xmlns:local="clr-namespace:nLogViewer"
-        xmlns:sys="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="600" Width="1024"
         DataContext="{Binding MainWindowViewModel, Source={StaticResource Locator}}"
@@ -44,34 +40,28 @@
                     <RibbonApplicationMenuItem Header="Новая сессия"
                                                Command="{Binding NewSession}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Add.png"
-                                               KeyTip="N"
-                    />
+                                               KeyTip="N"/>
                     <RibbonApplicationMenuItem Header="Загрузить сессию"
                                                Command="{Binding LoadSession}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Open.png"
-                                               KeyTip="L"
-                    />
+                                               KeyTip="L"/>
                     <RibbonApplicationMenuItem Header="Сохранить сессию"
                                                Command="{Binding SaveSession}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Save.png"
-                                               KeyTip="S"
-                                               />
+                                               KeyTip="S"/>
                     <RibbonApplicationMenuItem Header="Экспорт лога"
                                                Command="{Binding AddFolder}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Export.png"
-                                               KeyTip="E"
-                                               />
+                                               KeyTip="E"/>
                     <RibbonApplicationMenuItem Header="Настройки"
                                                Command="{Binding DeleteLog}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Settings.png"
                                                CommandParameter="0"
-                                               ToolTip="Открыть диалоговое окно настроек приложения"
-                                               />
+                                               ToolTip="Открыть диалоговое окно настроек приложения"/>
                     <RibbonApplicationMenuItem Header="О программе"
                                                Command="{Binding About}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Info.png"
-                                               KeyTip="A"
-                                               />
+                                               KeyTip="A"/>
                     
                     <RibbonApplicationMenu.FooterPaneContent>
                         <Grid>
@@ -116,94 +106,74 @@
             
             <RibbonTab Header="Главная">
                 <RibbonGroup Header="Общие">
-                    <RibbonButton Label="Добавить файл"
-                                  Command="{Binding AddFile}"
+                    <RibbonButton Label="Добавить файл" Command="{Binding AddFile}"
                                   ToolTip="Добавить новый просмотрщик лога"
-                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"
-                                  />
-                    <RibbonButton Label="Добавить папку"
-                                  Command="{Binding AddFolder}"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"/>
+                    <RibbonButton Label="Добавить папку" Command="{Binding AddFolder}"
                                   ToolTip="Добавить новый просмотрщик лога"
-                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"
-                    />
-                    <RibbonButton Label="Удалить лог"
-                                  Command="{Binding DeleteLog}"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"/>
+                    <RibbonButton Label="Удалить лог" Command="{Binding DeleteLog}"
                                   ToolTip="Удалить текущий просмотрщик лога"
-                                  SmallImageSource="/Infrastructure/Resources/Images/Small/delete.png"
-                    />
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/delete.png"/>
                 </RibbonGroup>
 
                 <!-- Фильтры -->
                 <RibbonGroup Header="Фильтр">                                
-                    <RibbonToggleButton Label="Trace"
+                    <RibbonToggleButton Label="Trace" Command="{Binding SetFilter}"
                                         IsChecked="{Binding EnableTraceEvent}"
-                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Trace.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Trace&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Trace&quot;"
-                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Trace.png"
-                    />
-                    <RibbonToggleButton Label="Debug"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Trace.png"/>
+                    <RibbonToggleButton Label="Debug" Command="{Binding SetFilter}"
                                         IsChecked="{Binding EnableDebugEvent}"
-                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Debug.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Debug&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Debug&quot;"
-                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Debug.png"
-                                        />
-                    <RibbonToggleButton Label="Info"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Debug.png"/>
+                    <RibbonToggleButton Label="Info" Command="{Binding SetFilter}"
                                         IsChecked="{Binding EnableInfoEvent}"
-                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Info.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Info&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Info&quot;"
-                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Info.png"
-                                        />
-                    <RibbonToggleButton Label="Warn"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Info.png"/>
+                    <RibbonToggleButton Label="Warn" Command="{Binding SetFilter}"
                                         IsChecked="{Binding EnableWarnEvent}"
-                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Warning.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Warn&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Warn&quot;"
-                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Warning.png"
-                                        />
-                    <RibbonToggleButton Label="Error"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Warning.png"/>
+                    <RibbonToggleButton Label="Error" Command="{Binding SetFilter}"
                                         IsChecked="{Binding EnableErrorEvent}"
-                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Error.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Error&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Error&quot;"
-                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Error.png"
-                                        />
-                    <RibbonToggleButton Label="Fatal"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Error.png"/>
+                    <RibbonToggleButton Label="Fatal" Command="{Binding SetFilter}"
                                         IsChecked="{Binding EnableFatalEvent}"
-                                        Command="{Binding SetFilter}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Fatal.png"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Fatal.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Fatal&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Fatal&quot;"
-                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Fatal.png"
-                                        />
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Fatal.png"/>
                 </RibbonGroup>
                 
                 <RibbonGroup Header="Поиск по тексту" IsEnabled="True">
                     <StackPanel Orientation="Horizontal">
                         <RibbonTextBox TextBoxWidth="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
-                        <RibbonToggleButton Label="Поиск"
+                        <RibbonToggleButton Label="Поиск" Command="{Binding SetSearch}"
                                             IsChecked="{Binding EnableSearchEvent}"
-                                            Command="{Binding SetSearch}"
                                             Style="{StaticResource SearchButtonStyle}"
                                             LargeImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"
                                             ToolTipTitle="Поиск событий соответствующих фильтру"
                                             ToolTipDescription="Включение/отключение отображения отфильтрованных событий"
                                             ToolTipImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"/>
-                        
                     </StackPanel>
                 </RibbonGroup>
             </RibbonTab>  
