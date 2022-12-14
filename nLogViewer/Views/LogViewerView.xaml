@@ -49,12 +49,10 @@
             </ToggleButton>
             <Separator/>
         </ToolBar>
-        <TextBlock DockPanel.Dock="Top" 
-                   Text="Log viewer"
-                   FontWeight="Bold"
-                   Padding="2,0"
-                   Background="CornflowerBlue"
-                   Foreground="White"/>
+        <Border DockPanel.Dock="Top" 
+                Height="2"
+                CornerRadius="1"
+                Background="CornflowerBlue" />
         <DataGrid ItemsSource="{Binding FiltredLogEntries}"
                   SelectedItem="{Binding SelectedEntry}"
                   SelectedIndex="{Binding SelectedIndex}"
