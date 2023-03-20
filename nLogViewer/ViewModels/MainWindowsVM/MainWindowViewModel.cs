@@ -288,7 +288,7 @@ internal class MainWindowViewModel : BaseViewModel
     /// <exception cref="NotImplementedException"></exception>
     private void ViewRecentLogs()
     {
-        foreach (var entry in _recentLogs)
+        foreach (var entry in _recentLogs.ToList())
         {
             _logger.Debug($"Открываем ранее {(entry.IsFolder ? "открытую директорию" : "открытый лог-файл")} \"{entry.Path}\"");
             var path = entry.IsFolder ? FindLastFileInDirectory(entry.Path) : entry.Path;
@@ -305,6 +305,11 @@ internal class MainWindowViewModel : BaseViewModel
     private string FindLastFileInDirectory(string dirPath)
     {
         var directoryInfo = new DirectoryInfo(dirPath);
+        if (!directoryInfo.Exists)
+        {
+            _logger.Error($"Директория {dirPath} отсутствует");
+            return string.Empty;
+        }
         var filesInfo = directoryInfo.GetFiles();
         if (filesInfo.Length == 0 && filesInfo.All(x => x.Extension != ".log"))
         {
