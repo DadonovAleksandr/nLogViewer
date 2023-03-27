@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NLog;
+using nLogViewer.Views;
 
 namespace nLogViewer.Model;
 
@@ -76,8 +77,8 @@ internal class FileLogReader : ILogReader
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
-                throw;
+                log.Error($"Ошибка при парсинге события: {e.Message}");
+                new ErrorWindow($"Ошибка при парсинге события: {e.Message}").ShowDialog();
             }
             
         }

@@ -117,6 +117,10 @@
       <Resource Include="Infrastructure\Resources\Images\Medium\Filter.png" />
       <None Remove="Infrastructure\Resources\Images\Large\Filter.png" />
       <Resource Include="Infrastructure\Resources\Images\Large\Filter.png" />
+      <None Remove="Infrastructure\Resources\Images\Large\bug-report.png" />
+      <Resource Include="Infrastructure\Resources\Images\Large\bug-report.png" />
+      <None Remove="Infrastructure\Resources\Images\Medium\bug.png" />
+      <Resource Include="Infrastructure\Resources\Images\Medium\bug.png" />
     </ItemGroup>
 
 </Project>
