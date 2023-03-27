@@ -8,20 +8,20 @@ namespace nLogViewer.Model;
 
 internal class FileLogReader : ILogReader
 {
-    private static Logger _logger = LogManager.GetCurrentClassLogger();
+    private static Logger log = LogManager.GetCurrentClassLogger();
     private readonly string _path;
     private int _count;
 
     public FileLogReader(string path)
     {
-        _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
+        log.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
         _path = path;
     }
 
 
     public IEnumerable<ILogEntry> GetAll()
     {
-        _logger.Trace($"Получение всех записей из файла {_path}");
+        log.Trace($"Получение всех записей из файла {_path}");
 
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;
@@ -31,7 +31,7 @@ internal class FileLogReader : ILogReader
     
     public IEnumerable<ILogEntry> GetNew()
     {
-        _logger.Trace($"Получение новых записей из файла {_path}");
+        log.Trace($"Получение новых записей из файла {_path}");
         
         string[] data = ReadLogFile().ToArray();
         if (data.Length > _count)
@@ -50,7 +50,7 @@ internal class FileLogReader : ILogReader
     {
         if (!File.Exists(_path))
         {
-            _logger.Error($"Файл {_path} не существует");
+            log.Error($"Файл {_path} не существует");
             return Enumerable.Empty<string>();
         }
         FileInfo file = new FileInfo(_path);
@@ -68,26 +68,22 @@ internal class FileLogReader : ILogReader
         var logEntries = new List<ILogEntry>();
         foreach (var item in data)
         {
-            var parts = item.Split("|").Select(x=>x.Trim()).ToArray();
-            logEntries.Add(new LogEntry(DateTime.Parse(parts[0]), ParseStringToLogEntryType(parts[1]), parts[2], parts[3]));
+            try
+            {
+                var parts = item.Split("|").Select(x=>x.Trim()).ToArray();
+                var type = Enum.Parse<LogEntryType>(parts[1], true);
+                logEntries.Add(new LogEntry(DateTime.Parse(parts[0]), type, parts[2], parts[3]));
+            }
+            catch (Exception e)
+            {
+                log.Error(e.Message);
+                throw;
+            }
+            
         }
         return logEntries;
     }
-
-    private LogEntryType ParseStringToLogEntryType(string type)
-    {
-        return type.ToUpper() switch
-        {
-            "TRACE" => LogEntryType.Trace,
-            "DEBUG" => LogEntryType.Debug,
-            "INFO" => LogEntryType.Info,
-            "WARN" => LogEntryType.Warn,
-            "ERROR" => LogEntryType.Error,
-            "FATAL" => LogEntryType.Fatal,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
-
+    
     public override string ToString() => $"Объект чтения лога из файла {_path}";
     
 }
