@@ -121,6 +121,8 @@
       <Resource Include="Infrastructure\Resources\Images\Large\bug-report.png" />
       <None Remove="Infrastructure\Resources\Images\Medium\bug.png" />
       <Resource Include="Infrastructure\Resources\Images\Medium\bug.png" />
+      <None Remove="Infrastructure\Resources\Images\256px\log.png" />
+      <Resource Include="Infrastructure\Resources\Images\256px\log.png" />
     </ItemGroup>
 
 </Project>
