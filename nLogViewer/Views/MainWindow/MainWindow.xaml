@@ -120,42 +120,42 @@
 
                 <!-- Фильтры -->
                 <RibbonGroup Header="Фильтр">                                
-                    <RibbonToggleButton Label="Trace" Command="{Binding SetFilter}"
+                    <RibbonToggleButton Label="Trace"
                                         IsChecked="{Binding EnableTraceEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Trace.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Trace&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Trace&quot;"
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Trace.png"/>
-                    <RibbonToggleButton Label="Debug" Command="{Binding SetFilter}"
+                    <RibbonToggleButton Label="Debug"
                                         IsChecked="{Binding EnableDebugEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Debug.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Debug&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Debug&quot;"
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Debug.png"/>
-                    <RibbonToggleButton Label="Info" Command="{Binding SetFilter}"
+                    <RibbonToggleButton Label="Info"
                                         IsChecked="{Binding EnableInfoEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Info.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Info&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Info&quot;"
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Info.png"/>
-                    <RibbonToggleButton Label="Warn" Command="{Binding SetFilter}"
+                    <RibbonToggleButton Label="Warn"
                                         IsChecked="{Binding EnableWarnEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Warning.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Warn&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Warn&quot;"
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Warning.png"/>
-                    <RibbonToggleButton Label="Error" Command="{Binding SetFilter}"
+                    <RibbonToggleButton Label="Error"
                                         IsChecked="{Binding EnableErrorEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         LargeImageSource="/Infrastructure/Resources/Images/Medium/Error.png"
                                         ToolTipTitle="Фильтр для событий с важностью &quot;Error&quot;"
                                         ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Error&quot;"
                                         ToolTipImageSource="/Infrastructure/Resources/Images/Large/Error.png"/>
-                    <RibbonToggleButton Label="Fatal" Command="{Binding SetFilter}"
+                    <RibbonToggleButton Label="Fatal"
                                         IsChecked="{Binding EnableFatalEvent}"
                                         Style="{StaticResource FilterButtonStyle}"
                                         SmallImageSource="/Infrastructure/Resources/Images/Small/Fatal.png"
@@ -168,7 +168,7 @@
                 <RibbonGroup Header="Поиск по тексту" IsEnabled="True">
                     <StackPanel Orientation="Horizontal">
                         <RibbonTextBox TextBoxWidth="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
-                        <RibbonToggleButton Label="Поиск" Command="{Binding SetSearch}"
+                        <RibbonToggleButton Label="Поиск"
                                             IsChecked="{Binding EnableSearchEvent}"
                                             Style="{StaticResource SearchButtonStyle}"
                                             LargeImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"

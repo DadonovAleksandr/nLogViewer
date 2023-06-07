@@ -19,5 +19,4 @@ internal interface ILogEntryFilter
     string TextSearch { get; set; }
     
     bool CheckFilter(ILogEntry entry);
-    void Refresh();
 }

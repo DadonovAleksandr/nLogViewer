@@ -9,14 +9,109 @@ namespace nLogViewer.Services.Filter;
 internal class LogEntryFilter : ILogEntryFilter
 {
     public event RefreshFilter? RefreshFilter;
-    public bool EnableTraceEvent { get; set; }
-    public bool EnableDebugEvent { get; set; }
-    public bool EnableInfoEvent { get; set; }
-    public bool EnableWarnEvent { get; set; }
-    public bool EnableErrorEvent { get; set; }
-    public bool EnableFatalEvent { get; set; }
-    public bool EnableTextSearch { get; set; }
-    public string TextSearch { get; set; }
+
+    private bool _enableTraceEvent;
+    public bool EnableTraceEvent
+    {
+        get => _enableTraceEvent;
+        set
+        {
+            if(_enableTraceEvent == value)
+                return;
+            _enableTraceEvent = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private bool _enableDebugEvent;
+    public bool EnableDebugEvent 
+    {
+        get => _enableDebugEvent;
+        set
+        {
+            if(_enableDebugEvent == value)
+                return;
+            _enableDebugEvent = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private bool _enableInfoEvent;
+    public bool EnableInfoEvent 
+    {
+        get => _enableInfoEvent;
+        set
+        {
+            if(_enableInfoEvent == value)
+                return;
+            _enableInfoEvent = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private bool _enableWarnEvent;
+    public bool EnableWarnEvent 
+    {
+        get => _enableWarnEvent;
+        set
+        {
+            if(_enableWarnEvent == value)
+                return;
+            _enableWarnEvent = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private bool _enableErrorEvent;
+    public bool EnableErrorEvent 
+    {
+        get => _enableErrorEvent;
+        set
+        {
+            if(_enableErrorEvent == value)
+                return;
+            _enableErrorEvent = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private bool _enableFatalEvent;
+    public bool EnableFatalEvent 
+    {
+        get => _enableFatalEvent;
+        set
+        {
+            if(_enableFatalEvent == value)
+                return;
+            _enableFatalEvent = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private bool _enableTextSearch;
+    public bool EnableTextSearch 
+    {
+        get => _enableTextSearch;
+        set
+        {
+            if(_enableTextSearch == value)
+                return;
+            _enableTextSearch = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
+    private string _textSearch;
+    public string TextSearch 
+    {
+        get => _textSearch;
+        set
+        {
+            _textSearch = value;
+            RefreshFilter?.Invoke();
+        }
+    }
+    
 
     public LogEntryFilter()
     {
@@ -64,6 +159,4 @@ internal class LogEntryFilter : ILogEntryFilter
         
         return typeFilter && textFilter;
     }
-
-    public void Refresh() => RefreshFilter?.Invoke();
 }

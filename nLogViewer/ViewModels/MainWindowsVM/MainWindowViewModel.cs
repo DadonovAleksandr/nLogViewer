@@ -38,8 +38,6 @@ internal class MainWindowViewModel : BaseViewModel
         AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
         AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
         DeleteLog = new LambdaCommand(OnDeleteLogExecuted, CanDeleteLogExecute);
-        SetFilter = new LambdaCommand(OnSetFilterExecuted, CanSetFilterExecute);
-        SetSearch = new LambdaCommand(OnSetSearchExecuted, CanSetSearchExecute);
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         #endregion
@@ -123,18 +121,6 @@ internal class MainWindowViewModel : BaseViewModel
         _logViewer.Items.Remove(_logViewer.SelectedItem);
     }
     private bool CanDeleteLogExecute(object p) => !(_logViewer is null) && _logViewer.Items.Count > 0;
-    #endregion
-    
-    #region SetFilter
-    public ICommand SetFilter { get; }
-    private void OnSetFilterExecuted(object p) => _filter?.Refresh();
-    private bool CanSetFilterExecute(object p) => true;
-    #endregion
-    
-    #region SetSearch
-    public ICommand SetSearch { get; }
-    private void OnSetSearchExecuted(object p) => _filter?.Refresh();
-    private bool CanSetSearchExecute(object p) => true;
     #endregion
 
     #region About
