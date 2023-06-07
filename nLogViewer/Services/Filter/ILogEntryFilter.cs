@@ -1,5 +1,7 @@
 ﻿
-namespace nLogViewer.Model.Filter;
+using nLogViewer.Model;
+
+namespace nLogViewer.Services.Filter;
 
 public delegate void RefreshFilter();
 

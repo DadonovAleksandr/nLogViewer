@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using nLogViewer.Model.Filter;
+using nLogViewer.Services.Filter;
 
 namespace nLogViewer.Services;
 

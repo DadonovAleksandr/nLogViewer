@@ -13,7 +13,7 @@ using nLogViewer.Infrastructure.Helpers.FileProvider;
 using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
-using nLogViewer.Model.Filter;
+using nLogViewer.Services.Filter;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.Views;
 using Ookii.Dialogs.Wpf;
@@ -326,7 +326,6 @@ internal class MainWindowViewModel : BaseViewModel
     {
         var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
         logViewerVm.Reader = new FileLogReader(filePath);
-        //logViewerVm.MainVm = this;
         
         _logViewer.Items.Add(new TabItem
         {

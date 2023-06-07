@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 
-namespace nLogViewer.Model.Filter;
-
+namespace nLogViewer.Services.Filter;
 
 internal class LogEntryFilter : ILogEntryFilter
 {

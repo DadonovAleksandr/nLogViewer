@@ -8,7 +8,7 @@ using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
-using nLogViewer.Model.Filter;
+using nLogViewer.Services.Filter;
 using nLogViewer.ViewModels.Base;
 
 namespace nLogViewer.ViewModels;
@@ -21,18 +21,6 @@ internal class LogViewerViewModel : BaseViewModel
         get => _reader;
         set => _reader = value;
     }
-
-    // private MainWindowViewModel _mainVm;
-    // public MainWindowViewModel MainVm
-    // {
-    //     get => _mainVm;
-    //     set
-    //     {
-    //         _mainVm = value;
-    //         _mainVm.RefreshFilter += RefreshFilter;
-    //         //_filter = _mainVm.Filter;
-    //     }
-    // }
     
     private static LogViewerState _state;
     private DispatcherTimer _timer;
