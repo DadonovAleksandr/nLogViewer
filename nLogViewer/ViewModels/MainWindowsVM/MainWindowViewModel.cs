@@ -25,18 +25,15 @@ internal class MainWindowViewModel : BaseViewModel
     private Selector _logViewer;
     private IRecentLogsRepository _recentLogs;
     private IAppConfig _appConfig;
-    public LogEntryFilter Filter;
-    public Action RefreshFilter;
-    
+    private readonly ILogEntryFilter? _filter;
     
     public MainWindowViewModel()
     {
         _logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
-        Filter = new LogEntryFilter(_appConfig.FilterConfig);
+        _filter = App.Host.Services.GetService<ILogEntryFilter>();
         
-
         #region commands
         AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
         AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
@@ -130,13 +127,13 @@ internal class MainWindowViewModel : BaseViewModel
     
     #region SetFilter
     public ICommand SetFilter { get; }
-    private void OnSetFilterExecuted(object p) => RefreshFilter?.Invoke();
+    private void OnSetFilterExecuted(object p) => _filter?.Refresh();
     private bool CanSetFilterExecute(object p) => true;
     #endregion
     
     #region SetSearch
     public ICommand SetSearch { get; }
-    private void OnSetSearchExecuted(object p) => RefreshFilter?.Invoke();
+    private void OnSetSearchExecuted(object p) => _filter?.Refresh();
     private bool CanSetSearchExecute(object p) => true;
     #endregion
 
@@ -176,48 +173,48 @@ internal class MainWindowViewModel : BaseViewModel
     /// </summary>
     public bool EnableTraceEvent
     {
-        get => Filter.EnableTraceEvent;
-        set => Set(ref Filter.EnableTraceEvent, value);
+        get => _filter.EnableTraceEvent;
+        set => _filter.EnableTraceEvent = value;
     } 
     /// <summary>
     /// Debug
     /// </summary>
     public bool EnableDebugEvent
     {
-        get => Filter.EnableDebugEvent;
-        set => Set(ref Filter.EnableDebugEvent, value);
+        get => _filter.EnableDebugEvent;
+        set => _filter.EnableDebugEvent = value;
     }
     /// <summary>
     /// Info
     /// </summary>
     public bool EnableInfoEvent
     {
-        get => Filter.EnableInfoEvent;
-        set => Set(ref Filter.EnableInfoEvent, value);
+        get => _filter.EnableInfoEvent;
+        set => _filter.EnableInfoEvent = value;
     }
     /// <summary>
     /// Warning
     /// </summary>
     public bool EnableWarnEvent
     {
-        get => Filter.EnableWarnEvent;
-        set => Set(ref Filter.EnableWarnEvent, value);
+        get => _filter.EnableWarnEvent;
+        set => _filter.EnableWarnEvent = value;
     }
     /// <summary>
     /// Error
     /// </summary>
     public bool EnableErrorEvent
     {
-        get => Filter.EnableErrorEvent;
-        set => Set(ref Filter.EnableErrorEvent, value);
+        get => _filter.EnableErrorEvent;
+        set => _filter.EnableErrorEvent = value;
     }
     /// <summary>
     /// Fatal
     /// </summary>
     public bool EnableFatalEvent
     {
-        get => Filter.EnableFatalEvent;
-        set => Set(ref Filter.EnableFatalEvent, value);
+        get => _filter.EnableFatalEvent;
+        set => _filter.EnableFatalEvent = value;
     }
     #endregion
 
@@ -228,8 +225,8 @@ internal class MainWindowViewModel : BaseViewModel
     /// </summary>
     public bool EnableSearchEvent
     {
-        get => Filter.EnableTextSearch;
-        set => Set(ref Filter.EnableTextSearch, value);
+        get => _filter.EnableTextSearch;
+        set => _filter.EnableTextSearch = value;
     } 
     
     /// <summary>
@@ -237,8 +234,8 @@ internal class MainWindowViewModel : BaseViewModel
     /// </summary>
     public string SearchText
     {
-        get => Filter.TextSearch;
-        set => Set(ref Filter.TextSearch, value);
+        get => _filter.TextSearch;
+        set => _filter.TextSearch = value;
     }
     
     #endregion
@@ -270,15 +267,15 @@ internal class MainWindowViewModel : BaseViewModel
         _recentLogs?.Save();
 
         #region Cохранение настроек фильтра
-        _appConfig.FilterConfig.EnableTraceEvent = Filter.EnableTraceEvent;
-        _appConfig.FilterConfig.EnableDebugEvent = Filter.EnableDebugEvent;
-        _appConfig.FilterConfig.EnableInfoEvent = Filter.EnableInfoEvent;
-        _appConfig.FilterConfig.EnableWarnEvent = Filter.EnableWarnEvent;
-        _appConfig.FilterConfig.EnableErrorEvent = Filter.EnableErrorEvent;
-        _appConfig.FilterConfig.EnableFatalEvent = Filter.EnableFatalEvent;
+        _appConfig.FilterConfig.EnableTraceEvent = _filter.EnableTraceEvent;
+        _appConfig.FilterConfig.EnableDebugEvent = _filter.EnableDebugEvent;
+        _appConfig.FilterConfig.EnableInfoEvent = _filter.EnableInfoEvent;
+        _appConfig.FilterConfig.EnableWarnEvent = _filter.EnableWarnEvent;
+        _appConfig.FilterConfig.EnableErrorEvent = _filter.EnableErrorEvent;
+        _appConfig.FilterConfig.EnableFatalEvent = _filter.EnableFatalEvent;
 
-        _appConfig.FilterConfig.EnableTextSearch = Filter.EnableTextSearch;
-        _appConfig.FilterConfig.TextSearch = Filter.TextSearch;
+        _appConfig.FilterConfig.EnableTextSearch = _filter.EnableTextSearch;
+        _appConfig.FilterConfig.TextSearch = _filter.TextSearch;
         #endregion
     }
 
@@ -329,7 +326,7 @@ internal class MainWindowViewModel : BaseViewModel
     {
         var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
         logViewerVm.Reader = new FileLogReader(filePath);
-        logViewerVm.MainVm = this;
+        //logViewerVm.MainVm = this;
         
         _logViewer.Items.Add(new TabItem
         {
@@ -354,6 +351,4 @@ internal class MainWindowViewModel : BaseViewModel
         var configPath = Path.Combine(appDataPath, "nLogViewer", "recent-logs.json");
         return new RecentLogsFileRepository(configPath, new JsonFileProvider<List<RecentLogEntry>>());
     }
-    
-    
 }

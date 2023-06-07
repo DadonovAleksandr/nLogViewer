@@ -5,20 +5,22 @@ using nLogViewer.Model.AppSettings.AppConfig;
 
 namespace nLogViewer.Model.Filter;
 
+
 internal class LogEntryFilter : ILogEntryFilter
 {
-    public bool EnableTraceEvent;
-    public bool EnableDebugEvent;
-    public bool EnableInfoEvent;
-    public bool EnableWarnEvent;
-    public bool EnableErrorEvent;
-    public bool EnableFatalEvent;
+    public event RefreshFilter? RefreshFilter;
+    public bool EnableTraceEvent { get; set; }
+    public bool EnableDebugEvent { get; set; }
+    public bool EnableInfoEvent { get; set; }
+    public bool EnableWarnEvent { get; set; }
+    public bool EnableErrorEvent { get; set; }
+    public bool EnableFatalEvent { get; set; }
+    public bool EnableTextSearch { get; set; }
+    public string TextSearch { get; set; }
 
-    public bool EnableTextSearch;
-    public string TextSearch;
-    
-    public LogEntryFilter(IFilterConfig filterConfig)
+    public LogEntryFilter()
     {
+        var filterConfig = AppConfig.GetConfigFromDefaultPath().FilterConfig;
         #region Проверка, что настройик не "пустые"
         var list = new List<bool>
         {
@@ -62,4 +64,6 @@ internal class LogEntryFilter : ILogEntryFilter
         
         return typeFilter && textFilter;
     }
+
+    public void Refresh() => RefreshFilter?.Invoke();
 }

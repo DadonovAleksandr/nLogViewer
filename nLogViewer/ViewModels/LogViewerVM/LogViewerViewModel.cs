@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
 using nLogViewer.Model.Filter;
@@ -21,21 +22,21 @@ internal class LogViewerViewModel : BaseViewModel
         set => _reader = value;
     }
 
-    private MainWindowViewModel _mainVm;
-    public MainWindowViewModel MainVm
-    {
-        get => _mainVm;
-        set
-        {
-            _mainVm = value;
-            _mainVm.RefreshFilter += RefreshFilter;
-            _filter = _mainVm.Filter;
-        }
-    }
+    // private MainWindowViewModel _mainVm;
+    // public MainWindowViewModel MainVm
+    // {
+    //     get => _mainVm;
+    //     set
+    //     {
+    //         _mainVm = value;
+    //         _mainVm.RefreshFilter += RefreshFilter;
+    //         //_filter = _mainVm.Filter;
+    //     }
+    // }
     
     private static LogViewerState _state;
     private DispatcherTimer _timer;
-    private LogEntryFilter _filter;
+    private ILogEntryFilter? _filter;
     private List<LogEntryView> _logEntries = new();
     private readonly CollectionViewSource _filtredLogEntries = new();
     
@@ -52,6 +53,12 @@ internal class LogViewerViewModel : BaseViewModel
         _timer.Interval = new TimeSpan(0,0,2);
         _timer.Start();
 
+        _filter = App.Host.Services.GetService<ILogEntryFilter>();
+        _filter.RefreshFilter += () =>
+        {
+            _logger.Debug("Обновление фильтра событий");
+            _filtredLogEntries.View.Refresh();
+        };
         _filtredLogEntries.Source = _logEntries;
         _filtredLogEntries.Filter += LogEntriesFilter;
 
@@ -70,7 +77,6 @@ internal class LogViewerViewModel : BaseViewModel
     private void LogEntriesFilter(object sender, FilterEventArgs e)
     {
         if(!(e.Item is LogEntryView entry)) return;
-          
         if(_filter.CheckFilter(entry)) return;
         
         e.Accepted = false;
