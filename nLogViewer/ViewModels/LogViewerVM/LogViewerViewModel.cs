@@ -56,12 +56,7 @@ internal class LogViewerViewModel : BaseViewModel
         PauseCommand = new LambdaCommand(OnPauseCommandExecuted, CanPauseCommandExecute);
         #endregion
     }
-
-    private void RefreshFilter()
-    {
-        _logger.Debug("Обновление фильтра событий");
-        _filtredLogEntries.View.Refresh();
-    }
+    
     private void LogEntriesFilter(object sender, FilterEventArgs e)
     {
         if(!(e.Item is LogEntryView entry)) return;

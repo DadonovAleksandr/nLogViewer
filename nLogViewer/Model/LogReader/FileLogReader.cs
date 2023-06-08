@@ -9,20 +9,20 @@ namespace nLogViewer.Model;
 
 internal class FileLogReader : ILogReader
 {
-    private static Logger log = LogManager.GetCurrentClassLogger();
+    private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     private readonly string _path;
     private int _count;
 
     public FileLogReader(string path)
     {
-        log.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
+        _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
         _path = path;
     }
 
 
     public IEnumerable<ILogEntry> GetAll()
     {
-        log.Trace($"Получение всех записей из файла {_path}");
+        _log.Trace($"Получение всех записей из файла {_path}");
 
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;
@@ -32,7 +32,7 @@ internal class FileLogReader : ILogReader
     
     public IEnumerable<ILogEntry> GetNew()
     {
-        log.Trace($"Получение новых записей из файла {_path}");
+        _log.Trace($"Получение новых записей из файла {_path}");
         
         string[] data = ReadLogFile().ToArray();
         if (data.Length > _count)
@@ -51,7 +51,7 @@ internal class FileLogReader : ILogReader
     {
         if (!File.Exists(_path))
         {
-            log.Error($"Файл {_path} не существует");
+            _log.Error($"Файл {_path} не существует");
             return Enumerable.Empty<string>();
         }
         FileInfo file = new FileInfo(_path);
@@ -77,7 +77,7 @@ internal class FileLogReader : ILogReader
             }
             catch (Exception e)
             {
-                log.Error($"Ошибка при парсинге события: {e.Message}");
+                _log.Error($"Ошибка при парсинге события: {e.Message}");
                 new ErrorWindow($"Ошибка при парсинге события: {e.Message}").ShowDialog();
             }
             
