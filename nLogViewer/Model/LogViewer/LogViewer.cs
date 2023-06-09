@@ -9,7 +9,7 @@ namespace nLogViewer.Model;
 
 internal class LogViewer
 {
-    private static Logger _logger = LogManager.GetCurrentClassLogger();
+    private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     
     private readonly ILogReader _reader;
     private LogViewerState _state;
@@ -21,7 +21,7 @@ internal class LogViewer
     
     public LogViewer(ILogReader reader)
     {
-        _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами: reader - {reader}");
+        _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: reader - {reader}");
         
         _reader = reader;
 
@@ -37,7 +37,7 @@ internal class LogViewer
     
     private void Process(object? obj)
     {
-        _logger.Trace($"Просмотрщик лога в состоянии {_state}");
+        _log.Trace($"Просмотрщик лога в состоянии {_state}");
 
         switch (_state)
         {
@@ -45,31 +45,31 @@ internal class LogViewer
                 break;
             case LogViewerState.ReadAllMsg:
                 LogEntries = _reader.GetAll().ToList();
-                _logger.Trace($"Считывание всех событий");
+                _log.Trace($"Считывание всех событий");
                 _state = LogViewerState.ReadNewMsg;
-                _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
+                _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
                 break;
             case LogViewerState.ReadNewMsg:
                 if (Clear)
                 {
-                    _logger.Debug($"Очистка всех событий");
+                    _log.Debug($"Очистка всех событий");
                     LogEntries.Clear();
                 }
 
                 if (Pause)
                 {
-                    _logger.Debug($"Переход в состояние {LogViewerState.Pause}");
+                    _log.Debug($"Переход в состояние {LogViewerState.Pause}");
                     _state = LogViewerState.Pause;
                     break;
                 }
                     
                 LogEntries.AddRange(_reader.GetNew());
-                _logger.Trace($"Считывание новых событий");
+                _log.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:
                 if (!Pause)
                 {
-                    _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
+                    _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
                     _state = LogViewerState.ReadNewMsg;
                 }
                 break;
