@@ -1,4 +1,4 @@
-﻿namespace nLogViewer.Model;
+﻿namespace nLogViewer.Services.LogViewer;
 
 public enum LogViewerState
 {

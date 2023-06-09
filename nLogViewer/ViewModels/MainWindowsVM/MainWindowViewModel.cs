@@ -14,6 +14,7 @@ using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
+using nLogViewer.Services.LogReader;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.ViewModels.LogViewerVM;
 using nLogViewer.Views;

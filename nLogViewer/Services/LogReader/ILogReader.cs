@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using nLogViewer.Model;
 
-namespace nLogViewer.Model;
+namespace nLogViewer.Services.LogReader;
 
 internal interface ILogReader
 {

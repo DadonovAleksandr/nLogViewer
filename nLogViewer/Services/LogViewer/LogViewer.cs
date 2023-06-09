@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using NLog;
+using nLogViewer.Model;
+using nLogViewer.Services.LogReader;
 
-namespace nLogViewer.Model;
+namespace nLogViewer.Services.LogViewer;
 
 internal class LogViewer
 {

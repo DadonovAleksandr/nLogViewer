@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
 using nLogViewer.Services.Filter;
+using nLogViewer.Services.LogReader;
+using nLogViewer.Services.LogViewer;
 using nLogViewer.ViewModels.Base;
 
 namespace nLogViewer.ViewModels.LogViewerVM;

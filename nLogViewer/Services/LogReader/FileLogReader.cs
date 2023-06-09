@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NLog;
+using nLogViewer.Model;
 using nLogViewer.Views;
 
-namespace nLogViewer.Model;
+namespace nLogViewer.Services.LogReader;
 
 internal class FileLogReader : ILogReader
 {
