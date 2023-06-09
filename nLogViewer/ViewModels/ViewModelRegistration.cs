@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using nLogViewer.ViewModels.LogViewerVM;
 
 namespace nLogViewer.ViewModels;
 

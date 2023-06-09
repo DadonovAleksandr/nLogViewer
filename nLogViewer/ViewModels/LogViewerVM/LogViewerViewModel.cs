@@ -11,7 +11,7 @@ using nLogViewer.Model;
 using nLogViewer.Services.Filter;
 using nLogViewer.ViewModels.Base;
 
-namespace nLogViewer.ViewModels;
+namespace nLogViewer.ViewModels.LogViewerVM;
 
 internal class LogViewerViewModel : BaseViewModel
 {

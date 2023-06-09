@@ -6,10 +6,11 @@
              xmlns:vm="clr-namespace:nLogViewer.ViewModels"
              xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
              xmlns:local="clr-namespace:nLogViewer.Views"
+             xmlns:logViewerVm="clr-namespace:nLogViewer.ViewModels.LogViewerVM"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="1200">
     <d:UserControl.DataContext>
-        <vm:LogViewerViewModel/>
+        <logViewerVm:LogViewerViewModel/>
     </d:UserControl.DataContext>
     <UserControl.Resources>
         <c:LogEntryTypeToStringConvertor x:Key="EntryTypeToString"></c:LogEntryTypeToStringConvertor>

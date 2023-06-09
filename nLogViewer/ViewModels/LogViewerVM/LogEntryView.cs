@@ -3,9 +3,9 @@ using System.Linq;
 using System.Windows.Media;
 using nLogViewer.Model;
 
-namespace nLogViewer.ViewModels;
+namespace nLogViewer.ViewModels.LogViewerVM;
 
-public class LogEntryView : ILogEntry
+internal class LogEntryView : ILogEntry
 {
     public DateTime EventDateTime { get; }
     public LogEntryType EntryType { get; }
@@ -33,6 +33,4 @@ public class LogEntryView : ILogEntry
         };
 
     }
-
-    
 }

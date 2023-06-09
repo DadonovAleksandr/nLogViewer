@@ -15,6 +15,7 @@ using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
 using nLogViewer.ViewModels.Base;
+using nLogViewer.ViewModels.LogViewerVM;
 using nLogViewer.Views;
 using Ookii.Dialogs.Wpf;
 
