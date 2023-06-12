@@ -8,33 +8,42 @@ using nLogViewer.Services.LogReader;
 
 namespace nLogViewer.Services.LogViewer;
 
-internal class LogViewer
+internal class LogViewer : ILogViewer
 {
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     
     private readonly ILogReader _reader;
     private LogViewerState _state;
+    private List<ILogEntry> _logEntries;
+    private int  _prevEntriesCount;
+    // команды
+    private bool _start;
+    private bool _stop;
+    private bool _pause;
 
+    public event EntriesChanged EntriesChanged;
     public LogViewerState State => _state;
-    public bool Pause { get; set; }
-    public bool Clear { get; set; }
-    public List<ILogEntry> LogEntries { get; private set; }
+    public List<ILogEntry> LogEntries => _logEntries;
     
     public LogViewer(ILogReader reader)
     {
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: reader - {reader}");
         
         _reader = reader;
+        _logEntries = new List<ILogEntry>();
 
-        LogEntries = new List<ILogEntry>();
-        
         TimerCallback tm = new TimerCallback(Process);
         Timer timer = new Timer(tm, null, 0, 1000);
     }
 
-    public void Start() => _state = LogViewerState.ReadAllMsg; 
-    
-    public void Stop() => _state = LogViewerState.Stop;
+    public void Start() => _start = true;
+    public void Stop() => _stop = true;
+    public void Pause() => _pause = true;
+    public void Clear()
+    {
+        _log.Debug($"Очистка всех событий");
+        _logEntries.Clear();
+    }
     
     private void Process(object? obj)
     {
@@ -43,40 +52,67 @@ internal class LogViewer
         switch (_state)
         {
             case LogViewerState.Stop:
+                if (_start)
+                {
+                    _log.Debug($"Команда на переход в состояние {LogViewerState.ReadAllMsg}");
+                    _state = LogViewerState.ReadAllMsg;
+                    break;
+                }
                 break;
             case LogViewerState.ReadAllMsg:
-                LogEntries = _reader.GetAll().ToList();
-                _log.Trace($"Считывание всех событий");
+                _logEntries = _reader.GetAll().ToList();
+                _log.Trace($"Считывание всех событий ({_logEntries.Count})");
                 _state = LogViewerState.ReadNewMsg;
                 _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
                 break;
             case LogViewerState.ReadNewMsg:
-                if (Clear)
+                if (_stop)
                 {
-                    _log.Debug($"Очистка всех событий");
-                    LogEntries.Clear();
-                }
-
-                if (Pause)
-                {
-                    _log.Debug($"Переход в состояние {LogViewerState.Pause}");
-                    _state = LogViewerState.Pause;
+                    _log.Debug($"Команда на переход в состояние {LogViewerState.Stop}");
+                    _state = LogViewerState.Stop;
                     break;
                 }
-                    
-                LogEntries.AddRange(_reader.GetNew());
+                if (_pause)
+                {
+                    _log.Debug($"Команда на переход в состояние {LogViewerState.Pause}");
+                    _state = LogViewerState.Pause;
+                    break;
+                } 
+                _logEntries.AddRange(_reader.GetNew());
                 _log.Trace($"Считывание новых событий");
                 break;
             case LogViewerState.Pause:
-                if (!Pause)
+                if (_stop)
                 {
-                    _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
-                    _state = LogViewerState.ReadNewMsg;
+                    _log.Debug($"Команда на переход в состояние {LogViewerState.Stop}");
+                    _state = LogViewerState.Stop;
+                    break;
                 }
+                if (_start)
+                {
+                    _log.Debug($"Команда на переход в состояние {LogViewerState.ReadNewMsg}");
+                    _state = LogViewerState.ReadNewMsg;
+                    break;
+                }    
                 break;
             default: throw new ArgumentOutOfRangeException();
         }
+        
+        // сброс команд
+        _start = false;
+        _stop = false;
+        _pause = false;
+        
+        CheckEntriesChange();
     }
-    
+
+    private void CheckEntriesChange()
+    {
+        if(_logEntries.Count == _prevEntriesCount)
+            return;
+
+        _prevEntriesCount = _logEntries.Count;
+        EntriesChanged?.Invoke();
+    }
     
 }
