@@ -16,12 +16,14 @@ internal class LogViewer : ILogViewer
     private LogViewerState _state;
     private List<ILogEntry> _logEntries;
     private int  _prevEntriesCount;
+    private Timer _timer;
     // команды
     private bool _start;
     private bool _stop;
     private bool _pause;
 
     public event EntriesChanged EntriesChanged;
+    public int Count => _logEntries.Count;
     public LogViewerState State => _state;
     public List<ILogEntry> LogEntries => _logEntries;
     
@@ -33,7 +35,7 @@ internal class LogViewer : ILogViewer
         _logEntries = new List<ILogEntry>();
 
         TimerCallback tm = new TimerCallback(Process);
-        Timer timer = new Timer(tm, null, 0, 1000);
+        _timer = new Timer(tm, null, 0, 5000);
     }
 
     public void Start() => _start = true;
@@ -45,10 +47,22 @@ internal class LogViewer : ILogViewer
         _logEntries.Clear();
     }
     
+    public IEnumerable<ILogEntry> GetEntries(int count = 0)
+    {
+        if (count == 0)
+            return LogEntries;
+        return LogEntries.Skip(Math.Max(0, Count - count));
+
+    }
     private void Process(object? obj)
     {
         _log.Trace($"Просмотрщик лога в состоянии {_state}");
-
+        if (_reader is null)
+        {
+            _log.Warn($"Просмоторщик событий не инициализирован");
+            return;
+        }
+        
         switch (_state)
         {
             case LogViewerState.Stop:
@@ -114,5 +128,4 @@ internal class LogViewer : ILogViewer
         _prevEntriesCount = _logEntries.Count;
         EntriesChanged?.Invoke();
     }
-    
 }

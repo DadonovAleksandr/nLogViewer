@@ -39,7 +39,7 @@
             <Separator/>
 
             <ToggleButton Command="{Binding PauseCommand}" 
-                          IsChecked="{Binding EnabledPause}"
+                          IsChecked="{Binding EnabledPause, Mode=OneWay}"
                           MinWidth="120" >
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Infrastructure/Resources/Images/Small/Pause.png" Height="20"/>

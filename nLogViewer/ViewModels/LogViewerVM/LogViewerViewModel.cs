@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Model;
 using nLogViewer.Services.Filter;
-using nLogViewer.Services.LogReader;
 using nLogViewer.Services.LogViewer;
 using nLogViewer.ViewModels.Base;
 
@@ -17,15 +14,7 @@ namespace nLogViewer.ViewModels.LogViewerVM;
 
 internal class LogViewerViewModel : BaseViewModel
 {
-    private ILogReader _reader;
-    public ILogReader Reader
-    {
-        get => _reader;
-        set => _reader = value;
-    }
-    
-    private static LogViewerState _state;
-    private DispatcherTimer _timer;
+    private readonly ILogViewer _viewer;
     private ILogEntryFilter? _filter;
     private List<LogEntryView> _logEntries = new();
     private readonly CollectionViewSource _filtredLogEntries = new();
@@ -34,20 +23,18 @@ internal class LogViewerViewModel : BaseViewModel
     public LogEntry SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
 
-    public LogViewerViewModel()
+    public LogViewerViewModel(ILogViewer viewer)
     {
-        _logger.Debug($"Вызов конструктора {GetType().Name}");
+        _log.Debug($"Вызов конструктора {GetType().Name}");
          
-        _timer = new DispatcherTimer();
-        _timer.Tick += new EventHandler(Process);
-        _timer.Interval = new TimeSpan(0,0,2);
-        _timer.Start();
-
+        _viewer = viewer;
+        _viewer.EntriesChanged += ViewerEntriesChange;
+        _viewer.Start();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _filter.RefreshFilter += () =>
         {
-            _logger.Debug("Обновление фильтра событий");
-            _filtredLogEntries.View.Refresh();
+            _log.Debug("Обновление фильтра событий");
+            FiltredLogEntriesRefresh();
         };
         _filtredLogEntries.Source = _logEntries;
         _filtredLogEntries.Filter += LogEntriesFilter;
@@ -66,58 +53,30 @@ internal class LogViewerViewModel : BaseViewModel
         
         e.Accepted = false;
     }
-    
-    private void Process(object sender, EventArgs e)
+
+    private void FiltredLogEntriesRefresh()
     {
-        _logger.Trace($"Просмотрщик лога в состоянии {_state}");
-        if (_reader is null)
+        _filtredLogEntries.Dispatcher.BeginInvoke(new Action(() => _filtredLogEntries.View.Refresh()));
+        //_filtredLogEntries.View.Refresh();
+    }
+
+    private void ViewerEntriesChange()
+    {
+        int newEntriesCount = _viewer.Count - _logEntries.Count;
+        _log.Debug($"Получено уведомление о новых событиях ({newEntriesCount})");
+        var newEntries = _viewer.GetEntries(newEntriesCount);
+        foreach (var entry in newEntries)
         {
-            _logger.Warn($"Просмоторщик событий не инициализирован");
-            return;
+            _logEntries.Insert(0, new LogEntryView(entry));
         }
-        
-        switch (_state)
-        {
-            case LogViewerState.Stop:
-                _logger.Debug($"Переход в состояние {LogViewerState.ReadAllMsg}");
-                _state = LogViewerState.ReadAllMsg;    
-                break;
-            case LogViewerState.ReadAllMsg:
-                _logEntries.Clear();
-                var data = _reader.GetAll();
-                foreach (var entry in data)
-                {
-                    _logEntries.Insert(0, new LogEntryView(entry));       
-                }
-                _filtredLogEntries.View.Refresh();
-                _logger.Trace($"Считывание всех событий");
-                _state = LogViewerState.ReadNewMsg;
-                _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
-                break;
-            case LogViewerState.ReadNewMsg:
-                var newData = _reader.GetNew();
-                foreach (var entry in newData)
-                {
-                    _logEntries.Insert(0, new LogEntryView(entry));
-                }
-                if(newData.Any())
-                    _filtredLogEntries.View.Refresh();
-                _logger.Trace($"Считывание новых событий");
-                break;
-            case LogViewerState.Pause:
-                break;
-            default: throw new ArgumentOutOfRangeException();
-        }
+        //FiltredLogEntriesRefresh();
     }
     
     #region Commands
     
     #region Включение автопрокрутки
     public ICommand AutoscrollCommand { get; }
-    private void OnEnableAutoscrollCommandExecuted(object p)
-    {
-        //EnabledAutoscroll = !EnabledAutoscroll;
-    }
+    private void OnEnableAutoscrollCommandExecuted(object p) { }
     private bool CanEnableAutoscrollCommandExecute(object p) => true;
     #endregion
     
@@ -125,7 +84,7 @@ internal class LogViewerViewModel : BaseViewModel
     public ICommand ClearCommand { get; }
     private void OnClearCommandExecuted(object p)
     {
-        _logger.Debug($"Очистка всех событий");
+        _log.Debug($"Очистка всех событий");
         _logEntries.Clear();
         _filtredLogEntries.View.Refresh();
     }
@@ -138,15 +97,13 @@ internal class LogViewerViewModel : BaseViewModel
     {
         if (EnabledPause)
         {
-            _logger.Debug($"Команда: Включить паузу");
-            _logger.Debug($"Переход в состояние {LogViewerState.Pause}");
-            _state = LogViewerState.Pause;
+            _log.Debug($"Команда: Включить паузу");
+            _viewer.Pause();
         }
         else
         {
-            _logger.Debug($"Команда: Отключить паузу");
-            _logger.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
-            _state = LogViewerState.ReadNewMsg;
+            _log.Debug($"Команда: Отключить паузу");
+            _viewer.Start();
         }
     }
     private bool CanPauseCommandExecute(object p) => _logEntries.Count > 0;
@@ -167,15 +124,17 @@ internal class LogViewerViewModel : BaseViewModel
     }
     
     private bool _pause;
+
     /// <summary>
     /// Включение паузы
     /// </summary>
-    public bool EnabledPause
-    {
-        get => _pause;
-        set => Set(ref _pause, value);
-    }
-    
+    public bool EnabledPause => _viewer.State == LogViewerState.Pause;
+
+    // {
+    //     get => _pause;
+    //     set => Set(ref _pause, value);
+    // }
+
     #endregion
 
 }

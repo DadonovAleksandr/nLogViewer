@@ -15,6 +15,7 @@ using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader;
+using nLogViewer.Services.LogViewer;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.ViewModels.LogViewerVM;
 using nLogViewer.Views;
@@ -31,7 +32,7 @@ internal class MainWindowViewModel : BaseViewModel
     
     public MainWindowViewModel()
     {
-        _logger.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
+        _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = "Просмоторщик логов";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
@@ -56,7 +57,7 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand AddFile { get; }
     private void OnAddFileExecuted(object p)
     {
-        _logger.Debug("Команда добавить файл лога в просмоторщик");
+        _log.Debug("Команда добавить файл лога в просмоторщик");
         var ofd = new OpenFileDialog
         {
             DefaultExt = "log",
@@ -65,12 +66,12 @@ internal class MainWindowViewModel : BaseViewModel
         };
         if(ofd.ShowDialog() == false)
         {
-            _logger.Debug("Диалог выбора файла завершился отменой");
+            _log.Debug("Диалог выбора файла завершился отменой");
             return;
         }
         if (_logViewer is null)
         {
-            _logger.Error("Просмоторщик логов не инициализирован");
+            _log.Error("Просмоторщик логов не инициализирован");
             return;
         }
         AddNewLogViewer(ofd.FileName);
@@ -84,7 +85,7 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand AddFolder { get; }
     private void OnAddFolderExecuted(object p)
     {
-        _logger.Debug("Команда добавить директорию лога в просмоторщик");
+        _log.Debug("Команда добавить директорию лога в просмоторщик");
         var ofd = new VistaFolderBrowserDialog()
         {
             Description = "Выберите директорию логов",
@@ -94,13 +95,13 @@ internal class MainWindowViewModel : BaseViewModel
         var dialogResult = ofd.ShowDialog();
         if (!dialogResult ?? false)
         {
-            _logger.Debug("Диалог выбора директории завершился отменой");
+            _log.Debug("Диалог выбора директории завершился отменой");
             return;
         }
         var selectedFolder = ofd.SelectedPath;
         if (!Directory.Exists(selectedFolder))
         {
-            _logger.Error($"Директория {selectedFolder} несуществует");
+            _log.Error($"Директория {selectedFolder} несуществует");
             return;
         }
 
@@ -118,7 +119,7 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand DeleteLog { get; }
     private void OnDeleteLogExecuted(object p)
     {
-        _logger.Debug("Команда удалить текущий лог из просмоторщика");
+        _log.Debug("Команда удалить текущий лог из просмоторщика");
         _recentLogs.Remove(_recentLogs[_logViewer.SelectedIndex]);
         _logViewer.Items.Remove(_logViewer.SelectedItem);
     }
@@ -236,11 +237,11 @@ internal class MainWindowViewModel : BaseViewModel
     {
         if (!(control is TabControl tabControl))
         {
-            _logger.Error($"Не возможно ининцилизирвать компонент просмотра лога. Компонент имеет неподходящий тип: {control.GetType().Name}");
+            _log.Error($"Не возможно ининцилизирвать компонент просмотра лога. Компонент имеет неподходящий тип: {control.GetType().Name}");
             return;
         }
         _logViewer = tabControl;
-        _logger.Trace("Промотрщик лога инициализирован");
+        _log.Trace("Промотрщик лога инициализирован");
         
         _recentLogs = InitRecentLogsRepository();
         if (_recentLogs.Any())
@@ -275,12 +276,12 @@ internal class MainWindowViewModel : BaseViewModel
     {
         foreach (var entry in _recentLogs.ToList())
         {
-            _logger.Debug($"Открываем ранее {(entry.IsFolder ? "открытую директорию" : "открытый лог-файл")} \"{entry.Path}\"");
+            _log.Debug($"Открываем ранее {(entry.IsFolder ? "открытую директорию" : "открытый лог-файл")} \"{entry.Path}\"");
             var path = entry.IsFolder ? FindLastFileInDirectory(entry.Path) : entry.Path;
 
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
-                _logger.Warn($"Файл \"{path}\" не существует. Удаляем данную запись из списка ранее открытых логов");
+                _log.Warn($"Файл \"{path}\" не существует. Удаляем данную запись из списка ранее открытых логов");
                 _recentLogs.Remove(entry);
             }
             AddNewLogViewer(path);
@@ -292,17 +293,17 @@ internal class MainWindowViewModel : BaseViewModel
         var directoryInfo = new DirectoryInfo(dirPath);
         if (!directoryInfo.Exists)
         {
-            _logger.Error($"Директория {dirPath} отсутствует");
+            _log.Error($"Директория {dirPath} отсутствует");
             return string.Empty;
         }
         var filesInfo = directoryInfo.GetFiles();
         if (filesInfo.Length == 0 && filesInfo.All(x => x.Extension != ".log"))
         {
-            _logger.Error($"В директории {dirPath} отсутствуют лог-файлы");
+            _log.Error($"В директории {dirPath} отсутствуют лог-файлы");
             return string.Empty;
         }
         var lastFile = filesInfo.Where(x => x.Extension == ".log").OrderBy(x => x.LastWriteTime).Last();
-        _logger.Debug($"Последний измененный файл в заданной директории {lastFile.FullName}");
+        _log.Debug($"Последний измененный файл в заданной директории {lastFile.FullName}");
         return lastFile.FullName;
     }
     
@@ -312,8 +313,8 @@ internal class MainWindowViewModel : BaseViewModel
     /// <param name="filePath"></param>
     private void AddNewLogViewer(string filePath)
     {
-        var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
-        logViewerVm.Reader = new FileLogReader(filePath);
+        //var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
+        var logViewerVm = new LogViewerViewModel(new LogViewer(new FileLogReader(filePath)));
         
         _logViewer.Items.Add(new TabItem
         {
