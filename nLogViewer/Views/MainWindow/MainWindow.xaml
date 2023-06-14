@@ -1,0 +1,187 @@
+﻿<Window x:Class="nLogViewer.MainWindow"
+        x:Name="MainWin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
+        mc:Ignorable="d"
+        Title="{Binding Title}" Height="600" Width="1024"
+        DataContext="{Binding MainWindowViewModel, Source={StaticResource Locator}}"
+        Icon="../../Infrastructure/Resources/Images/256px/log.png"
+        >
+    <Window.Resources>
+        <c:LongPathToShortPathConvertor x:Key="LongToShortPathConvertor"/>
+    </Window.Resources>
+    <DockPanel>
+        <Ribbon DockPanel.Dock="Top" SelectedIndex="0" 
+                ShowQuickAccessToolBarOnTop="False" Margin="0,-22,0,0">
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu Visibility="Collapsed">
+                    
+                    <RibbonApplicationMenu.SmallImageSource>
+                        <DrawingImage>
+                            <DrawingImage.Drawing>
+                                <GeometryDrawing>
+                                    <GeometryDrawing.Geometry>
+                                        <RectangleGeometry Rect="0,0,20,20"/>
+                                    </GeometryDrawing.Geometry>
+                                    <GeometryDrawing.Brush>
+                                        <VisualBrush Stretch="Uniform">
+                                            <VisualBrush.Visual>
+                                                <TextBlock Text="Файл" FontSize="16" Foreground="White"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </GeometryDrawing.Brush>
+                                </GeometryDrawing>
+                            </DrawingImage.Drawing>
+                        </DrawingImage>
+                    </RibbonApplicationMenu.SmallImageSource>
+                    
+                    <RibbonApplicationMenuItem Header="Новая сессия"
+                                               Command="{Binding NewSession}"
+                                               ImageSource="/Infrastructure/Resources/Images/Large/Add.png"
+                                               KeyTip="N"/>
+                    <RibbonApplicationMenuItem Header="Загрузить сессию"
+                                               Command="{Binding LoadSession}"
+                                               ImageSource="/Infrastructure/Resources/Images/Large/Open.png"
+                                               KeyTip="L"/>
+                    <RibbonApplicationMenuItem Header="Сохранить сессию"
+                                               Command="{Binding SaveSession}"
+                                               ImageSource="/Infrastructure/Resources/Images/Large/Save.png"
+                                               KeyTip="S"/>
+                    <RibbonApplicationMenuItem Header="Экспорт лога"
+                                               Command="{Binding AddFolder}"
+                                               ImageSource="/Infrastructure/Resources/Images/Large/Export.png"
+                                               KeyTip="E"/>
+                    <RibbonApplicationMenuItem Header="Настройки"
+                                               Command="{Binding DeleteLog}"
+                                               ImageSource="/Infrastructure/Resources/Images/Large/Settings.png"
+                                               CommandParameter="0"
+                                               ToolTip="Открыть диалоговое окно настроек приложения"/>
+                    <RibbonApplicationMenuItem Header="О программе"
+                                               Command="{Binding About}"
+                                               ImageSource="/Infrastructure/Resources/Images/Large/Info.png"
+                                               KeyTip="A"/>
+                    
+                    <RibbonApplicationMenu.FooterPaneContent>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition
+                                    Width="Auto" />
+                                <ColumnDefinition
+                                    Width="*" />
+                                <ColumnDefinition
+                                    Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <RibbonButton
+                                SmallImageSource="/Infrastructure/Resources/Images/Small/Exit.PNG"
+                                Label="Выход"
+                                HorizontalAlignment="Right"
+                                Command="{Binding Exit}"
+                                Grid.Column="2" />
+                        </Grid>
+                    </RibbonApplicationMenu.FooterPaneContent>
+                    
+                    <RibbonApplicationMenu.AuxiliaryPaneContent>
+                        <StackPanel>
+                            <TextBlock HorizontalAlignment="Center" Text="Последние открытые сессии" FontSize="16" Opacity="0.40" />
+                            <RibbonGroup ItemsSource="{Binding RecentFiles}">
+                                <RibbonGroup.ItemTemplate>
+                                    <DataTemplate>
+                                        <RibbonButton Label="{Binding ., Converter={StaticResource LongToShortPathConvertor}}"
+                                                      Command="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.LoadSession}"
+                                                      CommandParameter="{Binding .}"
+                                                      HorizontalContentAlignment="Left"
+                                                      VerticalContentAlignment="Bottom"
+                                                      ToolTipTitle="{Binding .}"
+                                                      ToolTipDescription="Кликни для открытия этой сессии" />                                        
+                                    </DataTemplate>
+                                </RibbonGroup.ItemTemplate>                                
+                            </RibbonGroup>                            
+                        </StackPanel>
+                    </RibbonApplicationMenu.AuxiliaryPaneContent>
+                    
+                </RibbonApplicationMenu>
+            </Ribbon.ApplicationMenu>
+            
+            <RibbonTab Header="Главная">
+                <RibbonGroup Header="Общие">
+                    <RibbonButton Label="Добавить файл" Command="{Binding AddFile}"
+                                  ToolTip="Добавить новый просмотрщик лога"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"/>
+                    <RibbonButton Label="Добавить папку" Command="{Binding AddFolder}"
+                                  ToolTip="Добавить новый просмотрщик лога"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Add.png"/>
+                    <RibbonButton Label="Удалить лог" Command="{Binding DeleteLog}"
+                                  ToolTip="Удалить текущий просмотрщик лога"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/delete.png"/>
+                </RibbonGroup>
+
+                <!-- Фильтры -->
+                <RibbonGroup Header="Фильтр">                                
+                    <RibbonToggleButton Label="Trace"
+                                        IsChecked="{Binding EnableTraceEvent}"
+                                        Style="{StaticResource FilterButtonStyle}"
+                                        LargeImageSource="/Infrastructure/Resources/Images/Medium/Trace.png"
+                                        ToolTipTitle="Фильтр для событий с важностью &quot;Trace&quot;"
+                                        ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Trace&quot;"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Trace.png"/>
+                    <RibbonToggleButton Label="Debug"
+                                        IsChecked="{Binding EnableDebugEvent}"
+                                        Style="{StaticResource FilterButtonStyle}"
+                                        LargeImageSource="/Infrastructure/Resources/Images/Medium/Debug.png"
+                                        ToolTipTitle="Фильтр для событий с важностью &quot;Debug&quot;"
+                                        ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Debug&quot;"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Debug.png"/>
+                    <RibbonToggleButton Label="Info"
+                                        IsChecked="{Binding EnableInfoEvent}"
+                                        Style="{StaticResource FilterButtonStyle}"
+                                        LargeImageSource="/Infrastructure/Resources/Images/Medium/Info.png"
+                                        ToolTipTitle="Фильтр для событий с важностью &quot;Info&quot;"
+                                        ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Info&quot;"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Info.png"/>
+                    <RibbonToggleButton Label="Warn"
+                                        IsChecked="{Binding EnableWarnEvent}"
+                                        Style="{StaticResource FilterButtonStyle}"
+                                        LargeImageSource="/Infrastructure/Resources/Images/Medium/Warning.png"
+                                        ToolTipTitle="Фильтр для событий с важностью &quot;Warn&quot;"
+                                        ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Warn&quot;"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Warning.png"/>
+                    <RibbonToggleButton Label="Error"
+                                        IsChecked="{Binding EnableErrorEvent}"
+                                        Style="{StaticResource FilterButtonStyle}"
+                                        LargeImageSource="/Infrastructure/Resources/Images/Medium/Error.png"
+                                        ToolTipTitle="Фильтр для событий с важностью &quot;Error&quot;"
+                                        ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Error&quot;"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Error.png"/>
+                    <RibbonToggleButton Label="Fatal"
+                                        IsChecked="{Binding EnableFatalEvent}"
+                                        Style="{StaticResource FilterButtonStyle}"
+                                        SmallImageSource="/Infrastructure/Resources/Images/Small/Fatal.png"
+                                        LargeImageSource="/Infrastructure/Resources/Images/Medium/Fatal.png"
+                                        ToolTipTitle="Фильтр для событий с важностью &quot;Fatal&quot;"
+                                        ToolTipDescription="Включение/отключение отображения событий с важностью &quot;Fatal&quot;"
+                                        ToolTipImageSource="/Infrastructure/Resources/Images/Large/Fatal.png"/>
+                </RibbonGroup>
+                
+                <RibbonGroup Header="Поиск по тексту" IsEnabled="True">
+                    <StackPanel Orientation="Horizontal">
+                        <RibbonTextBox TextBoxWidth="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                        <RibbonToggleButton Label="Поиск"
+                                            IsChecked="{Binding EnableSearchEvent}"
+                                            Style="{StaticResource SearchButtonStyle}"
+                                            LargeImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"
+                                            ToolTipTitle="Поиск событий соответствующих фильтру"
+                                            ToolTipDescription="Включение/отключение отображения отфильтрованных событий"
+                                            ToolTipImageSource="/Infrastructure/Resources/Images/Medium/Filter.png"/>
+                    </StackPanel>
+                </RibbonGroup>
+            </RibbonTab>  
+            
+        </Ribbon>
+        <TabControl x:Name="LogViewersControl">
+            
+        </TabControl>
+    </DockPanel>
+</Window>
