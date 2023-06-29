@@ -11,7 +11,8 @@ internal class LogEntryView : ILogEntry
     public LogEntryType EntryType { get; }
     public string Message { get; }
     public string Source { get; }
-    
+    public int ProcessId { get; }
+    public int ThreadId { get; }
     public Brush Background { get; }
     
     public LogEntryView(ILogEntry entry)
@@ -20,7 +21,9 @@ internal class LogEntryView : ILogEntry
         EntryType = entry.EntryType;
         Message = entry.Message;
         Source = entry.Source.Split(".").Last();
-
+        ProcessId = entry.ProcessId;
+        ThreadId = entry.ThreadId;
+        
         Background = entry.EntryType switch
         {
             LogEntryType.Trace => new SolidColorBrush(Colors.LightGray),

@@ -19,16 +19,14 @@ internal class FileLogReader : ILogReader
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
         _path = path;
     }
-
-
+    
     public IEnumerable<ILogEntry> GetAll()
     {
         _log.Trace($"Получение всех записей из файла {_path}");
 
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;
-        var entries = ParseStringsToLogEntries(data);
-        return entries;
+        return ConvertStringsLogToLogEntries(data);
     }
     
     public IEnumerable<ILogEntry> GetNew()
@@ -40,7 +38,7 @@ internal class FileLogReader : ILogReader
         {
             var newData = new string[data.Length - _count];
             Array.Copy(data, _count, newData, 0, data.Length - _count);
-            var entries = ParseStringsToLogEntries(newData);
+            var entries = ConvertStringsLogToLogEntries(newData);
                 
             _count = data.Length;
             return entries;
@@ -65,27 +63,63 @@ internal class FileLogReader : ILogReader
         return data;
     }
     
-    private IEnumerable<ILogEntry> ParseStringsToLogEntries(IEnumerable<string> data)
+    private IEnumerable<ILogEntry> ConvertStringsLogToLogEntries(IEnumerable<string> data)
     {
         var logEntries = new List<ILogEntry>();
         foreach (var item in data)
         {
-            try
-            {
-                var parts = item.Split("|").Select(x=>x.Trim()).ToArray();
-                var type = Enum.Parse<LogEntryType>(parts[1], true);
-                logEntries.Add(new LogEntry(DateTime.Parse(parts[0]), type, parts[2], parts[3]));
-            }
-            catch (Exception e)
-            {
-                _log.Error($"Ошибка при парсинге события: {e.Message}");
-                new ErrorWindow($"Ошибка при парсинге события: {e.Message}").ShowDialog();
-            }
-            
+            logEntries.Add(ParseStringToLogEntry(item));
         }
         return logEntries;
     }
+
+    private ILogEntry ParseStringToLogEntry(string str)
+    {
+        DateTime dateTime = new DateTime();
+        LogEntryType type = LogEntryType.Fatal;
+        string message = String.Empty; 
+        string source = String.Empty;
+        int process = 0;
+        int thread = 0;
+        
+        var parts = str.Split("|").Select(x => x.Trim()).ToArray();
+        if (parts.Length < 4)
+        {
+            _log.Error($"Ошибка при парсинге события: {str}");
+            new ErrorWindow($"Ошибка при парсинге события: {str}").ShowDialog();    
+            return new LogEntry(dateTime, type, message, source, process, thread);
+        }
+        if (!DateTime.TryParse(parts[0], out dateTime))
+        {
+            _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[0]} в DateTime");
+            new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[0]} в DateTime").ShowDialog();
+        }
+        if (!Enum.TryParse<LogEntryType>(parts[1], true, out type))
+        {
+            _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[1]} в LogEntryType");
+            new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[1]} в LogEntryType").ShowDialog();
+        }
+        message = parts[2];
+        source = parts[3];
+        if (parts.Length > 4)
+        {
+            if (!int.TryParse(parts[4], out process))
+            {
+                _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int");
+                new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int").ShowDialog();
+            }
+        }
+        if (parts.Length > 5)
+        {
+            if (!int.TryParse(parts[5], out thread))
+            {
+                _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int");
+                new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int").ShowDialog();
+            }
+        }
+        
+        return new LogEntry(dateTime, type, message, source, process, thread);
+    }
     
     public override string ToString() => $"Объект чтения лога из файла {_path}";
-    
 }

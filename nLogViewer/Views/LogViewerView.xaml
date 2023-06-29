@@ -84,6 +84,12 @@
                                     Binding="{Binding Message, Mode=OneWay}"
                                     ElementStyle="{StaticResource WrapText}"
                                     Width="*"/>
+                <DataGridTextColumn Header=" Процесс " 
+                                    Binding="{Binding ProcessId, Mode=OneWay}"
+                                    Width="Auto"/>
+                <DataGridTextColumn Header=" Поток " 
+                                    Binding="{Binding ThreadId, Mode=OneWay}"
+                                    Width="Auto"/>
                 <DataGridTextColumn Header=" Источник " 
                                     Binding="{Binding Source, Mode=OneWay}"
                                     Width="Auto"/>
