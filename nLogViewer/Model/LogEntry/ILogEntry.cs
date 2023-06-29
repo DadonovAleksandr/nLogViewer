@@ -8,7 +8,7 @@ public interface ILogEntry
     /// Дата и время события
     /// </summary>
     public DateTime EventDateTime { get; }
-    
+
     /// <summary>
     /// Важность события
     /// </summary>
@@ -23,4 +23,13 @@ public interface ILogEntry
     /// Источник события
     /// </summary>
     public string Source { get; }
+    
+    /// <summary>
+    /// ИД процесса
+    /// </summary>
+    public int ProcessId { get; }
+    /// <summary>
+    /// ИД потока
+    /// </summary>
+    public int ThreadId { get; }
 }

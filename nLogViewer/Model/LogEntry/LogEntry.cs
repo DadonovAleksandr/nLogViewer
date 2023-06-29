@@ -8,14 +8,16 @@ public class LogEntry : ILogEntry
     public LogEntryType EntryType { get; }
     public string Message { get; }
     public string Source { get; }
+    public int ProcessId { get; }
+    public int ThreadId { get; }
 
-    public LogEntry(DateTime eventDateTime, LogEntryType entryType, string message, string source)
+    public LogEntry(DateTime eventDateTime, LogEntryType entryType, string message, string source, int processId = 0, int threadId = 0)
     {
         EventDateTime = eventDateTime;
         EntryType = entryType;
         Message = message;
         Source = source;
+        ProcessId = processId;
+        ThreadId = threadId;
     }
-
-    
 }
