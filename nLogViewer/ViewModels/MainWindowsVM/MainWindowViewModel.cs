@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Infrastructure.Helpers.FileProvider;
-using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
