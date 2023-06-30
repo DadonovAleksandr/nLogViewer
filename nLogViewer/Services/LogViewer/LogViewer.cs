@@ -35,7 +35,7 @@ internal class LogViewer : ILogViewer
         _logEntries = new List<ILogEntry>();
 
         TimerCallback tm = new TimerCallback(Process);
-        _timer = new Timer(tm, null, 0, 5000);
+        _timer = new Timer(tm, null, 0, 2000);
     }
 
     public void Start() => _start = true;
@@ -122,7 +122,10 @@ internal class LogViewer : ILogViewer
 
     private void CheckEntriesChange()
     {
-        if(_logEntries.Count == _prevEntriesCount)
+        _log.Trace($"Проверка появления новых сообщений: " +
+                   $"новых сообщений ({_logEntries.Count - _prevEntriesCount}) =  " +
+                   $"новое значение счетчика ({_logEntries.Count}) - предъидущее значение счетчика ({_prevEntriesCount})");
+        if(_logEntries.Count <= _prevEntriesCount)
             return;
 
         _prevEntriesCount = _logEntries.Count;

@@ -28,8 +28,9 @@ internal class LogViewerViewModel : BaseViewModel
         _log.Debug($"Вызов конструктора {GetType().Name}");
          
         _viewer = viewer;
-        _viewer.EntriesChanged += ViewerEntriesChange;
+        _viewer.EntriesChanged += ViewerEntriesRefresh;
         _viewer.Start();
+        
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _filter.RefreshFilter += () =>
         {
@@ -54,11 +55,11 @@ internal class LogViewerViewModel : BaseViewModel
         e.Accepted = false;
     }
 
-    private void FiltredLogEntriesRefresh()
-    {
+    private void FiltredLogEntriesRefresh() => 
         _filtredLogEntries.Dispatcher.BeginInvoke(new Action(() => _filtredLogEntries.View.Refresh()));
-        //_filtredLogEntries.View.Refresh();
-    }
+
+    private void ViewerEntriesRefresh() => 
+        _filtredLogEntries.Dispatcher.BeginInvoke(new Action(ViewerEntriesChange));
 
     private void ViewerEntriesChange()
     {
@@ -69,7 +70,7 @@ internal class LogViewerViewModel : BaseViewModel
         {
             _logEntries.Insert(0, new LogEntryView(entry));
         }
-        //FiltredLogEntriesRefresh();
+        FiltredLogEntriesRefresh();
     }
     
     #region Commands
