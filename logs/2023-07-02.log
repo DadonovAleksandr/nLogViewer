@@ -1,0 +1,52 @@
+2023-07-02 02:23:14.9799 | TRACE | Начинаем поиск файла AssemblyInfo.cs из директории X:\projects\_WIP\nLogViewer\nLogViewer | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Проверка файла App.xaml | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Проверка файла App.xaml.cs | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Проверка файла Program.cs | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Проверка файла nLogViewer.csproj | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Проверка файла AssemblyInfo.cs | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Файл AssemblyInfo.cs найден! | VersionChanger.AssemblyInfoSearcher | 16260 | 1
+2023-07-02 02:23:15.0172 | TRACE | Чтение файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 16260 | 1
+2023-07-02 02:23:15.0265 | TRACE | Поиск текущей версии проекта | Program | 16260 | 1
+2023-07-02 02:23:15.0265 | TRACE | Текущая версия проекта: 1.0.0701.2339 | Program | 16260 | 1
+2023-07-02 02:23:15.0265 | TRACE | Текущая конфигурация интерпритатора: Debug | Program | 16260 | 1
+2023-07-02 02:23:15.0265 | TRACE | Новая версия проекта: 1.0.702.223 | Program | 16260 | 1
+2023-07-02 02:23:15.0265 | TRACE | Запись файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 16260 | 1
+2023-07-02 02:26:15.3710 | TRACE | Начинаем поиск файла AssemblyInfo.cs из директории X:\projects\_WIP\nLogViewer\nLogViewer | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Проверка файла App.xaml | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Проверка файла App.xaml.cs | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Проверка файла Program.cs | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Проверка файла nLogViewer.csproj | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Проверка файла AssemblyInfo.cs | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Файл AssemblyInfo.cs найден! | VersionChanger.AssemblyInfoSearcher | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Чтение файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Поиск текущей версии проекта | Program | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Текущая версия проекта: 1.0.0702.0223 | Program | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Текущая конфигурация интерпритатора: Debug | Program | 3872 | 1
+2023-07-02 02:26:15.4063 | TRACE | Новая версия проекта: 1.0.702.226 | Program | 3872 | 1
+2023-07-02 02:26:15.4199 | TRACE | Запись файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 3872 | 1
+2023-07-02 02:27:28.8107 | TRACE | Начинаем поиск файла AssemblyInfo.cs из директории X:\projects\_WIP\nLogViewer\nLogViewer | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Проверка файла App.xaml | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Проверка файла App.xaml.cs | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Проверка файла Program.cs | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Проверка файла nLogViewer.csproj | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Проверка файла AssemblyInfo.cs | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Файл AssemblyInfo.cs найден! | VersionChanger.AssemblyInfoSearcher | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Чтение файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Поиск текущей версии проекта | Program | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Текущая версия проекта: 1.0.0702.0226 | Program | 3160 | 1
+2023-07-02 02:27:28.8466 | TRACE | Текущая конфигурация интерпритатора: Debug | Program | 3160 | 1
+2023-07-02 02:27:28.8539 | TRACE | Новая версия проекта: 1.0.702.227 | Program | 3160 | 1
+2023-07-02 02:27:28.8539 | TRACE | Запись файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 3160 | 1
+2023-07-02 02:29:12.8905 | TRACE | Начинаем поиск файла AssemblyInfo.cs из директории X:\projects\_WIP\nLogViewer\nLogViewer | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Проверка файла App.xaml | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Проверка файла App.xaml.cs | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Проверка файла Program.cs | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Проверка файла nLogViewer.csproj | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Проверка файла AssemblyInfo.cs | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Файл AssemblyInfo.cs найден! | VersionChanger.AssemblyInfoSearcher | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Чтение файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 12680 | 1
+2023-07-02 02:29:12.9267 | TRACE | Поиск текущей версии проекта | Program | 12680 | 1
+2023-07-02 02:29:12.9324 | TRACE | Текущая версия проекта: 1.0.0702.0227 | Program | 12680 | 1
+2023-07-02 02:29:12.9324 | TRACE | Текущая конфигурация интерпритатора: Release | Program | 12680 | 1
+2023-07-02 02:29:12.9324 | TRACE | Новая версия проекта: 1.1.702.229 | Program | 12680 | 1
+2023-07-02 02:29:12.9324 | TRACE | Запись файла: X:\projects\_WIP\nLogViewer\nLogViewer\AssemblyInfo.cs | Program | 12680 | 1

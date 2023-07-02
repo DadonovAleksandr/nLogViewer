@@ -7,6 +7,7 @@
         <UseWPF>true</UseWPF>
       <StartupObject>nLogViewer.Program</StartupObject>
       <LangVersion>11</LangVersion>
+      <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
     <ItemGroup>
@@ -122,5 +123,9 @@
       <None Remove="Infrastructure\Resources\Images\256px\log.png" />
       <Resource Include="Infrastructure\Resources\Images\256px\log.png" />
     </ItemGroup>
+
+    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+      <Exec Command="&quot;$(SolutionDir)VersionChanger.exe&quot; $(ConfigurationName)" />
+    </Target>
 
 </Project>
