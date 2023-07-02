@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -32,7 +33,7 @@ internal class MainWindowViewModel : BaseViewModel
     public MainWindowViewModel()
     {
         _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
-        _title = "Просмоторщик логов";
+        _title = $"Просмоторщик логов {Assembly.GetExecutingAssembly().GetName().Version}";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         
