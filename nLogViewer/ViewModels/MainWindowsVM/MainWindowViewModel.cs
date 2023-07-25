@@ -16,6 +16,7 @@ using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader;
 using nLogViewer.Services.LogViewer;
+using nLogViewer.Services.UserDialogService;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.ViewModels.LogViewerVM;
 using nLogViewer.Views;
@@ -29,14 +30,15 @@ internal class MainWindowViewModel : BaseViewModel
     private IRecentLogsRepository _recentLogs;
     private IAppConfig _appConfig;
     private readonly ILogEntryFilter? _filter;
-    
-    public MainWindowViewModel()
+    private readonly IUserDialogService _userDialogService;
+    public MainWindowViewModel(IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = $"Просмоторщик логов {Assembly.GetExecutingAssembly().GetName().Version}";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
-        
+        _userDialogService = userDialogService;
+
         #region commands
         AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
         AddFolder = new LambdaCommand(OnAddFolderExecuted, CanAddFolderExecute);
@@ -314,7 +316,7 @@ internal class MainWindowViewModel : BaseViewModel
     private void AddNewLogViewer(string filePath)
     {
         //var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
-        var logViewerVm = new LogViewerViewModel(new LogViewer(new FileLogReader(filePath)));
+        var logViewerVm = new LogViewerViewModel(new LogViewer(new FileLogReader(filePath, _userDialogService)));
         
         _logViewer.Items.Add(new TabItem
         {

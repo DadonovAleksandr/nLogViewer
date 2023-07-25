@@ -9,7 +9,7 @@
         SizeToContent="WidthAndHeight"
         Icon="../Infrastructure/Resources/Images/Medium/bug.png"
         ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterOwner">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>

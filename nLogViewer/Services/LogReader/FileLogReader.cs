@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NLog;
 using nLogViewer.Model;
+using nLogViewer.Services.UserDialogService;
 using nLogViewer.Views;
 
 namespace nLogViewer.Services.LogReader;
@@ -11,19 +12,21 @@ namespace nLogViewer.Services.LogReader;
 internal class FileLogReader : ILogReader
 {
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+    private readonly IUserDialogService _userDialogService;
     private readonly string _path;
     private int _count;
 
-    public FileLogReader(string path)
+    public FileLogReader(string path, IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: path - {path}");
         _path = path;
+        _userDialogService = userDialogService;
     }
     
     public IEnumerable<ILogEntry> GetAll()
     {
+        _userDialogService.ShowError("Tect", GetType().Name);
         _log.Trace($"Получение всех записей из файла {_path}");
-
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;
         return ConvertStringsLogToLogEntries(data);
@@ -86,18 +89,21 @@ internal class FileLogReader : ILogReader
         if (parts.Length < 4)
         {
             _log.Error($"Ошибка при парсинге события: {str}");
-            new ErrorWindow($"Ошибка при парсинге события: {str}").ShowDialog();    
+            _userDialogService.ShowError($"Ошибка при парсинге события: {str}", GetType().Name);
+            //new ErrorWindow($"Ошибка при парсинге события: {str}").ShowDialog();    
             return new LogEntry(dateTime, type, message, source, process, thread);
         }
         if (!DateTime.TryParse(parts[0], out dateTime))
         {
             _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[0]} в DateTime");
-            new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[0]} в DateTime").ShowDialog();
+            _userDialogService.ShowError($"Ошибка при парсинге события: не возможно преобразовать {parts[0]} в DateTime", GetType().Name);
+            //new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[0]} в DateTime").ShowDialog();
         }
         if (!Enum.TryParse<LogEntryType>(parts[1], true, out type))
         {
             _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[1]} в LogEntryType");
-            new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[1]} в LogEntryType").ShowDialog();
+            _userDialogService.ShowError($"Ошибка при парсинге события: не возможно преобразовать {parts[1]} в LogEntryType", GetType().Name);
+            //new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[1]} в LogEntryType").ShowDialog();
         }
         message = parts[2];
         source = parts[3];
@@ -106,7 +112,8 @@ internal class FileLogReader : ILogReader
             if (!int.TryParse(parts[4], out process))
             {
                 _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int");
-                new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int").ShowDialog();
+                _userDialogService.ShowError($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int", GetType().Name);
+                //new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int").ShowDialog();
             }
         }
         if (parts.Length > 5)
@@ -114,7 +121,8 @@ internal class FileLogReader : ILogReader
             if (!int.TryParse(parts[5], out thread))
             {
                 _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int");
-                new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int").ShowDialog();
+                _userDialogService.ShowError($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int", GetType().Name);
+                //new ErrorWindow($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int").ShowDialog();
             }
         }
         
