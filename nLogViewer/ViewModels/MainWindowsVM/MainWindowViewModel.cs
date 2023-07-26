@@ -35,6 +35,7 @@ internal class MainWindowViewModel : BaseViewModel
     {
         _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = $"Просмоторщик логов {Assembly.GetExecutingAssembly().GetName().Version}";
+        _log.Debug($"Запуск приложения: {_title}");
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _userDialogService = userDialogService;
