@@ -25,7 +25,6 @@ internal class FileLogReader : ILogReader
     
     public IEnumerable<ILogEntry> GetAll()
     {
-        //_userDialogService.ShowError("Tect", GetType().Name);
         _log.Trace($"Получение всех записей из файла {_path}");
         string[] data = ReadLogFile().ToArray();
         _count = data.Length;

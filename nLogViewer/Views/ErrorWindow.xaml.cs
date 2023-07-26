@@ -9,11 +9,12 @@ public partial class ErrorWindow : Window
         InitializeComponent();
     }
     
-    public ErrorWindow(string errMsg)
+    public ErrorWindow(string msg, string title)
     {
         InitializeComponent();
-        if (string.IsNullOrEmpty(errMsg))
+        if (string.IsNullOrEmpty(msg))
             return;
-        ExceptionDescription.Text = errMsg;
+        ExceptionDescription.Text = msg;
+        Title = title;
     }
 }

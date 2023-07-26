@@ -18,7 +18,7 @@ internal class WindowsUserDialogService : IUserDialogService
     {
         Application.Current.Dispatcher.Invoke(() => 
         {
-            var dlg = new ErrorWindow(message)
+            var dlg = new ErrorWindow(message, title)
             {
                 Owner = ActiveWindow
             };
