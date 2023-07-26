@@ -1,9 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NLog;
+using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Services;
 using nLogViewer.ViewModels;
 
@@ -14,6 +17,7 @@ namespace nLogViewer
     /// </summary>
     public partial class App : Application
     {
+        private static Logger _log = LogManager.GetCurrentClassLogger();
         public static bool IsDesighnMode { get; private set; } = true;
         
         private static IHost _host;
@@ -22,6 +26,7 @@ namespace nLogViewer
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            _log.Debug($"Запуск приложения: {AppConst.Get().AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
             IsDesighnMode = false;
             var host = Host;
             base.OnStartup(e);

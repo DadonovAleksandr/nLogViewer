@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Windows;
 
-[assembly: AssemblyVersion("1.3.0726.1205")]
-[assembly: AssemblyFileVersion("1.3.0726.1205")]
+[assembly: AssemblyVersion("1.3.0726.1333")]
+[assembly: AssemblyFileVersion("1.3.0726.1333")]
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None, //where theme specific resource dictionaries are located
