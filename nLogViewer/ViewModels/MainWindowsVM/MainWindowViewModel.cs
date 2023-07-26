@@ -47,8 +47,7 @@ internal class MainWindowViewModel : BaseViewModel
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         #endregion
     }
-
-
+    
     #region Pages
     
     #endregion

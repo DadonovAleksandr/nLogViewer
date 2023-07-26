@@ -98,13 +98,13 @@ internal class LogViewerViewModel : BaseViewModel
     {
         if (EnabledPause)
         {
-            _log.Debug($"Команда: Включить паузу");
-            _viewer.Pause();
+            _log.Debug($"Команда: Отключить паузу");
+            _viewer.Start();
         }
         else
         {
-            _log.Debug($"Команда: Отключить паузу");
-            _viewer.Start();
+            _log.Debug($"Команда: Включить паузу");
+            _viewer.Pause();
         }
     }
     private bool CanPauseCommandExecute(object p) => _logEntries.Count > 0;
