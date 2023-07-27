@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Infrastructure.Helpers.FileProvider;
+using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
@@ -34,7 +35,7 @@ internal class MainWindowViewModel : BaseViewModel
     public MainWindowViewModel(IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
-        _title = $"{AppConst.Get().AppName} {Assembly.GetExecutingAssembly().GetName().Version}";
+        _title = $"{AppConst.Get().AppName} {ProjectVersion.Get()}";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _userDialogService = userDialogService;

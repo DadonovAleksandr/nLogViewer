@@ -6,6 +6,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NLog;
+using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Services;
 using nLogViewer.ViewModels;
@@ -26,13 +27,13 @@ namespace nLogViewer
 
         protected override async void OnStartup(StartupEventArgs e)
         {
-            _log.Debug($"Запуск приложения: {AppConst.Get().AppName} {Assembly.GetExecutingAssembly().GetName().Version}");
+            _log.Debug($"Запуск приложения: {AppConst.Get().AppName} {ProjectVersion.Get()}");
             IsDesighnMode = false;
             var host = Host;
             base.OnStartup(e);
 
             await host.StartAsync().ConfigureAwait(false);
-        }
+        }                       
 
         protected override async void OnExit(ExitEventArgs e)
         {
