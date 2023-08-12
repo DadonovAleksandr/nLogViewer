@@ -15,14 +15,11 @@ internal class FileLogReader : ILogReader
     private readonly string _path;
     private int _count;
 
-    public FileLogReader(ILogReaderConfiguration configuration, IUserDialogService userDialogService)
+    public FileLogReader(string path, IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами");
 
-        if (configuration is not FileLogReaderConfiguration)
-            throw new ArgumentException($"Неверный тип конфигурации {configuration.GetType().Name}");
-        
-        _path = configuration.Args[0];
+        _path = path;
         _userDialogService = userDialogService;
     }
 

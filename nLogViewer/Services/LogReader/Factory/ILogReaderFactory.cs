@@ -2,5 +2,5 @@
 
 internal interface ILogReaderFactory
 {
-    ILogReader Create(ILogReaderConfiguration configuration);
+    ILogReader Create();
 }

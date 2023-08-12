@@ -5,6 +5,7 @@ using System.Threading;
 using NLog;
 using nLogViewer.Model;
 using nLogViewer.Services.LogReader;
+using nLogViewer.Services.LogReader.Factory;
 
 namespace nLogViewer.Services.LogViewer;
 
@@ -27,11 +28,11 @@ internal class LogViewer : ILogViewer
     public LogViewerState State => _state;
     public List<ILogEntry> LogEntries => _logEntries;
     
-    public LogViewer(ILogReader reader)
+    public LogViewer(ILogReaderFactory readerFactory)
     {
-        _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: reader - {reader}");
+        _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: readerFactory - {readerFactory}");
         
-        _reader = reader;
+        _reader = readerFactory.Create();
         _logEntries = new List<ILogEntry>();
 
         TimerCallback tm = new TimerCallback(Process);

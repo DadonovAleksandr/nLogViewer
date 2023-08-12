@@ -1,6 +1,6 @@
 ﻿namespace nLogViewer.Services.LogReader.FileLogReader;
 
-internal class FileLogReaderConfiguration : ILogReaderConfiguration
+internal class FileLogReaderConfiguration
 {
     private static string _fileName;
     public string FileName 
