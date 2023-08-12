@@ -4,12 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
-             xmlns:logViewerVm="clr-namespace:nLogViewer.ViewModels.LogViewerVM"
              mc:Ignorable="d"
+             DataContext="{Binding LogViewerViewModel, Source={StaticResource Locator}}"
              d:DesignHeight="300" d:DesignWidth="1200">
-    <d:UserControl.DataContext>
-        <logViewerVm:LogViewerViewModel/>
-    </d:UserControl.DataContext>
     <UserControl.Resources>
         <c:LogEntryTypeToStringConvertor x:Key="EntryTypeToString"></c:LogEntryTypeToStringConvertor>
     </UserControl.Resources>

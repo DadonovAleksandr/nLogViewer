@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -11,14 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
 using nLogViewer.Infrastructure.Helpers.FileProvider;
+using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
-using nLogViewer.Services.LogReader;
-using nLogViewer.Services.LogViewer;
+using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.UserDialogService;
 using nLogViewer.ViewModels.Base;
-using nLogViewer.ViewModels.LogViewerVM;
 using nLogViewer.Views;
 using Ookii.Dialogs.Wpf;
 
@@ -34,7 +32,7 @@ internal class MainWindowViewModel : BaseViewModel
     public MainWindowViewModel(IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
-        _title = $"{AppConst.Get().AppName} {Assembly.GetExecutingAssembly().GetName().Version}";
+        _title = $"{AppConst.Get().AppName} {ProjectVersion.Get()}";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _userDialogService = userDialogService;
@@ -314,17 +312,13 @@ internal class MainWindowViewModel : BaseViewModel
     /// <param name="filePath"></param>
     private void AddNewLogViewer(string filePath)
     {
-        //var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
-        var logViewerVm = new LogViewerViewModel(new LogViewer(new FileLogReader(filePath, _userDialogService)));
-        
+        new FileLogReaderConfiguration().FileName = filePath;
+
         _logViewer.Items.Add(new TabItem
         {
             Header = Path.GetFileName(filePath),
             ToolTip = filePath,
-            Content = new LogViewerView
-            {
-                DataContext = logViewerVm
-            } 
+            Content = new LogViewerView() 
         });
         _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
     }
