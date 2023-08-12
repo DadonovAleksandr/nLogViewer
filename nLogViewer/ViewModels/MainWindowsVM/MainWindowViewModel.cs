@@ -15,6 +15,7 @@ using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader;
+using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.LogViewer;
 using nLogViewer.Services.UserDialogService;
 using nLogViewer.ViewModels.Base;
@@ -314,18 +315,18 @@ internal class MainWindowViewModel : BaseViewModel
     /// <param name="filePath"></param>
     private void AddNewLogViewer(string filePath)
     {
-        //var logViewerVm = App.Host.Services.GetRequiredService<LogViewerViewModel>();
-        var logViewerVm = new LogViewerViewModel(new LogViewer(new FileLogReader(filePath, _userDialogService)));
-        
+        var readerConfiguration = new FileLogReaderConfiguration();
+        readerConfiguration.FileName = filePath;
+
         _logViewer.Items.Add(new TabItem
         {
             Header = Path.GetFileName(filePath),
             ToolTip = filePath,
-            Content = new LogViewerView
-            {
-                DataContext = logViewerVm
-            } 
-        });
+            Content = new LogViewerView()
+            //{
+            //DataContext = logViewerVm
+            //} 
+        }); ;
         _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
     }
 
