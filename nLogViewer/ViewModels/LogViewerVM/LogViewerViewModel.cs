@@ -5,7 +5,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Commands;
-using nLogViewer.Model;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogViewer;
 using nLogViewer.ViewModels.Base;
@@ -20,7 +19,7 @@ internal class LogViewerViewModel : BaseViewModel
     private readonly CollectionViewSource _filtredLogEntries = new();
     
     public ICollectionView FiltredLogEntries => _filtredLogEntries.View;
-    public LogEntry SelectedEntry { get; set; }
+    public LogEntryView SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
 
     public LogViewerViewModel(ILogViewer viewer)
