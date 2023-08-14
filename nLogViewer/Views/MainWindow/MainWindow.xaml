@@ -16,7 +16,7 @@
     <DockPanel>
         <Ribbon DockPanel.Dock="Top" SelectedIndex="0" 
                 ShowQuickAccessToolBarOnTop="False" Margin="0,-22,0,0">
-            <Ribbon.ApplicationMenu>
+            <!--<Ribbon.ApplicationMenu>
                 <RibbonApplicationMenu Visibility="Collapsed">
                     
                     <RibbonApplicationMenu.SmallImageSource>
@@ -39,15 +39,12 @@
                     </RibbonApplicationMenu.SmallImageSource>
                     
                     <RibbonApplicationMenuItem Header="Новая сессия"
-                                               Command="{Binding NewSession}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Add.png"
                                                KeyTip="N"/>
                     <RibbonApplicationMenuItem Header="Загрузить сессию"
-                                               Command="{Binding LoadSession}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Open.png"
                                                KeyTip="L"/>
                     <RibbonApplicationMenuItem Header="Сохранить сессию"
-                                               Command="{Binding SaveSession}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Save.png"
                                                KeyTip="S"/>
                     <RibbonApplicationMenuItem Header="Экспорт лога"
@@ -103,7 +100,7 @@
                     </RibbonApplicationMenu.AuxiliaryPaneContent>
                     
                 </RibbonApplicationMenu>
-            </Ribbon.ApplicationMenu>
+            </Ribbon.ApplicationMenu>-->
             
             <RibbonTab Header="Главная">
                 <RibbonGroup Header="Общие">
