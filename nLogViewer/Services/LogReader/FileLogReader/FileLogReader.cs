@@ -13,7 +13,8 @@ internal class FileLogReader : ILogReader
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     private readonly IUserDialogService _userDialogService;
     private readonly string _path;
-    private int _count;
+    private long _pos;
+    private int _lineCount;
 
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
@@ -27,7 +28,7 @@ internal class FileLogReader : ILogReader
     {
         _log.Trace($"Получение всех записей из файла {_path}");
         string[] data = ReadLogFile().ToArray();
-        _count = data.Length;
+        _lineCount += data.Length;
         return ConvertStringsLogToLogEntries(data);
     }
 
@@ -36,16 +37,8 @@ internal class FileLogReader : ILogReader
         _log.Trace($"Получение новых записей из файла {_path}");
 
         string[] data = ReadLogFile().ToArray();
-        if (data.Length > _count)
-        {
-            var newData = new string[data.Length - _count];
-            Array.Copy(data, _count, newData, 0, data.Length - _count);
-            var entries = ConvertStringsLogToLogEntries(newData);
-
-            _count = data.Length;
-            return entries;
-        }
-        return Enumerable.Empty<ILogEntry>();
+        _lineCount += data.Length;
+        return ConvertStringsLogToLogEntries(data);
     }
 
     private IEnumerable<string> ReadLogFile()
@@ -58,10 +51,12 @@ internal class FileLogReader : ILogReader
         FileInfo file = new FileInfo(_path);
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         List<string> data = new List<string>();
+        sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
         while (sr.ReadLine() is { } line)
         {
             data.Add(line);
         }
+        _pos = sr.BaseStream.Position;
         return data;
     }
 
