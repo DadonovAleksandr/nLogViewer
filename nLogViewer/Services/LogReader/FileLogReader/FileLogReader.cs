@@ -103,23 +103,20 @@ internal class FileLogReader : ILogReader
         }
         message = parts[2];
         source = parts[3];
-        if (parts.Length > 4)
+        if(parts.Length > 5)
         {
-            if (!int.TryParse(parts[4], out process))
+            if (!int.TryParse(parts[parts.Length - 2], out process))
             {
                 _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int");
                 _userDialogService.ShowError($"Ошибка при парсинге события: не возможно преобразовать {parts[4]} в Int", GetType().Name);
             }
-        }
-        if (parts.Length > 5)
-        {
-            if (!int.TryParse(parts[5], out thread))
+            if (!int.TryParse(parts[parts.Length - 1], out thread))
             {
                 _log.Error($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int");
                 _userDialogService.ShowError($"Ошибка при парсинге события: не возможно преобразовать {parts[5]} в Int", GetType().Name);
             }
         }
-
+        
         return new LogEntry(dateTime, type, message, source, process, thread);
     }
 
