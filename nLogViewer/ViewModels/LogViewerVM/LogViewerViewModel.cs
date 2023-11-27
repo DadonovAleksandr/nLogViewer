@@ -85,6 +85,7 @@ internal class LogViewerViewModel : BaseViewModel
     private void OnClearCommandExecuted(object p)
     {
         _log.Debug($"Очистка всех событий");
+        _viewer.Clear();
         _logEntries.Clear();
         _filtredLogEntries.View.Refresh();
     }

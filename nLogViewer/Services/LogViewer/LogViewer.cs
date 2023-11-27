@@ -46,6 +46,7 @@ internal class LogViewer : ILogViewer
     {
         _log.Debug($"Очистка всех событий");
         _logEntries.Clear();
+        _prevEntriesCount = 0;
     }
     
     public IEnumerable<ILogEntry> GetEntries(int count = 0)
