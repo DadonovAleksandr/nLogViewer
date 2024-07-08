@@ -1,9 +1,11 @@
-﻿using nLogViewer.Tester.Infrastructure.Commands;
+﻿using System;
+using nLogViewer.Tester.Infrastructure.Commands;
 using nLogViewer.Tester.Model.AppSettings.AppConfig;
 using nLogViewer.Tester.Service.UserDialogService;
 using nLogViewer.Tester.ViewModels.Base;
 using ProjectVersionInfo;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using nLogViewer.Model;
@@ -49,23 +51,25 @@ internal class MainWindowViewModel : BaseViewModel
 
     public ICommand GenEvent { get; }
 
-    private void OnGenEventExecuted(object p)
+    private async void OnGenEventExecuted(object p)
     {
         if (p is LogEntryType type)
         {
-            _eventGenerator.Generate(type);
-            LogCount = _eventGenerator.LogCount;
+            var progress = new Progress<int>(p => LogCount = p);
+            var task = Task.Run(() => _eventGenerator.Generate(type, progress));
+            await task;
         }
     }
     private bool CanGenEventExecute(object p) => true;
     
     public ICommand GenRandom { get; }
-    private void OnGenRandomExecuted(object p)
+    private async void OnGenRandomExecuted(object p)
     {
         if (int.TryParse(p.ToString(), out int count))
         {
-            _eventGenerator.RandomGenerate(count);
-            LogCount = _eventGenerator.LogCount;
+            var progress = new Progress<int>(p => LogCount = p);
+            var task = Task.Run(() => _eventGenerator.RandomGenerate(count, progress));
+            await task;
         }
     }
     private bool CanGenRandomExecute(object p) => true;

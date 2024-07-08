@@ -82,6 +82,7 @@
                     <Grid.Resources>
                         <Style TargetType="Button">
                             <Setter Property="Margin" Value="5"/>
+                            <Setter Property="MinHeight" Value="40"/>
                         </Style>
                     </Grid.Resources>
                     <Button Grid.Column="0" Content="10" Command="{Binding GenRandom}"
@@ -89,11 +90,11 @@
                     <Button Grid.Column="1" Content="100" Command="{Binding GenRandom}"
                             CommandParameter="100"/>
                     <Button Grid.Column="2" Content="1_000" Command="{Binding GenRandom}"
-                            CommandParameter="1_000"/>
+                            CommandParameter="1000"/>
                     <Button Grid.Column="3" Content="10_000" Command="{Binding GenRandom}"
-                            CommandParameter="10_000"/>
+                            CommandParameter="10000"/>
                     <Button Grid.Column="4" Content="100_000" Command="{Binding GenRandom}"
-                            CommandParameter="100_000"/>
+                            CommandParameter="100000"/>
                 </Grid>
             </GroupBox>
         <TextBlock Grid.Row="2" Text="{Binding LogCount, StringFormat=Всего сообщений {0}}" />

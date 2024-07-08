@@ -9,12 +9,14 @@ internal class EventGenerator
 {
     protected static Logger _log = LogManager.GetCurrentClassLogger();
     private int _logCount;
+    private IProgress<int> _progress;
 
     public int LogCount => _logCount;
     
-    public void Generate(LogEntryType type)
+    public void Generate(LogEntryType type, IProgress<int> progress)
     {
         var msg = $"Сообщение {++_logCount}";
+        
         switch(type)
         {
             case LogEntryType.Trace: _log.Trace(msg); break;
@@ -25,15 +27,16 @@ internal class EventGenerator
             case LogEntryType.Fatal: _log.Fatal(msg); break;
             default: throw new ArgumentOutOfRangeException("Тип события не определен");
         }
+        progress.Report(_logCount);
     }
     
-    public void RandomGenerate(int count)
+    public void RandomGenerate(int count, IProgress<int> progress)
     {
         Random random = new Random();
         for(int i = 0; i < count; i++)
         {
             var message = $"Сообщение {++_logCount}";
-            switch(random.Next(0,5))
+            switch(random.Next(0,6))
             {
                 case 0: _log.Trace(message); break;
                 case 1: _log.Debug(message); break;
@@ -42,6 +45,7 @@ internal class EventGenerator
                 case 4: _log.Error(message); break;
                 case 5: _log.Fatal(message); break;
             }
+            progress.Report(_logCount);
             Thread.Sleep(10);
         }
     }
