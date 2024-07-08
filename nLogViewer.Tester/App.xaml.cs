@@ -29,7 +29,7 @@ namespace nLogViewer.Tester
         protected override async void OnStartup(StartupEventArgs e)
         {
             var prjVersion = new ProjectVersion(Assembly.GetExecutingAssembly());
-            _log.Debug($"Запуск приложения: {AppConst.Get().AppDesciption} {prjVersion.Version} билд от {prjVersion.BuildDate}");
+            _log.Info($"Запуск приложения: {AppConst.Get().AppDesciption} {prjVersion.Version} билд от {prjVersion.BuildDate}");
             IsDesighnMode = false;
             var host = Host;
             base.OnStartup(e);

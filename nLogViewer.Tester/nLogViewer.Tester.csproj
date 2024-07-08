@@ -11,7 +11,6 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\Convertors\" />
-    <Folder Include="Infrastructure\Resources\Images\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +26,19 @@
     <None Update="nlog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Infrastructure\Resources\Images\Medium\Debug.png" />
+    <Resource Include="Infrastructure\Resources\Images\Medium\Error.png" />
+    <Resource Include="Infrastructure\Resources\Images\Medium\Fatal.png" />
+    <Resource Include="Infrastructure\Resources\Images\Medium\Info.png" />
+    <Resource Include="Infrastructure\Resources\Images\Medium\Trace.png" />
+    <Resource Include="Infrastructure\Resources\Images\Medium\Warning.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\nLogViewer\nLogViewer.csproj" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
