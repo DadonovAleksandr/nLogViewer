@@ -1,30 +1,23 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
 
 namespace nLogViewer.Model;
 
 internal class ProjectVersion
 {
-    private static ProjectVersion _instance;
+    private static readonly Lazy<ProjectVersion> _instance = 
+        new(() => new ProjectVersion(), LazyThreadSafetyMode.ExecutionAndPublication);
 
-    public ProjectVersion()
-    {
-        _version = Assembly.GetExecutingAssembly().GetName().Version;
-    }
-
-    public static Version Get()
-    {
-        if (_instance is null)
-            _instance = new ProjectVersion();
-        return _instance.Version;
-    }
+    private readonly Version _version;
+    private readonly string _versionString;
     
-    #region Версия сборки
-    private Version _version;
+    private ProjectVersion()
+    {
+        var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        _version = assemblyVersion ?? new Version(0, 0, 0);
+        _versionString = $"{_version.Major}.{_version.Minor}.{_version.Build}";
+    }
 
-    /// <summary>
-    /// Версия сборки
-    /// </summary>
-    public Version Version => _version;
-    #endregion
+    public static string Get() => _instance.Value._versionString;
 }
