@@ -27,17 +27,13 @@ internal class FileLogReader : ILogReader
     public IEnumerable<ILogEntry> GetAll()
     {
         _log.Trace($"Получение всех записей из файла {_path}");
-        var lines = ReadLogFile().ToArray();
-        _lineCount += lines.Length;
-        return ParseLogEntries(lines);
+        return ParseLogEntries(ReadLogFile());
     }
 
     public IEnumerable<ILogEntry> GetNew()
     {
         _log.Trace($"Получение новых записей из файла {_path}");
-        var lines = ReadLogFile().ToArray();
-        _lineCount += lines.Length;
-        return ParseLogEntries(lines);
+        return ParseLogEntries(ReadLogFile());
     }
 
     private IEnumerable<string> ReadLogFile()
@@ -45,24 +41,24 @@ internal class FileLogReader : ILogReader
         if (!File.Exists(_path))
         {
             _log.Error($"Файл {_path} не существует");
-            return Enumerable.Empty<string>();
+            yield break;
         }
 
         FileInfo file = new FileInfo(_path);
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
-        List<string> lines = new List<string>();
-        while (sr.ReadLine() is { } line)
+
+        string? line;
+        while ((line = sr.ReadLine()) != null)
         {
-            lines.Add(line);
+            _lineCount++;
+            yield return line;
         }
         _pos = sr.BaseStream.Position;
-        return lines;
     }
 
     private IEnumerable<ILogEntry> ParseLogEntries(IEnumerable<string> lines)
     {
-        var logEntries = new List<ILogEntry>();
         StringBuilder currentMessage = new StringBuilder();
         DateTime? dateTime = null;
         LogEntryType type = LogEntryType.Fatal;
@@ -73,22 +69,22 @@ internal class FileLogReader : ILogReader
         foreach (var line in lines)
         {
             // Проверяем, начинается ли строка с даты (новая запись)
-            if (DateTime.TryParse(line.Split('|')[0].Trim(), out DateTime parsedDateTime))
+            if (TryParseDateTime(line.Split('|')[0].Trim(), out DateTime parsedDateTime))
             {
-                // Если уже есть накопленные данные, сохраняем предыдущую запись
+                // Если есть накопленные данные, возвращаем предыдущую запись
                 if (dateTime.HasValue)
                 {
-                    logEntries.Add(new LogEntry(
+                    yield return new LogEntry(
                         dateTime.Value,
                         type,
                         currentMessage.ToString().Trim(),
                         source,
                         process,
-                        thread));
+                        thread);
                 }
 
                 // Начинаем новую запись
-                var parts = line.Split("|").Select(x => x.Trim()).ToArray();
+                var parts = line.Split("|", StringSplitOptions.TrimEntries);
                 if (parts.Length < 4)
                 {
                     _log.Error($"Ошибка при парсинге события: {line}");
@@ -100,33 +96,36 @@ internal class FileLogReader : ILogReader
                 if (!Enum.TryParse(parts[1], true, out type))
                 {
                     _log.Error($"Ошибка при парсинге типа: {parts[1]}");
-                    type = LogEntryType.Fatal; // Значение по умолчанию
+                    type = LogEntryType.Fatal;
                 }
                 currentMessage.Clear().Append(parts[2]);
                 source = parts[3];
-                process = parts.Length > 5 && int.TryParse(parts[parts.Length - 2], out int p) ? p : 0;
-                thread = parts.Length > 5 && int.TryParse(parts[parts.Length - 1], out int t) ? t : 0;
+                process = parts.Length > 5 && int.TryParse(parts[^2], out int p) ? p : 0;
+                thread = parts.Length > 5 && int.TryParse(parts[^1], out int t) ? t : 0;
             }
             else
             {
-                // Это продолжение сообщения
+                // Продолжение сообщения
                 currentMessage.AppendLine(line);
             }
         }
 
-        // Добавляем последнюю запись, если она есть
+        // Возвращаем последнюю запись, если она есть
         if (dateTime.HasValue)
         {
-            logEntries.Add(new LogEntry(
+            yield return new LogEntry(
                 dateTime.Value,
                 type,
                 currentMessage.ToString().Trim(),
                 source,
                 process,
-                thread));
+                thread);
         }
+    }
 
-        return logEntries;
+    private static bool TryParseDateTime(string input, out DateTime result)
+    {
+        return DateTime.TryParse(input, out result);
     }
 
     public override string ToString() => $"Объект чтения лога из файла {_path}";
