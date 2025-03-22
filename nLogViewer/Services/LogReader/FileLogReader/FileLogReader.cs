@@ -17,7 +17,7 @@ internal class FileLogReader : ILogReader
     private readonly string _path;
     private long _pos;
     private int _lineCount;
-    private static readonly Regex LogEntryPattern = new Regex(@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*(\w+)(?:\s*\|\s*(\d+)\s*\|\s*(\d+))?$");
+    private static readonly Regex LogEntryPattern = new Regex(@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*(\w+)(?:\s*\|\s*(\d+)\s*\|\s*(\d+))?$");
 
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
@@ -55,10 +55,7 @@ internal class FileLogReader : ILogReader
         {
             _lineCount++;
             _log.Trace($"Прочитана строка {_lineCount}: {line}");
-            if (!string.IsNullOrWhiteSpace(line))
-            {
-                yield return line;
-            }
+            yield return line;
         }
         _pos = sr.BaseStream.Position;
         _log.Trace($"Обновлена позиция в файле: {_pos}");
@@ -98,9 +95,18 @@ internal class FileLogReader : ILogReader
                 }
 
                 // Начинаем новую запись
-                if (DateTime.TryParseExact(match.Groups[1].Value, "yyyy-MM-dd HH:mm:ss.fff", null, System.Globalization.DateTimeStyles.None, out DateTime parsedDateTime))
+                if (DateTime.TryParseExact(match.Groups[1].Value, "yyyy-MM-dd HH:mm:ss.ffff", null, System.Globalization.DateTimeStyles.None, out DateTime parsedDateTime))
                 {
-                    dateTime = parsedDateTime;
+                    // Округляем миллисекунды до трех цифр
+                    dateTime = new DateTime(
+                        parsedDateTime.Year,
+                        parsedDateTime.Month,
+                        parsedDateTime.Day,
+                        parsedDateTime.Hour,
+                        parsedDateTime.Minute,
+                        parsedDateTime.Second,
+                        parsedDateTime.Millisecond);
+                    
                     if (!Enum.TryParse(match.Groups[2].Value, true, out type))
                     {
                         _log.Error($"Ошибка при парсинге типа: {match.Groups[2].Value}");
