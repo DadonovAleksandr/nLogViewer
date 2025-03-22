@@ -80,6 +80,7 @@ internal class FileLogReader : ILogReader
             if (parts.Length < 1)
             {
                 _log.Error($"Строка не содержит разделитель '|': {line}");
+                _userDialogService.ShowError($"Строка не содержит разделитель '|': {line}", GetType().Name);
                 continue;
             }
 
@@ -119,12 +120,17 @@ internal class FileLogReader : ILogReader
                 process = parts.Length > 5 && int.TryParse(parts[^2], out int p) ? p : 0;
                 thread = parts.Length > 5 && int.TryParse(parts[^1], out int t) ? t : 0;
             }
-            else
+            else if (dateTime.HasValue)
             {
                 // Продолжение сообщения
                 if (currentMessage.Length > 0)
                     currentMessage.AppendLine();
                 currentMessage.Append(line);
+            }
+            else
+            {
+                _log.Error($"Невозможно распарсить строку: {line}");
+                _userDialogService.ShowError($"Невозможно распарсить строку: {line}", GetType().Name);
             }
         }
 
@@ -143,7 +149,21 @@ internal class FileLogReader : ILogReader
 
     private static bool TryParseDateTime(string input, out DateTime result)
     {
-        return DateTime.TryParse(input, out result);
+        // Пробуем сначала с четырьмя цифрами миллисекунд
+        if (DateTime.TryParseExact(input, "yyyy-MM-dd HH:mm:ss.ffff", null, System.Globalization.DateTimeStyles.None, out result))
+        {
+            // Округляем миллисекунды до трех цифр
+            result = new DateTime(
+                result.Year,
+                result.Month,
+                result.Day,
+                result.Hour,
+                result.Minute,
+                result.Second,
+                result.Millisecond);
+            return true;
+        }
+        return DateTime.TryParseExact(input, "yyyy-MM-dd HH:mm:ss.fff", null, System.Globalization.DateTimeStyles.None, out result);
     }
 
     public override string ToString() => $"Объект чтения лога из файла {_path}";
