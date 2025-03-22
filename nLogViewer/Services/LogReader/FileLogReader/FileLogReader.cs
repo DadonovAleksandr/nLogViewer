@@ -52,9 +52,14 @@ internal class FileLogReader : ILogReader
         while ((line = sr.ReadLine()) != null)
         {
             _lineCount++;
-            yield return line;
+            _log.Trace($"Прочитана строка {_lineCount}: {line}");
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                yield return line;
+            }
         }
         _pos = sr.BaseStream.Position;
+        _log.Trace($"Обновлена позиция в файле: {_pos}");
     }
 
     private IEnumerable<ILogEntry> ParseLogEntries(IEnumerable<string> lines)
@@ -68,9 +73,21 @@ internal class FileLogReader : ILogReader
 
         foreach (var line in lines)
         {
-            // Проверяем, начинается ли строка с даты (новая запись)
-            if (TryParseDateTime(line.Split('|')[0].Trim(), out DateTime parsedDateTime))
+            _log.Trace($"Обработка строки: {line}");
+            
+            // Разбиваем строку на части
+            var parts = line.Split('|', StringSplitOptions.TrimEntries);
+            if (parts.Length < 1)
             {
+                _log.Error($"Строка не содержит разделитель '|': {line}");
+                continue;
+            }
+
+            // Проверяем, начинается ли строка с даты (новая запись)
+            if (TryParseDateTime(parts[0], out DateTime parsedDateTime))
+            {
+                _log.Trace($"Найдена дата: {parsedDateTime}");
+                
                 // Если есть накопленные данные, возвращаем предыдущую запись
                 if (dateTime.HasValue)
                 {
@@ -84,7 +101,6 @@ internal class FileLogReader : ILogReader
                 }
 
                 // Начинаем новую запись
-                var parts = line.Split("|", StringSplitOptions.TrimEntries);
                 if (parts.Length < 4)
                 {
                     _log.Error($"Ошибка при парсинге события: {line}");
@@ -106,7 +122,9 @@ internal class FileLogReader : ILogReader
             else
             {
                 // Продолжение сообщения
-                currentMessage.AppendLine(line);
+                if (currentMessage.Length > 0)
+                    currentMessage.AppendLine();
+                currentMessage.Append(line);
             }
         }
 
