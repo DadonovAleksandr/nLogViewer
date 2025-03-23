@@ -21,8 +21,13 @@ internal class FileLogReader : ILogReader
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами");
-        _path = path;
         _userDialogService = userDialogService;
+        if (string.IsNullOrEmpty(path))
+        {
+            _log.Error($"Не задан путь для файла лога");
+            throw new ArgumentException("Не задан путь для файла лога", nameof(path));
+        }
+        _path = path;
     }
 
     public IEnumerable<ILogEntry> GetAll()
@@ -45,7 +50,7 @@ internal class FileLogReader : ILogReader
             yield break;
         }
 
-        FileInfo file = new FileInfo(_path);
+        var file = new FileInfo(_path);
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
 
@@ -62,6 +67,7 @@ internal class FileLogReader : ILogReader
 
     private IEnumerable<ILogEntry> ParseLogEntries(IEnumerable<string> lines)
     {
+        _log.Trace($"Парсинг записей из строк");
         StringBuilder currentMessage = new StringBuilder();
         DateTime? dateTime = null;
         LogEntryType type = LogEntryType.Fatal;
