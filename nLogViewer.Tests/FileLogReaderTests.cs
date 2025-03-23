@@ -1,8 +1,4 @@
-using NUnit.Framework;
 using Moq;
-using System.IO;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using nLogViewer.Model;
 using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.UserDialogService;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
@@ -17,7 +16,7 @@ internal class FileLogReader : ILogReader
     private readonly string _path;
     private long _pos;
     private int _lineCount;
-    private static readonly Regex LogEntryPattern = new Regex(@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*(\w+)(?:\s*\|\s*(\d+)\s*\|\s*(\d+))?$");
+    private static readonly Regex LogEntryPattern = new (@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*(\w+)(?:\s*\|\s*(\d+)\s*\|\s*(\d+))?$");
 
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
