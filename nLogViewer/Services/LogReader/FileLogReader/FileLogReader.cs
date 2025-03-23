@@ -16,7 +16,7 @@ internal class FileLogReader : ILogReader
     private readonly string _path;
     private long _pos;
     private int _lineCount;
-    private static readonly Regex LogEntryPattern = new (@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*(\w+)(?:\s*\|\s*(\d+)\s*\|\s*(\d+))?$");
+    private static readonly Regex LogEntryPattern = new(@"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*(\w+)(?:\s*\|\s*(\d+)\s*\|\s*(\d+))?$");
 
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
@@ -69,84 +69,90 @@ internal class FileLogReader : ILogReader
     {
         _log.Trace($"Парсинг записей из строк");
         StringBuilder currentMessage = new StringBuilder();
-        DateTime? dateTime = null;
-        LogEntryType type = LogEntryType.Fatal;
-        string source = string.Empty;
-        int process = 0;
-        int thread = 0;
 
         foreach (var line in lines)
         {
             _log.Trace($"Обработка строки: {line}");
-            
-            var match = LogEntryPattern.Match(line);
+
+            // Добавляем новую строку к текущему сообщению
+            if (currentMessage.Length > 0)
+                currentMessage.AppendLine();
+            currentMessage.Append(line);
+
+            // Проверяем весь накопленный текст на соответствие паттерну
+            string currentText = currentMessage.ToString().Trim();
+            var match = LogEntryPattern.Match(currentText);
             if (match.Success)
             {
-                _log.Trace($"Найдено начало нового сообщения: {line}");
-                
-                // Если есть накопленные данные, возвращаем предыдущую запись
-                if (dateTime.HasValue)
+                _log.Trace($"Найдена полная запись: {currentText}");
+                if (TryParseLogEntry(match, out var entry))
                 {
-                    yield return CreateLogEntry(dateTime.Value, type, currentMessage, source, process, thread);
-                    currentMessage.Clear();
-                }
-
-                // Начинаем новую запись
-                if (DateTime.TryParseExact(match.Groups[1].Value, "yyyy-MM-dd HH:mm:ss.ffff", null, System.Globalization.DateTimeStyles.None, out DateTime parsedDateTime))
-                {
-                    // Округляем миллисекунды до трех цифр
-                    dateTime = new DateTime(
-                        parsedDateTime.Year,
-                        parsedDateTime.Month,
-                        parsedDateTime.Day,
-                        parsedDateTime.Hour,
-                        parsedDateTime.Minute,
-                        parsedDateTime.Second,
-                        parsedDateTime.Millisecond);
-                    
-                    if (!Enum.TryParse(match.Groups[2].Value, true, out type))
-                    {
-                        _log.Error($"Ошибка при парсинге типа: {match.Groups[2].Value}");
-                        type = LogEntryType.Fatal;
-                    }
-                    currentMessage.Append(match.Groups[3].Value);
-                    source = match.Groups[4].Value;
-                    process = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
-                    thread = match.Groups[6].Success ? int.Parse(match.Groups[6].Value) : 0;
-                    _log.Trace($"Начата новая запись: {dateTime}, {type}, {currentMessage}, {source}, {process}, {thread}");
+                    yield return entry;
                 }
                 else
                 {
-                    _log.Error($"Невозможно распарсить дату: {match.Groups[1].Value}");
-                    _userDialogService.ShowError($"Невозможно распарсить дату: {match.Groups[1].Value}", GetType().Name);
+                    _log.Error($"Ошибка парсинга записи: {currentText}");
+                    _userDialogService.ShowError($"Ошибка парсинга записи: {currentText}", GetType().Name);
                 }
+                currentMessage.Clear();
             }
-            else if (dateTime.HasValue)
+            // Если нет соответствия, продолжаем накапливать строки
+            else
             {
-                // Продолжение сообщения
-                if (currentMessage.Length > 0)
-                    currentMessage.AppendLine();
-                currentMessage.Append(line);
-                _log.Trace($"Добавлена строка к текущему сообщению: {line}");
+                _log.Trace($"Строка добавлена к сообщению, ждем завершения: {line}");
+            }
+        }
+
+        // Проверяем остаток, если он есть
+        if (currentMessage.Length > 0)
+        {
+            string finalText = currentMessage.ToString().Trim();
+            var match = LogEntryPattern.Match(finalText);
+            if (match.Success && TryParseLogEntry(match, out var entry))
+            {
+                _log.Trace($"Возвращаем последнюю запись: {finalText}");
+                yield return entry;
             }
             else
             {
-                _log.Error($"Строка не соответствует формату лога: {line}");
-                _userDialogService.ShowError($"Строка не соответствует формату лога: {line}", GetType().Name);
+                _log.Error($"Невалидный остаток лога: {finalText}");
+                _userDialogService.ShowError($"Невалидный остаток лога: {finalText}", GetType().Name);
             }
         }
-
-        // Возвращаем последнюю запись, если она есть
-        if (dateTime.HasValue)
-        {
-            yield return CreateLogEntry(dateTime.Value, type, currentMessage, source, process, thread);
-        }
     }
 
-    private LogEntry CreateLogEntry(DateTime dateTime, LogEntryType type, StringBuilder message, string source, int process, int thread)
+    private bool TryParseLogEntry(Match match, out ILogEntry entry)
     {
-        return new LogEntry(dateTime, type, message.ToString().Trim(), source, process, thread);
+        entry = null;
+        if (!DateTime.TryParseExact(match.Groups[1].Value, "yyyy-MM-dd HH:mm:ss.ffff", null, System.Globalization.DateTimeStyles.None, out DateTime parsedDateTime))
+        {
+            _log.Error($"Невозможно распарсить дату: {match.Groups[1].Value}");
+            return false;
+        }
+
+        DateTime dateTime = new DateTime(
+            parsedDateTime.Year,
+            parsedDateTime.Month,
+            parsedDateTime.Day,
+            parsedDateTime.Hour,
+            parsedDateTime.Minute,
+            parsedDateTime.Second,
+            parsedDateTime.Millisecond);
+
+        if (!Enum.TryParse(match.Groups[2].Value, true, out LogEntryType type))
+        {
+            _log.Error($"Ошибка при парсинге типа: {match.Groups[2].Value}");
+            type = LogEntryType.Fatal;
+        }
+
+        string message = match.Groups[3].Value.Trim();
+        string source = match.Groups[4].Value;
+        int process = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
+        int thread = match.Groups[6].Success ? int.Parse(match.Groups[6].Value) : 0;
+
+        entry = new LogEntry(dateTime, type, message, source, process, thread);
+        return true;
     }
-    
+
     public override string ToString() => $"Объект чтения лога из файла {_path}";
 }
