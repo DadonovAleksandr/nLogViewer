@@ -87,15 +87,7 @@ internal class FileLogReader : ILogReader
                 // Если есть накопленные данные, возвращаем предыдущую запись
                 if (dateTime.HasValue)
                 {
-                    var entry = new LogEntry(
-                        dateTime.Value,
-                        type,
-                        currentMessage.ToString().Trim(),
-                        source,
-                        process,
-                        thread);
-                    _log.Trace($"Возвращаем запись: {entry}");
-                    yield return entry;
+                    yield return CreateLogEntry(dateTime.Value, type, currentMessage, source, process, thread);
                     currentMessage.Clear();
                 }
 
@@ -147,17 +139,14 @@ internal class FileLogReader : ILogReader
         // Возвращаем последнюю запись, если она есть
         if (dateTime.HasValue)
         {
-            var entry = new LogEntry(
-                dateTime.Value,
-                type,
-                currentMessage.ToString().Trim(),
-                source,
-                process,
-                thread);
-            _log.Trace($"Возвращаем последнюю запись: {entry}");
-            yield return entry;
+            yield return CreateLogEntry(dateTime.Value, type, currentMessage, source, process, thread);
         }
     }
 
+    private LogEntry CreateLogEntry(DateTime dateTime, LogEntryType type, StringBuilder message, string source, int process, int thread)
+    {
+        return new LogEntry(dateTime, type, message.ToString().Trim(), source, process, thread);
+    }
+    
     public override string ToString() => $"Объект чтения лога из файла {_path}";
 }
