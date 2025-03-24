@@ -55,13 +55,15 @@ namespace nLogViewer
 
             services.AddSingleton<IConfiguration>(configuration);
 
+            LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration("nlog.config");
+            var logLevel = configuration.GetValue<string>("Logging:LogLevel:Default") ?? "Info";
+            LogManager.Configuration.Variables["logLevel"] = logLevel;
+
             services
                 .RegisterServices()
                 .RegisterViewModels()
                 .AddLogging(builder =>
                 {
-                    var logLevel = configuration.GetValue<string>("Logging:LogLevel:Default");
-                    LogManager.Configuration.Variables["logLevel"] = logLevel;
                     builder.ClearProviders();
                     builder.AddNLog();
                 });
