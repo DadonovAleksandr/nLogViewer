@@ -71,7 +71,7 @@ public class FileLogReaderTests
         // Assert
         Assert.That(entries.Count, Is.EqualTo(2));
         var firstEntry = entries[0];
-        Assert.That(firstEntry.Message, Is.EqualTo("Multi-line message:\nLine 2\nLine 3"));
+        Assert.That(firstEntry.Message.Replace("\r\n", "\n"), Is.EqualTo("Multi-line message:\nLine 2\nLine 3"));
         Assert.That(firstEntry.EntryType, Is.EqualTo(LogEntryType.Debug));
         Assert.That(firstEntry.ProcessId, Is.EqualTo(123));
         Assert.That(firstEntry.ThreadId, Is.EqualTo(456));
