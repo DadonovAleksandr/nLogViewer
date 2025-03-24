@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
@@ -25,9 +24,7 @@ namespace nLogViewer
         public static bool IsDesighnMode { get; private set; } = true;
         
         private static IHost _host;
-        public static IHost Host => _host ??= Program.CreateHostBuilder(Environment.GetCommandLineArgs())
-            .Build();
-        public IConfiguration Configuration { get; }
+        public static IHost Host => _host ??= Program.CreateHostBuilder(Environment.GetCommandLineArgs()).Build();
         protected override async void OnStartup(StartupEventArgs e)
         {
             _log.Debug($"Запуск приложения: {AppConst.Get().AppName} {ProjectVersion.Get()}");
@@ -47,16 +44,28 @@ namespace nLogViewer
             _host = null;
         }
 
-        public static void ConfigureServices(HostBuilderContext host, IServiceCollection services) => services
-            .RegisterServices()
-            .RegisterViewModels()
-            .AddLogging(builder =>
-            {
-                var logLevel = Configuration.GetValue<string>("Logging:LogLevel:Default");
-                LogManager.Configuration.Variables["logLevel"] = logLevel;
-                builder.ClearProviders();
-                builder.AddNLog();
-            });
+        public static void ConfigureServices(HostBuilderContext host, IServiceCollection services)
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{host.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            services.AddSingleton<IConfiguration>(configuration);
+
+            services
+                .RegisterServices()
+                .RegisterViewModels()
+                .AddLogging(builder =>
+                {
+                    var logLevel = configuration.GetValue<string>("Logging:LogLevel:Default");
+                    LogManager.Configuration.Variables["logLevel"] = logLevel;
+                    builder.ClearProviders();
+                    builder.AddNLog();
+                });
+        }
 
         public static string CurrentDirectory => IsDesighnMode
             ? Path.GetDirectoryName(GetSourceCodePath())
