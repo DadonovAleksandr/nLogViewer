@@ -20,6 +20,7 @@ internal class FileLogReader : ILogReader
     private static readonly Regex LogEntryPattern = new(
         @"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*([.\w]+)\s*\|\s*(\d+)\s*\|\s*(\d+)?$",
         RegexOptions.Singleline);
+    private static readonly Regex DateTimePattern = new(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4}");
 
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
@@ -73,14 +74,20 @@ internal class FileLogReader : ILogReader
         _log.Trace($"Парсинг записей из строк");
         StringBuilder currentMessage = new StringBuilder();
 
-        var arrayLines = lines.ToArray();
-        foreach (var line in arrayLines)
+        foreach (var line in lines)
         {
             _log.Trace($"Обработка строки: {line}");
 
             // Добавляем новую строку к текущему сообщению
             if (currentMessage.Length > 0)
                 currentMessage.AppendLine();
+            else
+                if (!DateTimePattern.Match(line).Success)
+                {
+                    _log.Error($"Ошибка парсинга записи. Запись будет игнорирована: {line}");
+                    _userDialogService.ShowError($"Ошибка парсинга записи. Запись будет игнорирована: {line}", GetType().Name);
+                    continue;
+                }
             currentMessage.Append(line);
 
             // Проверяем весь накопленный текст на соответствие паттерну

@@ -2,5 +2,6 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=92baecf9_002D3a42_002D4e37_002D8cf7_002Dcc2c61da76f3/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetAll_MultiLineMessage_ReturnsSingleEntry" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::990F4D80-6BD7-4413-98C7-C149E39E864C::net8.0-windows::FileLogReaderTests.GetAll_MultiLineMessage_ReturnsSingleEntry&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::990F4D80-6BD7-4413-98C7-C149E39E864C::net8.0-windows::FileLogReaderTests.GetAll_InvalidLine_LogsError&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
