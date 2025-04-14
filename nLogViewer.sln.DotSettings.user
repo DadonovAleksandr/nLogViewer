@@ -3,5 +3,7 @@
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;NUnit3x::990F4D80-6BD7-4413-98C7-C149E39E864C::net8.0-windows::FileLogReaderTests.GetAll_MultiLineMessage_ReturnsSingleEntry&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;NUnit3x::990F4D80-6BD7-4413-98C7-C149E39E864C::net8.0-windows::FileLogReaderTests.GetAll_InvalidLine_LogsError&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::990F4D80-6BD7-4413-98C7-C149E39E864C::net8.0-windows::FileLogReaderTests.GetAll_SingleLineLog_ReturnsCorrectEntry&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::990F4D80-6BD7-4413-98C7-C149E39E864C::net8.0-windows::FileLogReaderTests.GetNew_TracksPosition&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

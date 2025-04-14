@@ -85,7 +85,7 @@ internal class MainWindowViewModel : BaseViewModel
     private void OnAddFolderExecuted(object p)
     {
         _log.Debug("Команда добавить директорию лога в просмоторщик");
-        var ofd = new VistaFolderBrowserDialog()
+        var ofd = new VistaFolderBrowserDialog
         {
             Description = "Выберите директорию логов",
             UseDescriptionForTitle = true,
