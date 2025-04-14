@@ -72,7 +72,6 @@ internal class LogViewer : ILogViewer
                 {
                     _log.Debug($"Команда на переход в состояние {LogViewerState.ReadAllMsg}");
                     _state = LogViewerState.ReadAllMsg;
-                    break;
                 }
                 break;
             case LogViewerState.ReadAllMsg:
