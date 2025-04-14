@@ -45,6 +45,51 @@ internal class FileLogReader : ILogReader
         return ParseLogEntries(ReadLogFile());
     }
 
+    public bool Clear()
+    {
+        _log.Trace($"Попытка очистки лог-файла {_path}");
+    
+        try
+        {
+            if (!File.Exists(_path))
+            {
+                _log.Warn($"Файл {_path} не существует, очистка не требуется");
+                return true;
+            }
+
+            // Открываем файл с доступом для записи и обнуляем его содержимое
+            using (var fs = new FileStream(_path, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
+                // Просто открытие в режиме Create автоматически очистит файл
+                _log.Info($"Файл лога {_path} успешно очищен");
+            }
+
+            // Сбрасываем позицию чтения
+            _pos = 0;
+            _lineCount = 0;
+        
+            return true;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _log.Error(ex, $"Нет прав на очистку файла {_path}");
+            _userDialogService.ShowError($"Ошибка очистки: нет прав доступа к файлу {_path}", "Ошибка очистки лога");
+            return false;
+        }
+        catch (IOException ex)
+        {
+            _log.Error(ex, $"Ошибка ввода-вывода при очистке файла {_path}");
+            _userDialogService.ShowError($"Ошибка очистки лог-файла: {ex.Message}", "Ошибка очистки лога");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, $"Неизвестная ошибка при очистке файла {_path}");
+            _userDialogService.ShowError($"Неизвестная ошибка при очистке лога: {ex.Message}", "Ошибка очистки лога");
+            return false;
+        }
+    }
+    
     private IEnumerable<string> ReadLogFile()
     {
         if (!File.Exists(_path))

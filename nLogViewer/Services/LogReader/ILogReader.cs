@@ -17,4 +17,9 @@ internal interface ILogReader
     /// <returns></returns>
     IEnumerable<ILogEntry> GetNew();
 
+    /// <summary>
+    /// Очистка текущего лога
+    /// </summary>
+    /// <returns></returns>
+    bool Clear();
 }
