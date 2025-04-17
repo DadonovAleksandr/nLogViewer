@@ -119,6 +119,10 @@ internal class MainWindowViewModel : BaseViewModel
     private void OnDeleteLogExecuted(object p)
     {
         _log.Debug("Команда удалить текущий лог из просмоторщика");
+        if (_logViewer.SelectedItem is TabItem tabItem && tabItem.Content is LogViewerView logViewerView)
+        {
+            logViewerView.Dispose();
+        }
         _recentLogs.Remove(_recentLogs[_logViewer.SelectedIndex]);
         _logViewer.Items.Remove(_logViewer.SelectedItem);
     }

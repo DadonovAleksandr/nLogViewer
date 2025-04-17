@@ -138,4 +138,10 @@ internal class LogViewerViewModel : BaseViewModel
 
     #endregion
 
+    public void Dispose()
+    {
+        _log.Debug($"Освобождение ресурсов LogViewerViewModel");
+        _viewer.EntriesChanged -= ViewerEntriesRefresh;
+        _viewer.Dispose();
+    }
 }

@@ -9,4 +9,11 @@ public partial class LogViewerView : UserControl
         InitializeComponent();
     }
     
+    public void Dispose()
+    {
+        if (DataContext is ViewModels.LogViewerVM.LogViewerViewModel viewModel)
+        {
+            viewModel.Dispose();
+        }
+    }
 }

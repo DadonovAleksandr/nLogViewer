@@ -9,7 +9,7 @@ using nLogViewer.Services.LogReader.Factory;
 
 namespace nLogViewer.Services.LogViewer;
 
-internal class LogViewer : ILogViewer
+internal class LogViewer : ILogViewer, IDisposable
 {
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     
@@ -50,12 +50,20 @@ internal class LogViewer : ILogViewer
         _prevEntriesCount = 0;
     }
     
+    public void Dispose()
+    {
+        _log.Debug($"Освобождение ресурсов LogViewer");
+        _timer?.Dispose();
+        _timer = null;
+        _logEntries.Clear();
+        _prevEntriesCount = 0;
+    }
+    
     public IEnumerable<ILogEntry> GetEntries(int count = 0)
     {
         if (count == 0)
             return LogEntries;
         return LogEntries.Skip(Math.Max(0, Count - count));
-
     }
     private void Process(object? obj)
     {
