@@ -2,6 +2,7 @@
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader.Factory;
 using nLogViewer.Services.LogReader.FileLogReader;
+using nLogViewer.Services.LogReader.Repository;
 using nLogViewer.Services.LogViewer;
 using nLogViewer.Services.UserDialogService;
 
@@ -13,6 +14,9 @@ public static class ServiceRegistration
     {
         services.AddSingleton<ILogEntryFilter, LogEntryFilter>();
 
+        // Регистрация репозиториев
+        services.AddSingleton<ILogRepositoryFactory, LogRepositoryFactory>();
+        
         services.AddTransient<ILogReaderFactory, FileLogReaderFactory>();
 
         services.AddTransient<ILogViewer, LogViewer.LogViewer>();

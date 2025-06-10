@@ -103,17 +103,27 @@ Filter properties are duplicated between `LogEntryFilter.cs` and `MainWindowView
 
 ---
 
-### Issue #6: Implement Repository pattern for log sources
+### Issue #6: Implement Repository pattern for log sources ✅
 **Title:** Add repository abstraction for multiple log sources
 **Labels:** `enhancement`, `architecture`, `priority:medium`
 **Description:**
 Create abstraction layer to support different log sources (files, databases, network).
 
 **Tasks:**
-- [ ] Create `ILogRepository` interface
-- [ ] Implement `FileLogRepository`
-- [ ] Add factory for repository creation
-- [ ] Support for multiple simultaneous sources
+- [x] Create `ILogRepository` interface
+- [x] Implement `FileLogRepository`
+- [x] Add factory for repository creation
+- [x] Support for multiple simultaneous sources
+
+**Affected files:**
+- `Services/LogReader/Repository/ILogRepository.cs` ✅ (новый)
+- `Services/LogReader/Repository/FileLogRepository.cs` ✅ (новый)
+- `Services/LogReader/Repository/ILogRepositoryFactory.cs` ✅ (новый)
+- `Services/LogReader/Repository/LogRepositoryFactory.cs` ✅ (новый)
+- `Services/LogReader/Repository/CompositeLogRepository.cs` ✅ (новый)
+- `Services/LogReader/RepositoryLogSource.cs` ✅ (новый адаптер)
+- `Services/LogReader/FileLogReader/FileLogReaderFactory.cs` ✅ (обновлен)
+- `Services/ServiceRegistration.cs` ✅ (обновлен)
 
 ---
 
