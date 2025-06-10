@@ -52,10 +52,10 @@ The `Process()` method in `LogViewer` runs in a timer callback without error han
 - [x] Wrap `Process()` method content in try-catch
 - [x] Add logging for caught exceptions
 - [x] Implement error recovery strategy
-- [ ] Add aggregate error reporting for batch operations
+- [x] Add aggregate error reporting for batch operations
 
 **Affected files:**
-- `Services/LogViewer/LogViewer.cs` ✅ (добавлена обработка ошибок в ProcessAsync)
+- `Services/LogViewer/LogViewer.cs` ✅ (добавлена полная обработка ошибок с агрегацией)
 
 ---
 

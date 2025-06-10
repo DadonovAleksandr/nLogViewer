@@ -22,6 +22,8 @@ internal class LogViewer : ILogViewer, IDisposable
     private readonly SemaphoreSlim _processLock = new SemaphoreSlim(1, 1);
     private CancellationTokenSource _cancellationTokenSource;
     private bool _disposed;
+    private int _totalErrorCount;
+    private DateTime _lastErrorReportTime = DateTime.MinValue;
     // команды
     private bool _start;
     private bool _stop;
@@ -146,12 +148,42 @@ internal class LogViewer : ILogViewer, IDisposable
                     break;
                 case LogViewerState.ReadAllMsg:
                     var allEntries = new List<ILogEntry>();
-                    await foreach (var entry in _reader.GetAllAsync(cancellationToken))
+                    var errors = new List<Exception>();
+                    var entriesRead = 0;
+                    
+                    try
                     {
-                        allEntries.Add(entry);
+                        await foreach (var entry in _reader.GetAllAsync(cancellationToken))
+                        {
+                            try
+                            {
+                                allEntries.Add(entry);
+                                entriesRead++;
+                            }
+                            catch (Exception ex)
+                            {
+                                errors.Add(ex);
+                                _log.Warn(ex, $"Ошибка при добавлении записи #{entriesRead}");
+                            }
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        errors.Add(ex);
+                        _log.Error(ex, "Критическая ошибка при чтении всех записей");
+                    }
+                    
                     _logEntries = allEntries;
-                    _log.Trace($"Считывание всех событий ({_logEntries.Count})");
+                    _log.Trace($"Считывание всех событий ({_logEntries.Count} успешно, {errors.Count} ошибок)");
+                    
+                    if (errors.Count > 0)
+                    {
+                        _totalErrorCount += errors.Count;
+                        var aggregateException = new AggregateException($"Произошло {errors.Count} ошибок при чтении логов", errors);
+                        _log.Error(aggregateException, $"Агрегированные ошибки при чтении всех записей");
+                        ReportAccumulatedErrors();
+                    }
+                    
                     _state = LogViewerState.ReadNewMsg;
                     _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
                     break;
@@ -168,11 +200,40 @@ internal class LogViewer : ILogViewer, IDisposable
                         _state = LogViewerState.Pause;
                         break;
                     }
-                    await foreach (var entry in _reader.GetNewAsync(cancellationToken))
+                    var newErrors = new List<Exception>();
+                    var newEntriesCount = 0;
+                    
+                    try
                     {
-                        _logEntries.Add(entry);
+                        await foreach (var entry in _reader.GetNewAsync(cancellationToken))
+                        {
+                            try
+                            {
+                                _logEntries.Add(entry);
+                                newEntriesCount++;
+                            }
+                            catch (Exception ex)
+                            {
+                                newErrors.Add(ex);
+                                _log.Warn(ex, $"Ошибка при добавлении новой записи #{_logEntries.Count + newEntriesCount}");
+                            }
+                        }
                     }
-                    _log.Trace($"Считывание новых событий");
+                    catch (Exception ex)
+                    {
+                        newErrors.Add(ex);
+                        _log.Error(ex, "Критическая ошибка при чтении новых записей");
+                    }
+                    
+                    _log.Trace($"Считывание новых событий ({newEntriesCount} успешно, {newErrors.Count} ошибок)");
+                    
+                    if (newErrors.Count > 0)
+                    {
+                        _totalErrorCount += newErrors.Count;
+                        var aggregateException = new AggregateException($"Произошло {newErrors.Count} ошибок при чтении новых логов", newErrors);
+                        _log.Error(aggregateException, $"Агрегированные ошибки при чтении новых записей");
+                        ReportAccumulatedErrors();
+                    }
                     break;
                 case LogViewerState.Pause:
                     if (_stop)
@@ -232,5 +293,25 @@ internal class LogViewer : ILogViewer, IDisposable
 
         _prevEntriesCount = _logEntries.Count;
         EntriesChanged?.Invoke();
+    }
+    
+    private void ReportAccumulatedErrors()
+    {
+        var now = DateTime.UtcNow;
+        var timeSinceLastReport = now - _lastErrorReportTime;
+        
+        // Сообщаем о накопленных ошибках каждые 5 минут или при достижении 100 ошибок
+        if (timeSinceLastReport.TotalMinutes >= 5 || _totalErrorCount >= 100)
+        {
+            _log.Error($"Накоплено {_totalErrorCount} ошибок за последние {timeSinceLastReport.TotalMinutes:F1} минут при обработке логов");
+            _lastErrorReportTime = now;
+            
+            // Сбрасываем счетчик после 1000 ошибок, чтобы избежать переполнения
+            if (_totalErrorCount >= 1000)
+            {
+                _log.Warn($"Счетчик ошибок сброшен после достижения {_totalErrorCount} ошибок");
+                _totalErrorCount = 0;
+            }
+        }
     }
 }
