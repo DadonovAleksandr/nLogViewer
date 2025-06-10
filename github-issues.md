@@ -61,21 +61,25 @@ The `Process()` method in `LogViewer` runs in a timer callback without error han
 
 ## Архитектурные улучшения (Priority: Medium)
 
-### Issue #4: Split ILogReader interface following ISP
+### Issue #4: Split ILogReader interface following ISP ✅
 **Title:** Refactor ILogReader interface to follow Interface Segregation Principle
 **Labels:** `refactoring`, `architecture`, `priority:medium`
 **Description:**
 The `ILogReader` interface violates ISP by including the `Clear()` method, which doesn't belong to a reader.
 
 **Tasks:**
-- [ ] Create new `ILogSource` interface extending `ILogReader`
-- [ ] Move `Clear()` method to `ILogSource`
-- [ ] Update implementations and dependencies
-- [ ] Add async version: `ClearAsync()`
+- [x] Create new `ILogSource` interface extending `ILogReader`
+- [x] Move `Clear()` method to `ILogSource`
+- [x] Update implementations and dependencies
+- [x] Add async version: `ClearAsync()`
 
 **Affected files:**
-- `Services/LogReader/ILogReader.cs`
-- All implementations and consumers
+- `Services/LogReader/ILogReader.cs` ✅
+- `Services/LogReader/ILogSource.cs` ✅ (новый файл)
+- `Services/LogReader/FileLogReader/FileLogReader.cs` ✅
+- `Services/LogReader/Factory/ILogReaderFactory.cs` ✅
+- `Services/LogReader/FileLogReader/FileLogReaderFactory.cs` ✅
+- `Services/LogViewer/LogViewer.cs` ✅
 
 ---
 

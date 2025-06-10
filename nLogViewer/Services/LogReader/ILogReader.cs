@@ -19,12 +19,6 @@ internal interface ILogReader : IDisposable
     /// </summary>
     /// <returns></returns>
     IEnumerable<ILogEntry> GetNew();
-
-    /// <summary>
-    /// Очистка текущего лога
-    /// </summary>
-    /// <returns></returns>
-    bool Clear();
     
     /// <summary>
     /// Асинхронно получить все записи
@@ -39,11 +33,4 @@ internal interface ILogReader : IDisposable
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns></returns>
     IAsyncEnumerable<ILogEntry> GetNewAsync(CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Асинхронная очистка текущего лога
-    /// </summary>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns></returns>
-    Task<bool> ClearAsync(CancellationToken cancellationToken = default);
 }

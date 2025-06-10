@@ -10,7 +10,7 @@ internal class FileLogReaderFactory : ILogReaderFactory
     {
         _userDialogService = userDialogService;
     }
-    public ILogReader Create()
+    public ILogSource Create()
     {
         var configuration = new FileLogReaderConfiguration();
         return new FileLogReader(configuration.FileName, _userDialogService);

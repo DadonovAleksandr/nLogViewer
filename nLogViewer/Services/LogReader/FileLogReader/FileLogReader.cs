@@ -12,7 +12,7 @@ using nLogViewer.Services.UserDialogService;
 
 namespace nLogViewer.Services.LogReader.FileLogReader;
 
-internal class FileLogReader : ILogReader
+internal class FileLogReader : ILogSource
 {
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     private readonly IUserDialogService _userDialogService;

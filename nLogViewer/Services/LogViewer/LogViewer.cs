@@ -14,7 +14,7 @@ internal class LogViewer : ILogViewer, IDisposable
 {
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     
-    private readonly ILogReader _reader;
+    private readonly ILogSource _reader;
     private LogViewerState _state;
     private List<ILogEntry> _logEntries;
     private int  _prevEntriesCount;
