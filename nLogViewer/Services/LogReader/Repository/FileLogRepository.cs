@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
+using nLogViewer.Services.Progress;
 
 namespace nLogViewer.Services.LogReader.Repository;
 
@@ -54,7 +55,20 @@ internal class FileLogRepository : ILogRepository
         // Сбрасываем позицию для чтения с начала
         _currentPosition = 0;
         
-        await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, cancellationToken))
+        await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, null, cancellationToken))
+        {
+            yield return line;
+        }
+    }
+
+    public async IAsyncEnumerable<string> ReadAllLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Чтение всех строк из файла {_filePath} с отчетом о прогрессе");
+        
+        // Сбрасываем позицию для чтения с начала
+        _currentPosition = 0;
+        
+        await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, progressReporter, cancellationToken))
         {
             yield return line;
         }
@@ -64,7 +78,17 @@ internal class FileLogRepository : ILogRepository
     {
         _log.Trace($"Чтение новых строк из файла {_filePath} с позиции {_currentPosition}");
         
-        await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, cancellationToken))
+        await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, null, cancellationToken))
+        {
+            yield return line;
+        }
+    }
+
+    public async IAsyncEnumerable<string> ReadNewLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Чтение новых строк из файла {_filePath} с позиции {_currentPosition} с отчетом о прогрессе");
+        
+        await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, progressReporter, cancellationToken))
         {
             yield return line;
         }
@@ -96,7 +120,7 @@ internal class FileLogRepository : ILogRepository
         _currentPosition = 0;
     }
 
-    private async IAsyncEnumerable<string> ReadLinesFromPositionAsync(long startPosition, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<string> ReadLinesFromPositionAsync(long startPosition, IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (!File.Exists(_filePath))
         {
@@ -107,13 +131,33 @@ internal class FileLogRepository : ILogRepository
         using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
         fs.Seek(startPosition, SeekOrigin.Begin);
         
+        var fileSize = fs.Length;
+        var linesRead = 0;
+        
         using var reader = new StreamReader(fs);
         string? line;
         
         while ((line = await reader.ReadLineAsync()) != null)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            
+            linesRead++;
+            
+            // Отчет о прогрессе каждые 100 строк
+            if (progressReporter != null && linesRead % 100 == 0)
+            {
+                var currentPosition = fs.Position;
+                var progressPercentage = fileSize > 0 ? (double)currentPosition / fileSize * 100 : 0;
+                progressReporter.ReportPercentage((int)progressPercentage, $"Обработано {linesRead} строк");
+            }
+            
             yield return line;
+        }
+        
+        // Финальный отчет о прогрессе
+        if (progressReporter != null)
+        {
+            progressReporter.ReportPercentage(100, $"Обработано {linesRead} строк");
         }
         
         // Обновляем позицию для следующего инкрементального чтения

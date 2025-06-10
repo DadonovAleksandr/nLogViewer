@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using NLog;
 using nLogViewer.Model;
 using nLogViewer.Services.LogReader.Repository;
+using nLogViewer.Services.Progress;
 
 namespace nLogViewer.Services.LogReader;
 
@@ -90,6 +91,34 @@ internal class RepositoryLogSource : ILogSource
         }
 
         return await _repository.ClearAsync(cancellationToken);
+    }
+    
+    public async IAsyncEnumerable<ILogEntry> GetAllAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронное получение всех записей с прогрессом из источника {_repository.SourceDescription}");
+        
+        var lines = _repository.ReadAllLinesAsync(progressReporter, cancellationToken);
+        await foreach (var entry in ParseLogEntriesAsync(lines, cancellationToken))
+        {
+            yield return entry;
+        }
+    }
+
+    public async IAsyncEnumerable<ILogEntry> GetNewAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронное получение новых записей с прогрессом из источника {_repository.SourceDescription}");
+        
+        if (!_repository.SupportsIncrementalRead)
+        {
+            _log.Warn($"Источник {_repository.SourceDescription} не поддерживает инкрементальное чтение");
+            yield break;
+        }
+        
+        var lines = _repository.ReadNewLinesAsync(progressReporter, cancellationToken);
+        await foreach (var entry in ParseLogEntriesAsync(lines, cancellationToken))
+        {
+            yield return entry;
+        }
     }
 
     private async IAsyncEnumerable<ILogEntry> ParseLogEntriesAsync(

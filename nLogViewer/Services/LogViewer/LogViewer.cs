@@ -9,6 +9,7 @@ using nLogViewer.Infrastructure.Configuration;
 using nLogViewer.Model;
 using nLogViewer.Services.LogReader;
 using nLogViewer.Services.LogReader.Factory;
+using nLogViewer.Services.Progress;
 
 namespace nLogViewer.Services.LogViewer;
 
@@ -18,6 +19,7 @@ internal class LogViewer : ILogViewer, IDisposable
     
     private readonly ILogSource _reader;
     private readonly MemoryConfiguration _memoryConfig;
+    private readonly IProgressReporter _progressReporter;
     private LogViewerState _state;
     private List<ILogEntry> _logEntries;
     private CircularBuffer<ILogEntry> _circularBuffer;
@@ -38,12 +40,13 @@ internal class LogViewer : ILogViewer, IDisposable
     public LogViewerState State => _state;
     public List<ILogEntry> LogEntries => _memoryConfig?.UseCircularBuffer == true ? _circularBuffer?.ToList() ?? new List<ILogEntry>() : _logEntries;
     
-    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig)
+    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, IProgressReporter progressReporter = null)
     {
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами: readerFactory - {readerFactory}, memoryConfig - {memoryConfig}");
         
         _reader = readerFactory.Create();
         _memoryConfig = memoryConfig;
+        _progressReporter = progressReporter;
         
         if (_memoryConfig?.UseCircularBuffer == true)
         {
@@ -209,7 +212,7 @@ internal class LogViewer : ILogViewer, IDisposable
 
                     try
                     {
-                        await foreach (var entry in _reader.GetAllAsync(cancellationToken))
+                        await foreach (var entry in _reader.GetAllAsync(_progressReporter, cancellationToken))
                         {
                             try
                             {
@@ -273,7 +276,7 @@ internal class LogViewer : ILogViewer, IDisposable
 
                         try
                         {
-                            await foreach (var entry in _reader.GetNewAsync(cancellationToken))
+                            await foreach (var entry in _reader.GetNewAsync(_progressReporter, cancellationToken))
                             {
                                 try
                                 {

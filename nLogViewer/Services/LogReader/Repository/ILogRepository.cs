@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using nLogViewer.Services.Progress;
 
 namespace nLogViewer.Services.LogReader.Repository;
 
@@ -34,11 +35,27 @@ internal interface ILogRepository : IDisposable
     IAsyncEnumerable<string> ReadAllLinesAsync(CancellationToken cancellationToken = default);
     
     /// <summary>
+    /// Читает все строки из источника с отчетом о прогрессе
+    /// </summary>
+    /// <param name="progressReporter">Отчет о прогрессе</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns>Поток строк из источника</returns>
+    IAsyncEnumerable<string> ReadAllLinesAsync(IProgressReporter progressReporter, CancellationToken cancellationToken = default);
+    
+    /// <summary>
     /// Читает новые строки из источника (с последней позиции чтения)
     /// </summary>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Поток новых строк</returns>
     IAsyncEnumerable<string> ReadNewLinesAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Читает новые строки из источника с отчетом о прогрессе
+    /// </summary>
+    /// <param name="progressReporter">Отчет о прогрессе</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns>Поток новых строк</returns>
+    IAsyncEnumerable<string> ReadNewLinesAsync(IProgressReporter progressReporter, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Очищает источник логов (если поддерживается)

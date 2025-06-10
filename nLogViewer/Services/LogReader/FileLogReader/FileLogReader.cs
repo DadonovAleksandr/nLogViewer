@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
+using nLogViewer.Infrastructure.Extensions;
 using nLogViewer.Model;
+using nLogViewer.Services.Progress;
 using nLogViewer.Services.UserDialogService;
 
 namespace nLogViewer.Services.LogReader.FileLogReader;
@@ -245,6 +248,46 @@ internal class FileLogReader : ILogSource
             yield return entry;
         }
     }
+    
+    public async IAsyncEnumerable<ILogEntry> GetAllAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронное получение всех записей с прогрессом из файла {_path}");
+        
+        // Получаем размер файла для расчёта прогресса
+        long fileSize = 0;
+        if (File.Exists(_path))
+        {
+            var fileInfo = new FileInfo(_path);
+            fileSize = fileInfo.Length;
+        }
+        
+        long processedBytes = 0;
+        int processedEntries = 0;
+        
+        // Отправляем начальный прогресс
+        progressReporter?.Report(0, fileSize, "Начинаем обработку файла...");
+        
+        await foreach (var line in ReadLogFileAsync(cancellationToken, progressReporter).ConfigureAwait(false))
+        {
+            await foreach (var entry in ParseLogEntriesAsync(new[] { line }.ToAsyncEnumerable(), cancellationToken).ConfigureAwait(false))
+            {
+                processedEntries++;
+                
+                // Отчитываемся каждые 100 записей
+                if (processedEntries % 100 == 0)
+                {
+                    progressReporter?.Report(processedBytes, fileSize, $"Обработано {processedEntries} записей");
+                }
+                
+                yield return entry;
+            }
+            
+            processedBytes += Encoding.UTF8.GetByteCount(line) + Environment.NewLine.Length;
+        }
+        
+        // Отчитываемся о завершении
+        progressReporter?.Report(fileSize, fileSize, $"Завершено. Обработано {processedEntries} записей");
+    }
 
     public async IAsyncEnumerable<ILogEntry> GetNewAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -253,6 +296,28 @@ internal class FileLogReader : ILogSource
         {
             yield return entry;
         }
+    }
+    
+    public async IAsyncEnumerable<ILogEntry> GetNewAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронное получение новых записей с прогрессом из файла {_path}");
+        
+        int processedEntries = 0;
+        await foreach (var entry in ParseLogEntriesAsync(ReadLogFileAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
+        {
+            processedEntries++;
+            
+            // Отчитываемся каждые 10 записей (чаще, так как новых обычно меньше)
+            if (processedEntries % 10 == 0)
+            {
+                progressReporter?.ReportPercentage(50, $"Обработано {processedEntries} новых записей");
+            }
+            
+            yield return entry;
+        }
+        
+        // Отчитываемся о завершении
+        progressReporter?.ReportPercentage(100, $"Завершено. Обработано {processedEntries} новых записей");
     }
 
     public async Task<bool> ClearAsync(CancellationToken cancellationToken = default)
@@ -297,6 +362,65 @@ internal class FileLogReader : ILogSource
             _log.Error(ex, $"Неизвестная ошибка при очистке файла {_path}");
             _userDialogService.ShowError($"Неизвестная ошибка при очистке лога: {ex.Message}", "Ошибка очистки лога");
             return false;
+        }
+    }
+    
+    private async IAsyncEnumerable<string> ReadLogFileAsync([EnumeratorCancellation] CancellationToken cancellationToken = default, IProgressReporter progressReporter = null)
+    {
+        if (!File.Exists(_path))
+        {
+            _log.Debug($"Файл лога не найден {_path}");
+            yield break;
+        }
+
+        FileStream fs = null;
+        StreamReader sr = null;
+        
+        try
+        {
+            fs = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            sr = new StreamReader(fs, Encoding.UTF8);
+
+            // Переходим к сохранённой позиции
+            if (_pos > 0 && fs.Length >= _pos)
+            {
+                fs.Seek(_pos, SeekOrigin.Begin);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, $"Ошибка открытия файла {_path}");
+            _userDialogService.ShowError($"Ошибка открытия файла лога: {ex.Message}", "Ошибка");
+            sr?.Dispose();
+            fs?.Dispose();
+            throw;
+        }
+
+        try
+        {
+            string line;
+            while ((line = await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false)) != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                _lineCount++;
+                yield return line;
+                
+                // Отчитываемся о прогрессе каждые 1000 строк
+                if (progressReporter != null && _lineCount % 1000 == 0)
+                {
+                    progressReporter.Report(fs.Position, fs.Length, $"Обработано {_lineCount} строк");
+                }
+            }
+
+            // Сохраняем позицию для следующего чтения
+            _pos = fs.Position;
+            _log.Trace($"Прочитано {_lineCount} строк из файла {_path}, новая позиция: {_pos}");
+        }
+        finally
+        {
+            sr?.Dispose();
+            fs?.Dispose();
         }
     }
     

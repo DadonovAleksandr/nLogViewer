@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet --version)"
+      "Bash(dotnet --version)",
+      "Bash(dotnet build:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

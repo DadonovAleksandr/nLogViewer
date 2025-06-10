@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
+using nLogViewer.Services.Progress;
 
 namespace nLogViewer.Services.LogReader.Repository;
 
@@ -94,6 +95,54 @@ internal class CompositeLogRepository : ILogRepository
         }
     }
 
+    public async IAsyncEnumerable<string> ReadAllLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Чтение всех строк из {_repositories.Count} источников с отчетом о прогрессе");
+        
+        // Читаем из всех источников параллельно и объединяем результаты
+        var tasks = _repositories.Select(r => ReadAllFromRepositoryAsync(r, progressReporter, cancellationToken)).ToList();
+        
+        // Объединяем все строки из всех источников
+        var allLines = new List<(DateTime timestamp, string line, string sourceId)>();
+        var processedRepositories = 0;
+        
+        foreach (var task in tasks)
+        {
+            await foreach (var item in task)
+            {
+                allLines.Add(item);
+            }
+            
+            processedRepositories++;
+            if (progressReporter != null)
+            {
+                var progress = (double)processedRepositories / _repositories.Count * 50; // Первые 50% на чтение
+                progressReporter.ReportPercentage((int)progress, $"Обработан источник {processedRepositories}/{_repositories.Count}");
+            }
+        }
+        
+        // Сортируем по времени и возвращаем
+        var sortedLines = allLines.OrderBy(x => x.timestamp).ToList();
+        var processedLines = 0;
+        
+        foreach (var item in sortedLines)
+        {
+            processedLines++;
+            if (progressReporter != null && processedLines % 100 == 0)
+            {
+                var progress = 50 + (double)processedLines / sortedLines.Count * 50; // Вторые 50% на сортировку и возврат
+                progressReporter.ReportPercentage((int)progress, $"Отсортировано {processedLines}/{sortedLines.Count} строк");
+            }
+            
+            yield return item.line;
+        }
+        
+        if (progressReporter != null)
+        {
+            progressReporter.ReportPercentage(100, $"Завершено. Обработано {sortedLines.Count} строк из {_repositories.Count} источников");
+        }
+    }
+
     public async IAsyncEnumerable<string> ReadNewLinesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         _log.Trace($"Чтение новых строк из {_repositories.Count} источников");
@@ -127,6 +176,55 @@ internal class CompositeLogRepository : ILogRepository
                     channels.RemoveAt(i);
                 }
             }
+        }
+    }
+
+    public async IAsyncEnumerable<string> ReadNewLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Чтение новых строк из {_repositories.Count} источников с отчетом о прогрессе");
+        
+        // Для новых строк читаем из всех источников и возвращаем по мере поступления
+        var channels = _repositories
+            .Where(r => r.SupportsIncrementalRead)
+            .Select(r => CreateChannelForRepository(r, progressReporter, cancellationToken))
+            .ToList();
+
+        var processedLines = 0;
+        
+        // Читаем из всех каналов пока есть данные
+        while (channels.Count > 0)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            // Ждем данные из любого канала
+            var completedTask = await Task.WhenAny(channels.Select(c => c.Reader.WaitToReadAsync(cancellationToken).AsTask()));
+            
+            // Обрабатываем все доступные данные
+            for (int i = channels.Count - 1; i >= 0; i--)
+            {
+                var channel = channels[i];
+                while (channel.Reader.TryRead(out var line))
+                {
+                    processedLines++;
+                    if (progressReporter != null && processedLines % 10 == 0)
+                    {
+                        progressReporter.ReportPercentage(50, $"Обработано {processedLines} новых строк");
+                    }
+                    
+                    yield return line;
+                }
+                
+                // Удаляем завершенные каналы
+                if (channel.Reader.Completion.IsCompleted)
+                {
+                    channels.RemoveAt(i);
+                }
+            }
+        }
+        
+        if (progressReporter != null)
+        {
+            progressReporter.ReportPercentage(100, $"Завершено. Обработано {processedLines} новых строк");
         }
     }
 
@@ -167,6 +265,19 @@ internal class CompositeLogRepository : ILogRepository
         }
     }
 
+    private async IAsyncEnumerable<(DateTime timestamp, string line, string sourceId)> ReadAllFromRepositoryAsync(
+        ILogRepository repository,
+        IProgressReporter progressReporter,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (var line in repository.ReadAllLinesAsync(progressReporter, cancellationToken))
+        {
+            // Пытаемся извлечь временную метку из строки для сортировки
+            var timestamp = ExtractTimestamp(line);
+            yield return (timestamp, line, repository.SourceId);
+        }
+    }
+
     private System.Threading.Channels.Channel<string> CreateChannelForRepository(ILogRepository repository, CancellationToken cancellationToken)
     {
         var channel = System.Threading.Channels.Channel.CreateUnbounded<string>();
@@ -177,6 +288,33 @@ internal class CompositeLogRepository : ILogRepository
             try
             {
                 await foreach (var line in repository.ReadNewLinesAsync(cancellationToken))
+                {
+                    await channel.Writer.WriteAsync(line, cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, $"Ошибка чтения из репозитория {repository.SourceDescription}");
+            }
+            finally
+            {
+                channel.Writer.Complete();
+            }
+        }, cancellationToken);
+        
+        return channel;
+    }
+
+    private System.Threading.Channels.Channel<string> CreateChannelForRepository(ILogRepository repository, IProgressReporter progressReporter, CancellationToken cancellationToken)
+    {
+        var channel = System.Threading.Channels.Channel.CreateUnbounded<string>();
+        
+        // Запускаем фоновую задачу для чтения из репозитория
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await foreach (var line in repository.ReadNewLinesAsync(progressReporter, cancellationToken))
                 {
                     await channel.Writer.WriteAsync(line, cancellationToken);
                 }

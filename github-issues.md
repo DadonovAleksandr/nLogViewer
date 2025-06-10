@@ -205,17 +205,17 @@ Current implementation loads all entries into memory. Need virtualization for la
 
 ---
 
-### Issue #12: Add progress indicators
+### Issue #12: Add progress indicators ✅
 **Title:** Show progress bar when loading large files
 **Labels:** `enhancement`, `ui/ux`, `priority:low`
 **Description:**
 Users have no feedback when loading large log files.
 
 **Tasks:**
-- [ ] Add progress bar control
-- [ ] Implement progress reporting in FileLogReader
-- [ ] Show estimated time remaining
-- [ ] Add cancel button for long operations
+- [x] Add progress bar control
+- [x] Implement progress reporting in FileLogReader
+- [x] Show estimated time remaining
+- [x] Add cancel button for long operations
 
 ---
 

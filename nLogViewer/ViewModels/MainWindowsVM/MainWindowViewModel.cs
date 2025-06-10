@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -9,12 +10,15 @@ using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
+using nLogViewer.Infrastructure.Configuration;
 using nLogViewer.Infrastructure.Helpers.FileProvider;
 using nLogViewer.Model;
 using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Model.AppSettings.RecentLogs;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader.FileLogReader;
+using nLogViewer.Services.LogViewer;
+using nLogViewer.Services.Progress;
 using nLogViewer.Services.UserDialogService;
 using nLogViewer.ViewModels.Base;
 using nLogViewer.Views;
@@ -29,13 +33,16 @@ internal class MainWindowViewModel : BaseViewModel
     private IAppConfig _appConfig;
     private readonly ILogEntryFilter? _filter;
     private readonly IUserDialogService _userDialogService;
-    public MainWindowViewModel(IUserDialogService userDialogService)
+    private readonly IWindowProgressService _windowProgressService;
+    
+    public MainWindowViewModel(IUserDialogService userDialogService, IWindowProgressService windowProgressService)
     {
         _log.Debug($"Вызов конструктора {this.GetType().Name} по умолчанию");
         _title = $"{AppConst.Get().AppName} {ProjectVersion.Get()}";
         _appConfig = AppConfig.GetConfigFromDefaultPath();
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _userDialogService = userDialogService;
+        _windowProgressService = windowProgressService;
 
         #region commands
         AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
@@ -259,15 +266,18 @@ internal class MainWindowViewModel : BaseViewModel
         _recentLogs?.Save();
 
         #region Cохранение настроек фильтра
-        _appConfig.FilterConfig.EnableTraceEvent = _filter.EnableTraceEvent;
-        _appConfig.FilterConfig.EnableDebugEvent = _filter.EnableDebugEvent;
-        _appConfig.FilterConfig.EnableInfoEvent = _filter.EnableInfoEvent;
-        _appConfig.FilterConfig.EnableWarnEvent = _filter.EnableWarnEvent;
-        _appConfig.FilterConfig.EnableErrorEvent = _filter.EnableErrorEvent;
-        _appConfig.FilterConfig.EnableFatalEvent = _filter.EnableFatalEvent;
+        if (_filter != null)
+        {
+            _appConfig.FilterConfig.EnableTraceEvent = _filter.EnableTraceEvent;
+            _appConfig.FilterConfig.EnableDebugEvent = _filter.EnableDebugEvent;
+            _appConfig.FilterConfig.EnableInfoEvent = _filter.EnableInfoEvent;
+            _appConfig.FilterConfig.EnableWarnEvent = _filter.EnableWarnEvent;
+            _appConfig.FilterConfig.EnableErrorEvent = _filter.EnableErrorEvent;
+            _appConfig.FilterConfig.EnableFatalEvent = _filter.EnableFatalEvent;
 
-        _appConfig.FilterConfig.EnableTextSearch = _filter.EnableTextSearch;
-        _appConfig.FilterConfig.TextSearch = _filter.TextSearch;
+            _appConfig.FilterConfig.EnableTextSearch = _filter.EnableTextSearch;
+            _appConfig.FilterConfig.TextSearch = _filter.TextSearch;
+        }
         #endregion
     }
 
@@ -314,17 +324,45 @@ internal class MainWindowViewModel : BaseViewModel
     /// Добавление нового просмоторщика
     /// </summary>
     /// <param name="filePath"></param>
-    private void AddNewLogViewer(string filePath)
+    private async void AddNewLogViewer(string filePath)
     {
+        _log.Debug($"AddNewLogViewer вызван с файлом: {filePath}");
+        
+        // Сначала устанавливаем конфигурацию файла
         new FileLogReaderConfiguration().FileName = filePath;
-
-        _logViewer.Items.Add(new TabItem
+        _log.Debug($"Конфигурация файла установлена");
+        
+        // Создаем ViewModel вручную с нужными зависимостями
+        _log.Debug($"Получаем сервисы из DI");
+        var logViewerFactory = App.Host.Services.GetRequiredService<ILogViewerFactory>();
+        var memoryConfig = App.Host.Services.GetRequiredService<MemoryConfiguration>();
+        var windowProgressService = App.Host.Services.GetRequiredService<IWindowProgressService>();
+        var userDialogService = App.Host.Services.GetRequiredService<IUserDialogService>();
+        
+        _log.Debug($"Создаем LogViewerViewModel");
+        var viewModel = new LogViewerVM.LogViewerViewModel(logViewerFactory, memoryConfig, windowProgressService, userDialogService);
+        
+        _log.Debug($"Создаем LogViewerView и устанавливаем DataContext");
+        var logViewerView = new LogViewerView()
+        {
+            DataContext = viewModel
+        };
+        
+        _log.Debug($"Создаем TabItem и добавляем в коллекцию");
+        var tabItem = new TabItem
         {
             Header = Path.GetFileName(filePath),
             ToolTip = filePath,
-            Content = new LogViewerView() 
-        });
+            Content = logViewerView
+        };
+        
+        _logViewer.Items.Add(tabItem);
         _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
+        
+        // Инициализируем LogViewerViewModel с файлом
+        _log.Debug($"Вызываем InitializeWithFileAsync для файла: {filePath}");
+        await viewModel.InitializeWithFileAsync(filePath);
+        _log.Debug($"InitializeWithFileAsync завершен");
     }
 
     /// <summary>

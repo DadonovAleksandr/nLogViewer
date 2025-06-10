@@ -5,6 +5,7 @@ using nLogViewer.Services.LogReader.Factory;
 using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.LogReader.Repository;
 using nLogViewer.Services.LogViewer;
+using nLogViewer.Services.Progress;
 using nLogViewer.Services.UserDialogService;
 
 namespace nLogViewer.Services;
@@ -28,11 +29,19 @@ public static class ServiceRegistration
         // Регистрация репозиториев
         services.AddSingleton<ILogRepositoryFactory, LogRepositoryFactory>();
         
+        // Регистрация фабрики LogViewer
+        services.AddSingleton<ILogViewerFactory, LogViewerFactory>();
+        
         services.AddTransient<ILogReaderFactory, FileLogReaderFactory>();
 
         services.AddTransient<ILogViewer, LogViewer.LogViewer>();
 
         services.AddTransient<IUserDialogService, WindowsUserDialogService>();
+        
+        // Служба прогресса
+        services.AddTransient<IProgressReporter, ProgressReporter>();
+        services.AddTransient<IWindowProgressService, WindowProgressService>();
+        
         return services;
     }
 }

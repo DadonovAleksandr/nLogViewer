@@ -5,7 +5,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:c="clr-namespace:nLogViewer.Infrastructure.Convertors"
              mc:Ignorable="d"
-             DataContext="{Binding LogViewerViewModel, Source={StaticResource Locator}}"
              d:DesignHeight="300" d:DesignWidth="1200">
     <UserControl.Resources>
         <c:LogEntryTypeToStringConvertor x:Key="EntryTypeToString"></c:LogEntryTypeToStringConvertor>
