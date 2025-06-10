@@ -59,6 +59,8 @@
                   ScrollViewer.CanContentScroll="True"
                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                   EnableRowVirtualization="True"
+                  VirtualizingStackPanel.IsVirtualizing="True"
+                  VirtualizingStackPanel.VirtualizationMode="Recycling"
                   >
             <DataGrid.Resources>
                 <Style TargetType="{x:Type TextBlock}" x:Key="WrapText">

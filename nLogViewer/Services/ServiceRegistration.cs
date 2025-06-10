@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using nLogViewer.Infrastructure.Configuration;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader.Factory;
 using nLogViewer.Services.LogReader.FileLogReader;
@@ -12,6 +13,16 @@ public static class ServiceRegistration
 {
     public static IServiceCollection RegisterServices(this IServiceCollection services)
     {
+        // Конфигурация памяти
+        services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
+        {
+            MaxEntriesInMemory = 100_000,
+            EnableDataVirtualization = false, // Временно отключаем для отладки
+            VirtualizationPageSize = 100,
+            MaxCachedPages = 10,
+            UseCircularBuffer = false // Временно отключаем для отладки
+        });
+        
         services.AddSingleton<ILogEntryFilter, LogEntryFilter>();
 
         // Регистрация репозиториев

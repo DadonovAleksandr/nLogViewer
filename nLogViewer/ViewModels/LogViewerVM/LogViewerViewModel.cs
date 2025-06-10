@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
+using nLogViewer.Infrastructure.Collections;
 using nLogViewer.Infrastructure.Commands;
+using nLogViewer.Infrastructure.Configuration;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogViewer;
 using nLogViewer.ViewModels.Base;
@@ -14,25 +16,45 @@ namespace nLogViewer.ViewModels.LogViewerVM;
 internal class LogViewerViewModel : BaseViewModel
 {
     private readonly ILogViewer _viewer;
+    private readonly MemoryConfiguration _memoryConfig;
     private ILogEntryFilter? _filter;
-    private List<LogEntryView> _logEntries = new();
+    private VirtualizingLogCollection _virtualLogEntries;
     private readonly CollectionViewSource _filtredLogEntries = new();
     
     public ICollectionView FiltredLogEntries => _filtredLogEntries.View;
     public LogEntryView SelectedEntry { get; set; }
     public int SelectedIndex { get; set; }
 
-    public LogViewerViewModel(ILogViewer viewer)
+    public LogViewerViewModel(ILogViewer viewer, MemoryConfiguration memoryConfig)
     {
         _log.Debug($"Вызов конструктора {GetType().Name}");
          
         _viewer = viewer;
+        _memoryConfig = memoryConfig;
         _viewer.EntriesChanged += ViewerEntriesRefresh;
         _viewer.Start();
         
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _filter.RefreshFilter += OnFilterRefresh;
-        _filtredLogEntries.Source = _logEntries;
+        
+        // Инициализируем виртуализированную коллекцию
+        if (_memoryConfig?.EnableDataVirtualization == true)
+        {
+            _virtualLogEntries = new VirtualizingLogCollection(
+                (startIndex, count) => 
+                {
+                    var entries = _viewer.GetEntriesRange(startIndex, count);
+                    return entries;
+                },
+                _viewer.Count,
+                _memoryConfig);
+            _filtredLogEntries.Source = _virtualLogEntries;
+        }
+        else
+        {
+            _filtredLogEntries.Source = new List<LogEntryView>();
+        }
+        
         _filtredLogEntries.Filter += LogEntriesFilter;
 
         #region commands
@@ -64,14 +86,36 @@ internal class LogViewerViewModel : BaseViewModel
 
     private void ViewerEntriesChange()
     {
-        int newEntriesCount = _viewer.Count - _logEntries.Count;
-        _log.Debug($"Получено уведомление о новых событиях ({newEntriesCount})");
-        var newEntries = _viewer.GetEntries(newEntriesCount);
-        foreach (var entry in newEntries)
+        if (_memoryConfig?.EnableDataVirtualization == true)
         {
-            _logEntries.Insert(0, new LogEntryView(entry));
+            // Для виртуализации просто обновляем общее количество
+            if (_virtualLogEntries != null && _filtredLogEntries.Source != null)
+            {
+                _virtualLogEntries.UpdateTotalCount(_viewer.Count);
+                _log.Debug($"Обновлено общее количество записей: {_viewer.Count}");
+            }
         }
-        FiltredLogEntriesRefresh();
+        else
+        {
+            // Для обычного режима работаем как раньше
+            var logEntries = _filtredLogEntries.Source as List<LogEntryView>;
+            if (logEntries != null)
+            {
+                int newEntriesCount = _viewer.Count - logEntries.Count;
+                _log.Debug($"Получено уведомление о новых событиях ({newEntriesCount})");
+                var newEntries = _viewer.GetEntries(newEntriesCount);
+                foreach (var entry in newEntries)
+                {
+                    logEntries.Insert(0, new LogEntryView(entry));
+                }
+            }
+        }
+        // Для виртуализированной коллекции не нужно обновлять View,
+        // так как она сама уведомляет об изменениях
+        if (_memoryConfig?.EnableDataVirtualization != true)
+        {
+            FiltredLogEntriesRefresh();
+        }
     }
     
     #region Commands
@@ -88,10 +132,20 @@ internal class LogViewerViewModel : BaseViewModel
     {
         _log.Debug($"Очистка всех событий");
         _viewer.Clear();
-        _logEntries.Clear();
+        
+        if (_memoryConfig?.EnableDataVirtualization == true)
+        {
+            _virtualLogEntries?.InvalidateCache();
+        }
+        else
+        {
+            var logEntries = _filtredLogEntries.Source as List<LogEntryView>;
+            logEntries?.Clear();
+        }
+        
         _filtredLogEntries.View.Refresh();
     }
-    private bool CanClearCommandExecute(object p) => _logEntries.Count > 0;
+    private bool CanClearCommandExecute(object p) => _viewer.Count > 0;
     #endregion
 
     #region Пауза отображения лога
@@ -109,7 +163,7 @@ internal class LogViewerViewModel : BaseViewModel
             _viewer.Pause();
         }
     }
-    private bool CanPauseCommandExecute(object p) => _logEntries.Count > 0;
+    private bool CanPauseCommandExecute(object p) => _viewer.Count > 0;
     #endregion
 
     #endregion

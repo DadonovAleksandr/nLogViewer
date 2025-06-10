@@ -19,4 +19,12 @@ public interface ILogViewer : IDisposable
     void Clear();
 
     IEnumerable<ILogEntry> GetEntries(int count = 0);
+    
+    /// <summary>
+    /// Получает записи в заданном диапазоне для виртуализации
+    /// </summary>
+    /// <param name="startIndex">Начальный индекс</param>
+    /// <param name="count">Количество записей</param>
+    /// <returns>Записи в заданном диапазоне</returns>
+    IEnumerable<ILogEntry> GetEntriesRange(int startIndex, int count);
 }
