@@ -83,21 +83,23 @@ The `ILogReader` interface violates ISP by including the `Clear()` method, which
 
 ---
 
-### Issue #5: Extract duplicate filter property logic
+### Issue #5: Extract duplicate filter property logic ✅
 **Title:** Eliminate code duplication in filter properties
 **Labels:** `refactoring`, `code-quality`, `priority:medium`
 **Description:**
 Filter properties are duplicated between `LogEntryFilter.cs` and `MainWindowViewModel.cs`.
 
 **Tasks:**
-- [ ] Create base class `FilterPropertyBase`
-- [ ] Extract common property setter logic
-- [ ] Consider using source generators
-- [ ] Reduce 6x duplication to single implementation
+- [x] Create base class `FilterPropertyBase`
+- [x] Extract common property setter logic
+- [x] Consider using source generators
+- [x] Reduce 6x duplication to single implementation
 
 **Affected files:**
-- `Services/Filter/LogEntryFilter.cs`
-- `ViewModels/MainWindowsVM/MainWindowViewModel.cs`
+- `Services/Filter/LogEntryFilter.cs` ✅
+- `Services/Filter/FilterBase.cs` ✅ (новый файл)
+- `ViewModels/MainWindowsVM/MainWindowViewModel.cs` ✅
+- `ViewModels/Base/ViewModel.cs` ✅ (добавлен метод SetProxied)
 
 ---
 

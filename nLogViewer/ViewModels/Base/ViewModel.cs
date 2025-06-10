@@ -31,4 +31,19 @@ public class BaseViewModel : INotifyPropertyChanged
         OnPropertyChanged(PropertyName);
         return true;
     }
+    
+    /// <summary>
+    /// Проксирует свойство к другому объекту с уведомлением об изменении
+    /// </summary>
+    /// <typeparam name="T">Тип свойства</typeparam>
+    /// <param name="getter">Функция получения значения</param>
+    /// <param name="setter">Действие установки значения</param>
+    /// <param name="value">Новое значение</param>
+    /// <param name="propertyName">Имя свойства</param>
+    protected void SetProxied<T>(System.Func<T> getter, System.Action<T> setter, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (Equals(getter(), value)) return;
+        setter(value);
+        OnPropertyChanged(propertyName);
+    }
 }

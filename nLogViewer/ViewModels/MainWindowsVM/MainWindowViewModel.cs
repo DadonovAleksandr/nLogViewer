@@ -166,7 +166,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableTraceEvent
     {
         get => _filter.EnableTraceEvent;
-        set => _filter.EnableTraceEvent = value;
+        set => SetProxied(() => _filter.EnableTraceEvent, v => _filter.EnableTraceEvent = v, value);
     } 
     /// <summary>
     /// Debug
@@ -174,7 +174,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableDebugEvent
     {
         get => _filter.EnableDebugEvent;
-        set => _filter.EnableDebugEvent = value;
+        set => SetProxied(() => _filter.EnableDebugEvent, v => _filter.EnableDebugEvent = v, value);
     }
     /// <summary>
     /// Info
@@ -182,7 +182,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableInfoEvent
     {
         get => _filter.EnableInfoEvent;
-        set => _filter.EnableInfoEvent = value;
+        set => SetProxied(() => _filter.EnableInfoEvent, v => _filter.EnableInfoEvent = v, value);
     }
     /// <summary>
     /// Warning
@@ -190,7 +190,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableWarnEvent
     {
         get => _filter.EnableWarnEvent;
-        set => _filter.EnableWarnEvent = value;
+        set => SetProxied(() => _filter.EnableWarnEvent, v => _filter.EnableWarnEvent = v, value);
     }
     /// <summary>
     /// Error
@@ -198,7 +198,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableErrorEvent
     {
         get => _filter.EnableErrorEvent;
-        set => _filter.EnableErrorEvent = value;
+        set => SetProxied(() => _filter.EnableErrorEvent, v => _filter.EnableErrorEvent = v, value);
     }
     /// <summary>
     /// Fatal
@@ -206,7 +206,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableFatalEvent
     {
         get => _filter.EnableFatalEvent;
-        set => _filter.EnableFatalEvent = value;
+        set => SetProxied(() => _filter.EnableFatalEvent, v => _filter.EnableFatalEvent = v, value);
     }
     #endregion
 
@@ -218,7 +218,7 @@ internal class MainWindowViewModel : BaseViewModel
     public bool EnableSearchEvent
     {
         get => _filter.EnableTextSearch;
-        set => _filter.EnableTextSearch = value;
+        set => SetProxied(() => _filter.EnableTextSearch, v => _filter.EnableTextSearch = v, value);
     } 
     
     /// <summary>
@@ -227,7 +227,7 @@ internal class MainWindowViewModel : BaseViewModel
     public string SearchText
     {
         get => _filter.TextSearch;
-        set => _filter.TextSearch = value;
+        set => SetProxied(() => _filter.TextSearch, v => _filter.TextSearch = v, value);
     }
     
     #endregion

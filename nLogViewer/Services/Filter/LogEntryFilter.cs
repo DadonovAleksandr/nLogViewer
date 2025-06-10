@@ -6,110 +6,54 @@ using nLogViewer.Model.AppSettings.AppConfig;
 
 namespace nLogViewer.Services.Filter;
 
-internal class LogEntryFilter : ILogEntryFilter
+internal class LogEntryFilter : FilterBase, ILogEntryFilter
 {
-    public event RefreshFilter? RefreshFilter;
-
-    private bool _enableTraceEvent;
     public bool EnableTraceEvent
     {
-        get => _enableTraceEvent;
-        set
-        {
-            if(_enableTraceEvent == value)
-                return;
-            _enableTraceEvent = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private bool _enableDebugEvent;
     public bool EnableDebugEvent 
     {
-        get => _enableDebugEvent;
-        set
-        {
-            if(_enableDebugEvent == value)
-                return;
-            _enableDebugEvent = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private bool _enableInfoEvent;
     public bool EnableInfoEvent 
     {
-        get => _enableInfoEvent;
-        set
-        {
-            if(_enableInfoEvent == value)
-                return;
-            _enableInfoEvent = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private bool _enableWarnEvent;
     public bool EnableWarnEvent 
     {
-        get => _enableWarnEvent;
-        set
-        {
-            if(_enableWarnEvent == value)
-                return;
-            _enableWarnEvent = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private bool _enableErrorEvent;
     public bool EnableErrorEvent 
     {
-        get => _enableErrorEvent;
-        set
-        {
-            if(_enableErrorEvent == value)
-                return;
-            _enableErrorEvent = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private bool _enableFatalEvent;
     public bool EnableFatalEvent 
     {
-        get => _enableFatalEvent;
-        set
-        {
-            if(_enableFatalEvent == value)
-                return;
-            _enableFatalEvent = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private bool _enableTextSearch;
     public bool EnableTextSearch 
     {
-        get => _enableTextSearch;
-        set
-        {
-            if(_enableTextSearch == value)
-                return;
-            _enableTextSearch = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<bool>();
+        set => SetProperty(value);
     }
     
-    private string _textSearch;
     public string TextSearch 
     {
-        get => _textSearch;
-        set
-        {
-            _textSearch = value;
-            RefreshFilter?.Invoke();
-        }
+        get => GetProperty<string>(string.Empty);
+        set => SetProperty(value);
     }
     
 
