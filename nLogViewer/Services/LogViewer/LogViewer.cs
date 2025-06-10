@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NLog;
 using nLogViewer.Model;
 using nLogViewer.Services.LogReader;
@@ -18,6 +19,8 @@ internal class LogViewer : ILogViewer, IDisposable
     private List<ILogEntry> _logEntries;
     private int  _prevEntriesCount;
     private Timer _timer;
+    private readonly SemaphoreSlim _processLock = new SemaphoreSlim(1, 1);
+    private CancellationTokenSource _cancellationTokenSource;
     // команды
     private bool _start;
     private bool _stop;
@@ -34,8 +37,9 @@ internal class LogViewer : ILogViewer, IDisposable
         
         _reader = readerFactory.Create();
         _logEntries = new List<ILogEntry>();
+        _cancellationTokenSource = new CancellationTokenSource();
 
-        TimerCallback tm = new TimerCallback(Process);
+        TimerCallback tm = new TimerCallback(async obj => await ProcessAsync(obj));
         _timer = new Timer(tm, null, 0, 2000);
     }
 
@@ -50,13 +54,24 @@ internal class LogViewer : ILogViewer, IDisposable
         _prevEntriesCount = 0;
     }
     
+    public async Task ClearAsync()
+    {
+        _log.Debug($"Асинхронная очистка всех событий");
+        _logEntries.Clear();
+        await _reader.ClearAsync(_cancellationTokenSource.Token);
+        _prevEntriesCount = 0;
+    }
+    
     public void Dispose()
     {
         _log.Debug($"Освобождение ресурсов LogViewer");
+        _cancellationTokenSource?.Cancel();
         _timer?.Dispose();
         _timer = null;
         _logEntries.Clear();
         _prevEntriesCount = 0;
+        _processLock?.Dispose();
+        _cancellationTokenSource?.Dispose();
     }
     
     public IEnumerable<ILogEntry> GetEntries(int count = 0)
@@ -65,69 +80,102 @@ internal class LogViewer : ILogViewer, IDisposable
             return LogEntries;
         return LogEntries.Skip(Math.Max(0, Count - count));
     }
-    private void Process(object? obj)
+
+    private async Task ProcessAsync(object? obj)
     {
-        _log.Trace($"Просмотрщик лога в состоянии {_state}");
-        if (_reader is null)
+        // Проверяем, не занят ли уже процесс обработки
+        if (!await _processLock.WaitAsync(0))
         {
-            _log.Warn($"Просмоторщик событий не инициализирован");
+            _log.Trace($"Процесс обработки уже выполняется, пропускаем");
             return;
         }
         
-        switch (_state)
+        try
         {
-            case LogViewerState.Stop:
-                if (_start)
-                {
-                    _log.Debug($"Команда на переход в состояние {LogViewerState.ReadAllMsg}");
-                    _state = LogViewerState.ReadAllMsg;
-                }
-                break;
-            case LogViewerState.ReadAllMsg:
-                _logEntries = _reader.GetAll().ToList();
-                _log.Trace($"Считывание всех событий ({_logEntries.Count})");
-                _state = LogViewerState.ReadNewMsg;
-                _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
-                break;
-            case LogViewerState.ReadNewMsg:
-                if (_stop)
-                {
-                    _log.Debug($"Команда на переход в состояние {LogViewerState.Stop}");
-                    _state = LogViewerState.Stop;
+            _log.Trace($"Просмотрщик лога в состоянии {_state}");
+            if (_reader is null)
+            {
+                _log.Warn($"Просмоторщик событий не инициализирован");
+                return;
+            }
+            
+            var cancellationToken = _cancellationTokenSource.Token;
+            
+            switch (_state)
+            {
+                case LogViewerState.Stop:
+                    if (_start)
+                    {
+                        _log.Debug($"Команда на переход в состояние {LogViewerState.ReadAllMsg}");
+                        _state = LogViewerState.ReadAllMsg;
+                    }
                     break;
-                }
-                if (_pause)
-                {
-                    _log.Debug($"Команда на переход в состояние {LogViewerState.Pause}");
-                    _state = LogViewerState.Pause;
-                    break;
-                } 
-                _logEntries.AddRange(_reader.GetNew());
-                _log.Trace($"Считывание новых событий");
-                break;
-            case LogViewerState.Pause:
-                if (_stop)
-                {
-                    _log.Debug($"Команда на переход в состояние {LogViewerState.Stop}");
-                    _state = LogViewerState.Stop;
-                    break;
-                }
-                if (_start)
-                {
-                    _log.Debug($"Команда на переход в состояние {LogViewerState.ReadNewMsg}");
+                case LogViewerState.ReadAllMsg:
+                    var allEntries = new List<ILogEntry>();
+                    await foreach (var entry in _reader.GetAllAsync(cancellationToken))
+                    {
+                        allEntries.Add(entry);
+                    }
+                    _logEntries = allEntries;
+                    _log.Trace($"Считывание всех событий ({_logEntries.Count})");
                     _state = LogViewerState.ReadNewMsg;
+                    _log.Debug($"Переход в состояние {LogViewerState.ReadNewMsg}");
                     break;
-                }    
-                break;
-            default: throw new ArgumentOutOfRangeException();
+                case LogViewerState.ReadNewMsg:
+                    if (_stop)
+                    {
+                        _log.Debug($"Команда на переход в состояние {LogViewerState.Stop}");
+                        _state = LogViewerState.Stop;
+                        break;
+                    }
+                    if (_pause)
+                    {
+                        _log.Debug($"Команда на переход в состояние {LogViewerState.Pause}");
+                        _state = LogViewerState.Pause;
+                        break;
+                    }
+                    await foreach (var entry in _reader.GetNewAsync(cancellationToken))
+                    {
+                        _logEntries.Add(entry);
+                    }
+                    _log.Trace($"Считывание новых событий");
+                    break;
+                case LogViewerState.Pause:
+                    if (_stop)
+                    {
+                        _log.Debug($"Команда на переход в состояние {LogViewerState.Stop}");
+                        _state = LogViewerState.Stop;
+                        break;
+                    }
+                    if (_start)
+                    {
+                        _log.Debug($"Команда на переход в состояние {LogViewerState.ReadNewMsg}");
+                        _state = LogViewerState.ReadNewMsg;
+                        break;
+                    }    
+                    break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+            
+            // сброс команд
+            _start = false;
+            _stop = false;
+            _pause = false;
+            
+            CheckEntriesChange();
         }
-        
-        // сброс команд
-        _start = false;
-        _stop = false;
-        _pause = false;
-        
-        CheckEntriesChange();
+        catch (OperationCanceledException)
+        {
+            _log.Debug("Операция была отменена");
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Ошибка при обработке логов");
+        }
+        finally
+        {
+            _processLock.Release();
+        }
     }
 
     private void CheckEntriesChange()

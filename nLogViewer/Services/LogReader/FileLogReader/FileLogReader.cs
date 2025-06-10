@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using NLog;
 using nLogViewer.Model;
 using nLogViewer.Services.UserDialogService;
@@ -112,6 +115,30 @@ internal class FileLogReader : ILogReader
         _pos = sr.BaseStream.Position;
         _log.Trace($"Обновлена позиция в файле: {_pos}");
     }
+    
+    private async IAsyncEnumerable<string> ReadLogFileAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(_path))
+        {
+            _log.Error($"Файл {_path} не существует");
+            yield break;
+        }
+
+        var file = new FileInfo(_path);
+        using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+        sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
+
+        string? line;
+        while ((line = await sr.ReadLineAsync().ConfigureAwait(false)) != null)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _lineCount++;
+            _log.Trace($"Прочитана строка {_lineCount}: {line}");
+            yield return line;
+        }
+        _pos = sr.BaseStream.Position;
+        _log.Trace($"Обновлена позиция в файле: {_pos}");
+    }
 
     private IEnumerable<ILogEntry> ParseLogEntries(IEnumerable<string> lines)
     {
@@ -207,6 +234,132 @@ internal class FileLogReader : ILogReader
 
         entry = new LogEntry(dateTime, type, message, source, process, thread);
         return true;
+    }
+
+    public async IAsyncEnumerable<ILogEntry> GetAllAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронное получение всех записей из файла {_path}");
+        await foreach (var entry in ParseLogEntriesAsync(ReadLogFileAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
+        {
+            yield return entry;
+        }
+    }
+
+    public async IAsyncEnumerable<ILogEntry> GetNewAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронное получение новых записей из файла {_path}");
+        await foreach (var entry in ParseLogEntriesAsync(ReadLogFileAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
+        {
+            yield return entry;
+        }
+    }
+
+    public async Task<bool> ClearAsync(CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронная попытка очистки лог-файла {_path}");
+    
+        try
+        {
+            if (!File.Exists(_path))
+            {
+                _log.Warn($"Файл {_path} не существует, очистка не требуется");
+                return true;
+            }
+
+            // Открываем файл с доступом для записи и обнуляем его содержимое
+            using (var fs = new FileStream(_path, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
+                await fs.FlushAsync(cancellationToken).ConfigureAwait(false);
+                _log.Info($"Файл лога {_path} успешно очищен");
+            }
+
+            // Сбрасываем позицию чтения
+            _pos = 0;
+            _lineCount = 0;
+        
+            return true;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _log.Error(ex, $"Нет прав на очистку файла {_path}");
+            _userDialogService.ShowError($"Ошибка очистки: нет прав доступа к файлу {_path}", "Ошибка очистки лога");
+            return false;
+        }
+        catch (IOException ex)
+        {
+            _log.Error(ex, $"Ошибка ввода-вывода при очистке файла {_path}");
+            _userDialogService.ShowError($"Ошибка очистки лог-файла: {ex.Message}", "Ошибка очистки лога");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, $"Неизвестная ошибка при очистке файла {_path}");
+            _userDialogService.ShowError($"Неизвестная ошибка при очистке лога: {ex.Message}", "Ошибка очистки лога");
+            return false;
+        }
+    }
+    
+    private async IAsyncEnumerable<ILogEntry> ParseLogEntriesAsync(IAsyncEnumerable<string> lines, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронный парсинг записей из строк");
+        StringBuilder currentMessage = new StringBuilder();
+
+        await foreach (var line in lines.WithCancellation(cancellationToken).ConfigureAwait(false))
+        {
+            _log.Trace($"Обработка строки: {line}");
+
+            // Добавляем новую строку к текущему сообщению
+            if (currentMessage.Length > 0)
+                currentMessage.AppendLine();
+            else
+                if (!DateTimePattern.Match(line).Success)
+                {
+                    _log.Error($"Ошибка парсинга записи. Запись будет игнорирована: {line}");
+                    _userDialogService.ShowError($"Ошибка парсинга записи. Запись будет игнорирована: {line}", GetType().Name);
+                    continue;
+                }
+            currentMessage.Append(line);
+
+            // Проверяем весь накопленный текст на соответствие паттерну
+            string currentText = currentMessage.ToString().Trim();
+            var match = LogEntryPattern.Match(currentText);
+            if (match.Success)
+            {
+                _log.Trace($"Найдена полная запись: {currentText}");
+                if (TryParseLogEntry(match, out var entry))
+                {
+                    yield return entry;
+                }
+                else
+                {
+                    _log.Error($"Ошибка парсинга записи: {currentText}");
+                    _userDialogService.ShowError($"Ошибка парсинга записи: {currentText}", GetType().Name);
+                }
+                currentMessage.Clear();
+            }
+            // Если нет соответствия, продолжаем накапливать строки
+            else
+            {
+                _log.Trace($"Строка добавлена к сообщению, ждем завершения: {line}");
+            }
+        }
+
+        // Проверяем остаток, если он есть
+        if (currentMessage.Length > 0)
+        {
+            string finalText = currentMessage.ToString().Trim();
+            var match = LogEntryPattern.Match(finalText);
+            if (match.Success && TryParseLogEntry(match, out var entry))
+            {
+                _log.Trace($"Возвращаем последнюю запись: {finalText}");
+                yield return entry;
+            }
+            else
+            {
+                _log.Error($"Невалидный остаток лога: {finalText}");
+                _userDialogService.ShowError($"Невалидный остаток лога: {finalText}", GetType().Name);
+            }
+        }
     }
 
     public override string ToString() => $"Объект чтения лога из файла {_path}";

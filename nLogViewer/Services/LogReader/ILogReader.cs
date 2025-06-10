@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using nLogViewer.Model;
 
 namespace nLogViewer.Services.LogReader;
@@ -22,4 +24,25 @@ internal interface ILogReader
     /// </summary>
     /// <returns></returns>
     bool Clear();
+    
+    /// <summary>
+    /// Асинхронно получить все записи
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns></returns>
+    IAsyncEnumerable<ILogEntry> GetAllAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Асинхронно получить новые записи
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns></returns>
+    IAsyncEnumerable<ILogEntry> GetNewAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Асинхронная очистка текущего лога
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <returns></returns>
+    Task<bool> ClearAsync(CancellationToken cancellationToken = default);
 }
