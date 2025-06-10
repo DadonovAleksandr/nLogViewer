@@ -19,6 +19,7 @@ internal class FileLogReader : ILogReader
     private readonly string _path;
     private long _pos;
     private int _lineCount;
+    private bool _disposed;
     private static readonly Regex LogEntryPattern = new(
         @"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*([.\w]+)\s*\|\s*(\d+)\s*\|\s*(\d+)?$",
         RegexOptions.Singleline);
@@ -360,6 +361,26 @@ internal class FileLogReader : ILogReader
                 _userDialogService.ShowError($"Невалидный остаток лога: {finalText}", GetType().Name);
             }
         }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+            
+        if (disposing)
+        {
+            _log.Debug($"Освобождение ресурсов FileLogReader для файла {_path}");
+            // Здесь можно освободить управляемые ресурсы, если они будут добавлены в будущем
+        }
+        
+        _disposed = true;
     }
 
     public override string ToString() => $"Объект чтения лога из файла {_path}";

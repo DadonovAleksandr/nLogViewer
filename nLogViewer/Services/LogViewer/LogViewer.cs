@@ -21,6 +21,7 @@ internal class LogViewer : ILogViewer, IDisposable
     private Timer _timer;
     private readonly SemaphoreSlim _processLock = new SemaphoreSlim(1, 1);
     private CancellationTokenSource _cancellationTokenSource;
+    private bool _disposed;
     // команды
     private bool _start;
     private bool _stop;
@@ -64,14 +65,35 @@ internal class LogViewer : ILogViewer, IDisposable
     
     public void Dispose()
     {
+        if (_disposed)
+            return;
+            
         _log.Debug($"Освобождение ресурсов LogViewer");
+        
+        // Сначала отменяем операции и останавливаем таймер
         _cancellationTokenSource?.Cancel();
+        _timer?.Change(Timeout.Infinite, 0);
         _timer?.Dispose();
         _timer = null;
-        _logEntries.Clear();
+        
+        // Ждем завершения текущей операции
+        try
+        {
+            _processLock?.Wait(TimeSpan.FromSeconds(5));
+        }
+        catch (ObjectDisposedException)
+        {
+            // Игнорируем, если уже освобожден
+        }
+        
+        // Теперь освобождаем остальные ресурсы
+        _reader?.Dispose();
+        _logEntries?.Clear();
         _prevEntriesCount = 0;
         _processLock?.Dispose();
         _cancellationTokenSource?.Dispose();
+        
+        _disposed = true;
     }
     
     public IEnumerable<ILogEntry> GetEntries(int count = 0)
@@ -83,10 +105,22 @@ internal class LogViewer : ILogViewer, IDisposable
 
     private async Task ProcessAsync(object? obj)
     {
+        // Проверяем, не освобожден ли объект
+        if (_disposed)
+            return;
+            
         // Проверяем, не занят ли уже процесс обработки
-        if (!await _processLock.WaitAsync(0))
+        try
         {
-            _log.Trace($"Процесс обработки уже выполняется, пропускаем");
+            if (!await _processLock.WaitAsync(0))
+            {
+                _log.Trace($"Процесс обработки уже выполняется, пропускаем");
+                return;
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+            // Объект уже освобожден
             return;
         }
         
@@ -174,7 +208,17 @@ internal class LogViewer : ILogViewer, IDisposable
         }
         finally
         {
-            _processLock.Release();
+            if (!_disposed)
+            {
+                try
+                {
+                    _processLock?.Release();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Игнорируем, если объект уже освобожден
+                }
+            }
         }
     }
 

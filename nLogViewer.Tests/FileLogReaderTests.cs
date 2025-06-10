@@ -21,6 +21,7 @@ public class FileLogReaderTests
     [TearDown]
     public void TearDown()
     {
+        _reader?.Dispose();
         if (File.Exists(_testFilePath))
             File.Delete(_testFilePath);
     }

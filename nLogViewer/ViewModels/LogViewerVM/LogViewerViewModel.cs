@@ -31,11 +31,7 @@ internal class LogViewerViewModel : BaseViewModel
         _viewer.Start();
         
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
-        _filter.RefreshFilter += () =>
-        {
-            _log.Debug("Обновление фильтра событий");
-            FiltredLogEntriesRefresh();
-        };
+        _filter.RefreshFilter += OnFilterRefresh;
         _filtredLogEntries.Source = _logEntries;
         _filtredLogEntries.Filter += LogEntriesFilter;
 
@@ -54,6 +50,12 @@ internal class LogViewerViewModel : BaseViewModel
         e.Accepted = false;
     }
 
+    private void OnFilterRefresh()
+    {
+        _log.Debug("Обновление фильтра событий");
+        FiltredLogEntriesRefresh();
+    }
+    
     private void FiltredLogEntriesRefresh() => 
         _filtredLogEntries.Dispatcher.BeginInvoke(new Action(() => _filtredLogEntries.View.Refresh()));
 
@@ -142,6 +144,11 @@ internal class LogViewerViewModel : BaseViewModel
     {
         _log.Debug($"Освобождение ресурсов LogViewerViewModel");
         _viewer.EntriesChanged -= ViewerEntriesRefresh;
+        if (_filter != null)
+        {
+            _filter.RefreshFilter -= OnFilterRefresh;
+        }
+        _filtredLogEntries.Filter -= LogEntriesFilter;
         _viewer.Dispose();
     }
 }
