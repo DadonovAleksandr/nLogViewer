@@ -60,12 +60,20 @@
                   EnableRowVirtualization="True"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling"
-                  >
+                  SelectionMode="Extended"
+                  SelectionUnit="FullRow"
+                  IsReadOnly="True"
+                  ClipboardCopyMode="ExcludeHeader">
             <DataGrid.Resources>
                 <Style TargetType="{x:Type TextBlock}" x:Key="WrapText">
                     <Setter Property="TextWrapping" Value="Wrap"/>
                 </Style>
             </DataGrid.Resources>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Копировать" Command="{x:Static ApplicationCommands.Copy}"/>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             
             <DataGrid.Columns>
                 <DataGridTextColumn Header=" Дата и время " 
