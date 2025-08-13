@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -355,6 +356,8 @@ internal class MainWindowViewModel : BaseViewModel
             ToolTip = filePath,
             Content = logViewerView
         };
+        tabItem.Tag = filePath;
+        tabItem.ContextMenu = CreateTabContextMenu(filePath);
         
         _logViewer.Items.Add(tabItem);
         _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
@@ -363,6 +366,70 @@ internal class MainWindowViewModel : BaseViewModel
         _log.Debug($"Вызываем InitializeWithFileAsync для файла: {filePath}");
         await viewModel.InitializeWithFileAsync(filePath);
         _log.Debug($"InitializeWithFileAsync завершен");
+    }
+
+    private ContextMenu CreateTabContextMenu(string filePath)
+    {
+        var contextMenu = new ContextMenu();
+
+        var openInNotepad = new MenuItem { Header = "Открыть в Блокноте" };
+        openInNotepad.Click += (s, e) =>
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("notepad.exe", $"\"{filePath}\"") { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Не удалось открыть файл в Блокноте: {ex.Message}");
+            }
+        };
+        contextMenu.Items.Add(openInNotepad);
+
+        var notepadPlusPlusPath = GetNotepadPlusPlusPath();
+        var openInNpp = new MenuItem { Header = "Открыть в Notepad++", IsEnabled = !string.IsNullOrEmpty(notepadPlusPlusPath) };
+        openInNpp.Click += (s, e) =>
+        {
+            if (string.IsNullOrEmpty(notepadPlusPlusPath)) return;
+            try
+            {
+                Process.Start(new ProcessStartInfo(notepadPlusPlusPath, $"\"{filePath}\"") { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Не удалось открыть файл в Notepad++: {ex.Message}");
+            }
+        };
+        contextMenu.Items.Add(openInNpp);
+
+        return contextMenu;
+    }
+
+    private static string GetNotepadPlusPlusPath()
+    {
+        try
+        {
+            var candidates = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Notepad++", "notepad++.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Notepad++", "notepad++.exe")
+            };
+            foreach (var candidate in candidates)
+                if (File.Exists(candidate))
+                    return candidate;
+
+            var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
+            foreach (var dir in pathEnv.Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrWhiteSpace(dir)) continue;
+                string possible = string.Empty;
+                try { possible = Path.Combine(dir, "notepad++.exe"); } catch { }
+                if (!string.IsNullOrEmpty(possible) && File.Exists(possible))
+                    return possible;
+            }
+        }
+        catch { }
+        return string.Empty;
     }
 
     /// <summary>
