@@ -371,7 +371,7 @@ internal class MainWindowViewModel : BaseViewModel
     private ContextMenu CreateTabContextMenu(string filePath)
     {
         var contextMenu = new ContextMenu();
-
+        
         var openInNotepad = new MenuItem { Header = "Открыть в Блокноте" };
         openInNotepad.Click += (s, e) =>
         {
@@ -402,6 +402,21 @@ internal class MainWindowViewModel : BaseViewModel
         };
         contextMenu.Items.Add(openInNpp);
 
+        var openInExplorer = new MenuItem { Header = "Показать в проводнике" };
+        openInExplorer.Click += (s, e) =>
+        {
+            try
+            {
+                var args = $"/select,\"{filePath}\"";
+                Process.Start(new ProcessStartInfo("explorer.exe", args) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Не удалось открыть проводник: {ex.Message}");
+            }
+        };
+        contextMenu.Items.Add(openInExplorer);
+        
         return contextMenu;
     }
 
