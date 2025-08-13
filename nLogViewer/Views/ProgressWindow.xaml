@@ -5,14 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Загрузка..."
-        Height="180"
+        Height="200"
         Width="400"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStyle="ToolWindow">
     
-    <Grid Margin="20">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -23,6 +23,7 @@
         
         <!-- Сообщение о статусе -->
         <TextBlock Grid.Row="0" 
+                   Height="30"
                    Text="{Binding StatusMessage}"
                    HorizontalAlignment="Center"
                    Margin="0,10"/>
@@ -35,7 +36,8 @@
                      IsIndeterminate="{Binding IsIndeterminate}"/>
         
         <!-- Оставшееся время -->
-        <TextBlock Grid.Row="2" 
+        <TextBlock Grid.Row="2"
+                   Height="30"
                    Text="{Binding EstimatedTimeRemaining}"
                    HorizontalAlignment="Center"
                    Margin="0,5"
