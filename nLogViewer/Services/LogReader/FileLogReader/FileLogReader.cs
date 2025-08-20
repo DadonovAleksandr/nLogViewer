@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -55,7 +54,6 @@ internal class FileLogReader : ILogSource
     public bool Clear()
     {
         _log.Trace($"Попытка очистки лог-файла {_path}");
-    
         try
         {
             if (!File.Exists(_path))
@@ -74,7 +72,6 @@ internal class FileLogReader : ILogSource
             // Сбрасываем позицию чтения
             _pos = 0;
             _lineCount = 0;
-        
             return true;
         }
         catch (UnauthorizedAccessException ex)
@@ -331,7 +328,7 @@ internal class FileLogReader : ILogSource
             }
 
             // Открываем файл с доступом для записи и обнуляем его содержимое
-            using (var fs = new FileStream(_path, FileMode.Create, FileAccess.Write, FileShare.Read))
+            await using (var fs = new FileStream(_path, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
                 await fs.FlushAsync(cancellationToken).ConfigureAwait(false);
                 _log.Info($"Файл лога {_path} успешно очищен");
@@ -443,7 +440,7 @@ internal class FileLogReader : ILogSource
             currentMessage.Append(line);
 
             // Проверяем весь накопленный текст на соответствие паттерну
-            string currentText = currentMessage.ToString().Trim();
+            var currentText = currentMessage.ToString().Trim();
             var match = LogEntryPattern.Match(currentText);
             if (match.Success)
             {
