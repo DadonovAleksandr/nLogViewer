@@ -14,7 +14,7 @@ namespace nLogViewer.Services.LogReader.Repository;
 /// </summary>
 internal class FileLogRepository : ILogRepository
 {
-    private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+    private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly string _filePath;
     private long _currentPosition;
     private bool _disposed;
@@ -26,7 +26,7 @@ internal class FileLogRepository : ILogRepository
 
     public FileLogRepository(string filePath)
     {
-        _log.Debug($"Создание FileLogRepository для файла: {filePath}");
+        _logger.Debug($"Создание FileLogRepository для файла: {filePath}");
         
         if (string.IsNullOrEmpty(filePath))
             throw new ArgumentException("Путь к файлу не может быть пустым", nameof(filePath));
@@ -43,14 +43,14 @@ internal class FileLogRepository : ILogRepository
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Ошибка проверки доступности файла {_filePath}");
+            _logger.Error(ex, $"Ошибка проверки доступности файла {_filePath}");
             return false;
         }
     }
 
     public async IAsyncEnumerable<string> ReadAllLinesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _log.Trace($"Чтение всех строк из файла {_filePath}");
+        _logger.Trace($"Чтение всех строк из файла {_filePath}");
         
         // Сбрасываем позицию для чтения с начала
         _currentPosition = 0;
@@ -63,7 +63,7 @@ internal class FileLogRepository : ILogRepository
 
     public async IAsyncEnumerable<string> ReadAllLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _log.Trace($"Чтение всех строк из файла {_filePath} с отчетом о прогрессе");
+        _logger.Trace($"Чтение всех строк из файла {_filePath} с отчетом о прогрессе");
         
         // Сбрасываем позицию для чтения с начала
         _currentPosition = 0;
@@ -76,7 +76,7 @@ internal class FileLogRepository : ILogRepository
 
     public async IAsyncEnumerable<string> ReadNewLinesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _log.Trace($"Чтение новых строк из файла {_filePath} с позиции {_currentPosition}");
+        _logger.Trace($"Чтение новых строк из файла {_filePath} с позиции {_currentPosition}");
         
         await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, null, cancellationToken))
         {
@@ -86,7 +86,7 @@ internal class FileLogRepository : ILogRepository
 
     public async IAsyncEnumerable<string> ReadNewLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _log.Trace($"Чтение новых строк из файла {_filePath} с позиции {_currentPosition} с отчетом о прогрессе");
+        _logger.Trace($"Чтение новых строк из файла {_filePath} с позиции {_currentPosition} с отчетом о прогрессе");
         
         await foreach (var line in ReadLinesFromPositionAsync(_currentPosition, progressReporter, cancellationToken))
         {
@@ -96,7 +96,7 @@ internal class FileLogRepository : ILogRepository
 
     public async Task<bool> ClearAsync(CancellationToken cancellationToken = default)
     {
-        _log.Debug($"Очистка файла {_filePath}");
+        _logger.Debug($"Очистка файла {_filePath}");
         
         try
         {
@@ -104,19 +104,19 @@ internal class FileLogRepository : ILogRepository
             await fs.FlushAsync(cancellationToken);
             
             _currentPosition = 0;
-            _log.Info($"Файл {_filePath} успешно очищен");
+            _logger.Info($"Файл {_filePath} успешно очищен");
             return true;
         }
         catch (Exception ex)
         {
-            _log.Error(ex, $"Ошибка при очистке файла {_filePath}");
+            _logger.Error(ex, $"Ошибка при очистке файла {_filePath}");
             return false;
         }
     }
 
     public void ResetPosition()
     {
-        _log.Debug($"Сброс позиции чтения для файла {_filePath}");
+        _logger.Debug($"Сброс позиции чтения для файла {_filePath}");
         _currentPosition = 0;
     }
 
@@ -124,20 +124,18 @@ internal class FileLogRepository : ILogRepository
     {
         if (!File.Exists(_filePath))
         {
-            _log.Warn($"Файл {_filePath} не существует");
+            _logger.Warn($"Файл {_filePath} не существует");
             yield break;
         }
 
-        using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
+        await using var fs = new FileStream(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
         fs.Seek(startPosition, SeekOrigin.Begin);
         
         var fileSize = fs.Length;
         var linesRead = 0;
         
         using var reader = new StreamReader(fs);
-        string line;
-        
-        while ((line = await reader.ReadLineAsync()) != null)
+        while (await reader.ReadLineAsync(cancellationToken) is { } line)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
@@ -155,14 +153,11 @@ internal class FileLogRepository : ILogRepository
         }
         
         // Финальный отчет о прогрессе
-        if (progressReporter != null)
-        {
-            progressReporter.ReportPercentage(100, $"Обработано {linesRead} строк");
-        }
-        
+        progressReporter?.ReportPercentage(100, $"Обработано {linesRead} строк");
+
         // Обновляем позицию для следующего инкрементального чтения
         _currentPosition = fs.Position;
-        _log.Trace($"Обновлена позиция чтения: {_currentPosition}");
+        _logger.Trace($"Обновлена позиция чтения: {_currentPosition}");
     }
 
     public void Dispose()
@@ -178,7 +173,7 @@ internal class FileLogRepository : ILogRepository
 
         if (disposing)
         {
-            _log.Debug($"Освобождение ресурсов FileLogRepository для файла {_filePath}");
+            _logger.Debug($"Освобождение ресурсов FileLogRepository для файла {_filePath}");
         }
 
         _disposed = true;
