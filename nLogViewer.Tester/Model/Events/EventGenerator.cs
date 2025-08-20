@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using NLog;
 using nLogViewer.Model;
@@ -12,6 +13,8 @@ internal class EventGenerator
     
     public int LogCount => _logCount;
     
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", 
+        Justification = "False positive - LogEntryType.Debug is custom enum, not Windows API")]
     public void Generate(LogEntryType type, IProgress<int> progress)
     {
         var msg = $"Сообщение {++_logCount}";
