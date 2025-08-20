@@ -109,8 +109,7 @@ internal class FileLogReader : ILogSource
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
 
-        string line;
-        while ((line = sr.ReadLine()) != null)
+        while (sr.ReadLine() is { } line)
         {
             _lineCount++;
             _log.Trace($"Прочитана строка {_lineCount}: {line}");
@@ -132,8 +131,7 @@ internal class FileLogReader : ILogSource
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
 
-        string line;
-        while ((line = await sr.ReadLineAsync().ConfigureAwait(false)) != null)
+        while (await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
         {
             cancellationToken.ThrowIfCancellationRequested();
             _lineCount++;
@@ -147,7 +145,7 @@ internal class FileLogReader : ILogSource
     private IEnumerable<ILogEntry> ParseLogEntries(IEnumerable<string> lines)
     {
         _log.Trace($"Парсинг записей из строк");
-        StringBuilder currentMessage = new StringBuilder();
+        var currentMessage = new StringBuilder();
 
         foreach (var line in lines)
         {
@@ -166,7 +164,7 @@ internal class FileLogReader : ILogSource
             currentMessage.Append(line);
 
             // Проверяем весь накопленный текст на соответствие паттерну
-            string currentText = currentMessage.ToString().Trim();
+            var currentText = currentMessage.ToString().Trim();
             var match = LogEntryPattern.Match(currentText);
             if (match.Success)
             {
@@ -192,7 +190,7 @@ internal class FileLogReader : ILogSource
         // Проверяем остаток, если он есть
         if (currentMessage.Length > 0)
         {
-            string finalText = currentMessage.ToString().Trim();
+            var finalText = currentMessage.ToString().Trim();
             var match = LogEntryPattern.Match(finalText);
             if (match.Success && TryParseLogEntry(match, out var entry))
             {
@@ -231,10 +229,10 @@ internal class FileLogReader : ILogSource
             type = LogEntryType.Fatal;
         }
 
-        string message = match.Groups[3].Value.Trim();
-        string source = match.Groups[4].Value;
-        int process = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
-        int thread = match.Groups[6].Success ? int.Parse(match.Groups[6].Value) : 0;
+        var message = match.Groups[3].Value.Trim();
+        var source = match.Groups[4].Value;
+        var process = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
+        var thread = match.Groups[6].Success ? int.Parse(match.Groups[6].Value) : 0;
 
         entry = new LogEntry(dateTime, type, message, source, process, thread);
         return true;
@@ -262,7 +260,7 @@ internal class FileLogReader : ILogSource
         }
         
         long processedBytes = 0;
-        int processedEntries = 0;
+        var processedEntries = 0;
         
         // Отправляем начальный прогресс
         progressReporter?.Report(0, fileSize, "Начинаем обработку файла...");
@@ -398,8 +396,7 @@ internal class FileLogReader : ILogSource
 
         try
         {
-            string line;
-            while ((line = await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false)) != null)
+            while (await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 
@@ -427,7 +424,7 @@ internal class FileLogReader : ILogSource
     private async IAsyncEnumerable<ILogEntry> ParseLogEntriesAsync(IAsyncEnumerable<string> lines, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         _log.Trace($"Асинхронный парсинг записей из строк");
-        StringBuilder currentMessage = new StringBuilder();
+        var currentMessage = new StringBuilder();
 
         await foreach (var line in lines.WithCancellation(cancellationToken).ConfigureAwait(false))
         {
