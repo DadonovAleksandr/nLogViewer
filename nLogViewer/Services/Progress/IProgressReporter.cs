@@ -18,14 +18,14 @@ public interface IProgressReporter
     /// <param name="current">Текущее значение</param>
     /// <param name="total">Общее значение</param>
     /// <param name="message">Сообщение</param>
-    void Report(long current, long total, string? message = null);
+    void Report(long current, long total, string message = null);
     
     /// <summary>
     /// Сообщить о прогрессе в процентах
     /// </summary>
     /// <param name="percentage">Процент выполнения (0-100)</param>
     /// <param name="message">Сообщение</param>
-    void ReportPercentage(int percentage, string? message = null);
+    void ReportPercentage(int percentage, string message = null);
 }
 
 /// <summary>
@@ -36,10 +36,10 @@ public class ProgressEventArgs : EventArgs
     public long Current { get; }
     public long Total { get; }
     public int Percentage { get; }
-    public string? Message { get; }
+    public string Message { get; }
     public TimeSpan? EstimatedTimeRemaining { get; }
     
-    public ProgressEventArgs(long current, long total, string? message = null, TimeSpan? estimatedTimeRemaining = null)
+    public ProgressEventArgs(long current, long total, string message = null, TimeSpan? estimatedTimeRemaining = null)
     {
         Current = current;
         Total = total;

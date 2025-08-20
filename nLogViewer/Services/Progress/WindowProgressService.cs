@@ -47,7 +47,6 @@ internal class WindowProgressService : IWindowProgressService
         
         T result = default;
         Exception exception = null;
-        var operationCompleted = false;
         var windowClosed = false;
         
         // Запускаем операцию в фоновом потоке
@@ -67,12 +66,11 @@ internal class WindowProgressService : IWindowProgressService
             }
             finally
             {
-                operationCompleted = true;
                 // Даем время для завершения анимации прогресса перед закрытием окна
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(1000); // Даем секунду на завершение анимации
-                    Application.Current.Dispatcher.BeginInvoke(() =>
+                    await Application.Current.Dispatcher.BeginInvoke(() =>
                     {
                         if (!windowClosed && progressWindow.IsLoaded)
                         {

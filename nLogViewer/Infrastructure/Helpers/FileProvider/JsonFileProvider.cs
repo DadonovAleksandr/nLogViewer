@@ -40,9 +40,9 @@ internal class JsonFileProvider<T> : IFileProvider<T> where T : class, new()
             string json = JsonSerializer.Serialize(obj);
             File.WriteAllText(filePath, json, Encoding.UTF8);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            throw new Exception($"При попытке записи в файл {filePath} было вызвано исключение");
+            throw new Exception($"При попытке записи в файл {filePath} было вызвано исключение: {ex.Message}");
         }
     }
     

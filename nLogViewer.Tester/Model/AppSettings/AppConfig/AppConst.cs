@@ -1,17 +1,11 @@
-﻿namespace nLogViewer.Tester.Model.AppSettings.AppConfig
+﻿namespace nLogViewer.Tester.Model.AppSettings.AppConfig;
+
+internal class AppConst
 {
-    internal class AppConst
-    {
-        private static AppConst _instance;
+    private static AppConst? _instance;
 
-        public static AppConst Get()
-        {
-            if (_instance is null)
-                _instance = new AppConst();
-            return _instance;
-        }
+    public static AppConst Get() => _instance ??= new AppConst();
 
-        public string AppName => "nLogViewer.Tester";
-        public string AppDesciption => "Тестирование просмоторщика логов";
-    }
+    public string AppName => "nLogViewer.Tester";
+    public string AppDesciption => "Тестирование просмоторщика логов";
 }

@@ -135,7 +135,7 @@ internal class FileLogRepository : ILogRepository
         var linesRead = 0;
         
         using var reader = new StreamReader(fs);
-        string? line;
+        string line;
         
         while ((line = await reader.ReadLineAsync()) != null)
         {

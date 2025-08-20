@@ -32,7 +32,7 @@ internal class MainWindowViewModel : BaseViewModel
     private Selector _logViewer;
     private IRecentLogsRepository _recentLogs;
     private IAppConfig _appConfig;
-    private readonly ILogEntryFilter? _filter;
+    private readonly ILogEntryFilter _filter;
     private readonly IUserDialogService _userDialogService;
     private readonly IWindowProgressService _windowProgressService;
     

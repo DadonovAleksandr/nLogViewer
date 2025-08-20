@@ -9,7 +9,7 @@ namespace nLogViewer.Infrastructure.Convertors;
 [ValueConversion(typeof(string), typeof(string))]
 public class LongPathToShortPathConvertor : IValueConverter
 {
-    public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (!(value is string strValue)) return null;
         var pathParts = strValue.Split(Path.DirectorySeparatorChar);

@@ -16,14 +16,14 @@ internal class ProgressReporter : IProgressReporter
     private DateTime _lastReportTime = DateTime.UtcNow;
     private readonly TimeSpan _minReportInterval = TimeSpan.FromMilliseconds(100);
     
-    public event EventHandler<ProgressEventArgs>? ProgressChanged;
+    public event EventHandler<ProgressEventArgs> ProgressChanged;
     
     public ProgressReporter()
     {
         _stopwatch.Start();
     }
     
-    public void Report(long current, long total, string? message = null)
+    public void Report(long current, long total, string message = null)
     {
         // Ограничиваем частоту отчётов для производительности
         var now = DateTime.UtcNow;
@@ -56,7 +56,7 @@ internal class ProgressReporter : IProgressReporter
         _log.Trace($"Прогресс: {args.Percentage}% ({current}/{total}) - {message}");
     }
     
-    public void ReportPercentage(int percentage, string? message = null)
+    public void ReportPercentage(int percentage, string message = null)
     {
         var args = new ProgressEventArgs(percentage, 100, message);
         ProgressChanged?.Invoke(this, args);

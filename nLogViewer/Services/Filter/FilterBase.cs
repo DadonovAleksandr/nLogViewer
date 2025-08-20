@@ -8,7 +8,7 @@ namespace nLogViewer.Services.Filter;
 /// </summary>
 internal abstract class FilterBase
 {
-    public event RefreshFilter? RefreshFilter;
+    public event RefreshFilter RefreshFilter;
     
     /// <summary>
     /// Словарь для хранения значений свойств

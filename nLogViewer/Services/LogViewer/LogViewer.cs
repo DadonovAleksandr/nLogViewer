@@ -163,7 +163,7 @@ internal class LogViewer : ILogViewer, IDisposable
         }
     }
 
-    private async Task ProcessAsync(object? obj)
+    private async Task ProcessAsync(object obj)
     {
         // Проверяем, не освобожден ли объект
         if (_disposed)

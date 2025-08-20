@@ -52,7 +52,7 @@ internal class VirtualizingLogCollection : IList, INotifyCollectionChanged, INot
         _log.Debug($"Создана виртуализированная коллекция для {_count} элементов с размером страницы {_pageSize}");
     }
 
-    public object? this[int index]
+    public object this[int index]
     {
         get
         {

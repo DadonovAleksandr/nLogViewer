@@ -7,10 +7,9 @@ namespace nLogViewer.Tester.Model.Events;
 
 internal class EventGenerator
 {
-    protected static Logger _log = LogManager.GetCurrentClassLogger();
+    private static Logger _logger = LogManager.GetCurrentClassLogger();
     private int _logCount;
-    private IProgress<int> _progress;
-
+    
     public int LogCount => _logCount;
     
     public void Generate(LogEntryType type, IProgress<int> progress)
@@ -19,12 +18,12 @@ internal class EventGenerator
         
         switch(type)
         {
-            case LogEntryType.Trace: _log.Trace(msg); break;
-            case LogEntryType.Debug: _log.Debug(msg); break;
-            case LogEntryType.Info: _log.Info(msg); break;
-            case LogEntryType.Warn: _log.Warn(msg); break;
-            case LogEntryType.Error: _log.Error(msg); break;
-            case LogEntryType.Fatal: _log.Fatal(msg); break;
+            case LogEntryType.Trace: _logger.Trace(msg); break;
+            case LogEntryType.Debug: _logger.Debug(msg); break;
+            case LogEntryType.Info: _logger.Info(msg); break;
+            case LogEntryType.Warn: _logger.Warn(msg); break;
+            case LogEntryType.Error: _logger.Error(msg); break;
+            case LogEntryType.Fatal: _logger.Fatal(msg); break;
             default: throw new ArgumentOutOfRangeException("Тип события не определен");
         }
         progress.Report(_logCount);
@@ -38,12 +37,12 @@ internal class EventGenerator
             var message = $"Сообщение {++_logCount}";
             switch(random.Next(0,6))
             {
-                case 0: _log.Trace(message); break;
-                case 1: _log.Debug(message); break;
-                case 2: _log.Info(message); break;
-                case 3: _log.Warn(message); break;
-                case 4: _log.Error(message); break;
-                case 5: _log.Fatal(message); break;
+                case 0: _logger.Trace(message); break;
+                case 1: _logger.Debug(message); break;
+                case 2: _logger.Info(message); break;
+                case 3: _logger.Warn(message); break;
+                case 4: _logger.Error(message); break;
+                case 5: _logger.Fatal(message); break;
             }
             progress.Report(_logCount);
             Thread.Sleep(10);

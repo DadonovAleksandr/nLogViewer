@@ -109,7 +109,7 @@ internal class FileLogReader : ILogSource
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
 
-        string? line;
+        string line;
         while ((line = sr.ReadLine()) != null)
         {
             _lineCount++;
@@ -132,7 +132,7 @@ internal class FileLogReader : ILogSource
         using var sr = new StreamReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
         sr.BaseStream.Seek(_pos, SeekOrigin.Begin);
 
-        string? line;
+        string line;
         while ((line = await sr.ReadLineAsync().ConfigureAwait(false)) != null)
         {
             cancellationToken.ThrowIfCancellationRequested();

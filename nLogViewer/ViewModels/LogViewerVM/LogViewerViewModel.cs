@@ -27,7 +27,7 @@ internal class LogViewerViewModel : BaseViewModel
     private readonly IWindowProgressService _windowProgressService;
     private readonly ILogViewerFactory _logViewerFactory;
     private readonly IUserDialogService _userDialogService;
-    private ILogEntryFilter? _filter;
+    private ILogEntryFilter _filter;
     private VirtualizingLogCollection _virtualLogEntries;
     private readonly CollectionViewSource _filtredLogEntries = new();
     

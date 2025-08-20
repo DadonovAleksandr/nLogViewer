@@ -87,7 +87,7 @@ internal class MainWindowViewModel : BaseViewModel
     /// <summary>
     /// Заголовок окна
     /// </summary>
-    public string Title { get => Get<string>(); set => Set(value); }
+    public string Title { get => Get<string>() ?? string.Empty; set => Set(value); }
 
     /// <summary>
     /// Счетчик сообщений

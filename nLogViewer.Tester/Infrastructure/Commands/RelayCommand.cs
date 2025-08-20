@@ -1,25 +1,26 @@
 ﻿using nLogViewer.Tester.Infrastructure.Commands.Base;
 using System;
 
-namespace nLogViewer.Tester.Infrastructure.Commands
+namespace nLogViewer.Tester.Infrastructure.Commands;
+
+internal class RelayCommand : Command
 {
-    internal class RelayCommand : Command
+    private readonly Action<object> _execute;
+    private readonly Func<object, bool>? _canExecute;
+
+    public RelayCommand(Action<object> execute, Func<object, bool>? canExecute = null)
     {
-        private readonly Action<object> _Execute;
-        private readonly Func<object, bool> _CanExecute;
+        _execute = execute ?? throw new ArgumentException(nameof(execute));
+        _canExecute = canExecute;
+    }
 
-        public RelayCommand(Action<object> Execute, Func<object, bool> CanExecute = null)
-        {
-            _Execute = Execute ?? throw new ArgumentException(nameof(Execute));
-            _CanExecute = CanExecute;
-        }
+    public override bool CanExecute(object? parameter) => parameter != null && (_canExecute?.Invoke(parameter) ?? true);
 
-        public override bool CanExecute(object parameter) => _CanExecute?.Invoke(parameter) ?? true;
-
-        public override void Execute(object parameter)
-        {
-            if (!CanExecute(parameter)) return;
-            _Execute(parameter);
-        }
+    public override void Execute(object? parameter)
+    {
+        if (!CanExecute(parameter)) 
+            return;
+        if (parameter != null) 
+            _execute(parameter);
     }
 }
