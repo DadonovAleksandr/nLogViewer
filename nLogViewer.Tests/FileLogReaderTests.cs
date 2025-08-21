@@ -30,7 +30,7 @@ public class FileLogReaderTests
     public void GetAll_SingleLineLog_ReturnsCorrectEntry()
     {
         // Arrange
-        string logContent = "2025-03-20 19:40:26.8972 | TRACE | Test message | Source | 123 | 456";
+        var logContent = "2025-03-20 19:40:26.8972 | TRACE | Test message | Source | 123 | 456";
         File.WriteAllText(_testFilePath, logContent);
 
         // Act
@@ -55,7 +55,7 @@ public class FileLogReaderTests
     public void GetAll_MultiLineMessage_ReturnsSingleEntry()
     {
         // Arrange
-        string logContent = 
+        var logContent = 
             "2025-03-20 19:40:26.8972 | DEBUG | Multi-line message:\n" +
             "Line 2\n" +
             "Line 3 | Source | 123 | 456\n" +
@@ -86,7 +86,7 @@ public class FileLogReaderTests
     public void GetAll_InvalidLine_LogsError()
     {
         // Arrange
-        string logContent = "Invalid line\n2025-03-20 19:40:26.8972 | TRACE | Valid | Source | 123 | 456";
+        var logContent = "Invalid line\n2025-03-20 19:40:26.8972 | TRACE | Valid | Source | 123 | 456";
         File.WriteAllText(_testFilePath, logContent);
 
         // Act
@@ -105,7 +105,7 @@ public class FileLogReaderTests
     public void GetNew_TracksPosition()
     {
         // Arrange
-        string initialContent = "2025-03-20 19:40:26.8972 | TRACE | First | Source | 123 | 456\n";
+        var initialContent = "2025-03-20 19:40:26.8972 | TRACE | First | Source | 123 | 456\n";
         File.WriteAllText(_testFilePath, initialContent);
 
         // Act 1: Первое чтение
