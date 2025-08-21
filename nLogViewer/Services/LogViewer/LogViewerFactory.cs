@@ -33,4 +33,20 @@ internal class LogViewerFactory : ILogViewerFactory
         
         return new LogViewer(readerFactory, memoryConfig, progressReporter);
     }
+    
+    public ILogViewer Create(string filePath)
+    {
+        var readerFactory = _serviceProvider.GetRequiredService<ILogReaderFactory>();
+        var memoryConfig = _serviceProvider.GetRequiredService<MemoryConfiguration>();
+        
+        return new LogViewer(readerFactory, memoryConfig, filePath);
+    }
+    
+    public ILogViewer Create(string filePath, IProgressReporter progressReporter)
+    {
+        var readerFactory = _serviceProvider.GetRequiredService<ILogReaderFactory>();
+        var memoryConfig = _serviceProvider.GetRequiredService<MemoryConfiguration>();
+        
+        return new LogViewer(readerFactory, memoryConfig, filePath, progressReporter);
+    }
 }

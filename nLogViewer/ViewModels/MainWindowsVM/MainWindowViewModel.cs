@@ -473,10 +473,6 @@ internal class MainWindowViewModel : BaseViewModel
     {
         _log.Debug($"AddNewLogViewer вызван с файлом: {filePath}");
         
-        // Сначала устанавливаем конфигурацию файла
-        new FileLogReaderConfiguration().FileName = filePath;
-        _log.Debug($"Конфигурация файла установлена");
-        
         // Создаем ViewModel вручную с нужными зависимостями
         _log.Debug($"Получаем сервисы из DI");
         var logViewerFactory = App.Host.Services.GetRequiredService<ILogViewerFactory>();

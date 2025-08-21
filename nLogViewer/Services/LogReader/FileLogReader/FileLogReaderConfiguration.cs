@@ -2,7 +2,13 @@
 
 internal class FileLogReaderConfiguration
 {
-    private static string _fileName;
+    private string _fileName;
+    
+    public FileLogReaderConfiguration(string fileName = null)
+    {
+        _fileName = fileName;
+    }
+    
     public string FileName 
     {
         get => _fileName;

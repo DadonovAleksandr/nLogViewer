@@ -17,10 +17,18 @@ internal class FileLogReaderFactory : ILogReaderFactory
     
     public ILogSource Create()
     {
+        // Для обратной совместимости - создаем без файла
         var configuration = new FileLogReaderConfiguration();
         
         // Используем новую архитектуру с репозиториями
         var repository = _repositoryFactory.Create(LogSourceType.File, configuration.FileName);
+        return new RepositoryLogSource(repository);
+    }
+    
+    public ILogSource Create(string filePath)
+    {
+        // Используем новую архитектуру с репозиториями
+        var repository = _repositoryFactory.Create(LogSourceType.File, filePath);
         return new RepositoryLogSource(repository);
     }
 }

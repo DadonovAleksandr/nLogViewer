@@ -72,10 +72,6 @@ internal class LogViewerViewModel : BaseViewModel
         
         _log.Debug($"Размер файла: {fileInfo.Length} байт, порог: {largeFileThreshold} байт");
         
-        // Устанавливаем файл в конфигурацию
-        new FileLogReaderConfiguration().FileName = filePath;
-        _log.Debug($"Конфигурация файла установлена: {filePath}");
-        
         if (fileInfo.Exists && fileInfo.Length > largeFileThreshold)
         {
             _log.Debug("Файл большой, показываем окно прогресса");
@@ -83,7 +79,7 @@ internal class LogViewerViewModel : BaseViewModel
                 async (progressReporter, cancellationToken) =>
                 {
                     _log.Debug("Внутри операции прогресса, создаем LogViewer с прогрессом");
-                    _viewer = _logViewerFactory.Create(progressReporter);
+                    _viewer = _logViewerFactory.Create(filePath, progressReporter);
                     await InitializeViewer();
                     
                     _log.Debug("Ждем полную загрузку файла через LogViewer");
@@ -95,7 +91,7 @@ internal class LogViewerViewModel : BaseViewModel
         else
         {
             _log.Debug("Файл маленький или не существует, создаем LogViewer без прогресса");
-            _viewer = _logViewerFactory.Create();
+            _viewer = _logViewerFactory.Create(filePath);
             await InitializeViewer();
         }
     }

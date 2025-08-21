@@ -47,6 +47,21 @@ internal class LogViewer : ILogViewer, IDisposable
         _memoryConfig = memoryConfig;
         _progressReporter = progressReporter;
         
+        Initialize();
+    }
+    
+    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, string filePath, IProgressReporter progressReporter = null)
+    {
+        _logger.Debug($"Вызов конструктора {GetType().Name} с файлом: {filePath}");
+        _reader = readerFactory.Create(filePath);
+        _memoryConfig = memoryConfig;
+        _progressReporter = progressReporter;
+        
+        Initialize();
+    }
+    
+    private void Initialize()
+    {
         if (_memoryConfig?.UseCircularBuffer == true)
             _circularBuffer = new CircularBuffer<ILogEntry>(_memoryConfig.MaxEntriesInMemory);
         else
