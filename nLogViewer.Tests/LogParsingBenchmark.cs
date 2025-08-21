@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using NUnit.Framework;
 using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.UserDialogService;
 

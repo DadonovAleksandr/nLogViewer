@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using NUnit.Framework;
 using nLogViewer.Model;
 using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.UserDialogService;
