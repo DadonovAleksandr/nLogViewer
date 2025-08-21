@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Configuration;
+using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Services.Filter;
 using nLogViewer.Services.LogReader.Factory;
 using nLogViewer.Services.LogReader.FileLogReader;
@@ -25,6 +26,8 @@ public static class ServiceRegistration
         });
         
         services.AddSingleton<ILogEntryFilter, LogEntryFilter>();
+        services.AddSingleton<IAppConfig>(provider => AppConfig.GetConfigFromDefaultPath());
+        services.AddSingleton<IVirtualizationService, VirtualizationService>();
 
         // Регистрация репозиториев
         services.AddSingleton<ILogRepositoryFactory, LogRepositoryFactory>();

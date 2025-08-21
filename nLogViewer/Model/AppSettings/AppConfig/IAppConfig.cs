@@ -7,6 +7,7 @@ namespace nLogViewer.Model.AppSettings.AppConfig;
 public interface IAppConfig
 {
     IFilterConfig FilterConfig { get; set; }
+    IUIConfig UIConfig { get; set; }
 }
 
 public static class AppConfig

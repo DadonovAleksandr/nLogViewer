@@ -113,6 +113,10 @@
                     <RibbonButton Label="Удалить лог" Command="{Binding DeleteLog}"
                                   ToolTip="Удалить текущий просмотрщик лога"
                                   SmallImageSource="/Infrastructure/Resources/Images/Small/delete.png"/>
+                    <RibbonSeparator/>
+                    <RibbonButton Label="Настройки" Command="{Binding Settings}"
+                                  ToolTip="Открыть настройки приложения"
+                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Settings.png"/>
                 </RibbonGroup>
 
                 <!-- Фильтры -->
