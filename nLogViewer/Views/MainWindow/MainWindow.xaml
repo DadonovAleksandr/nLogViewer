@@ -191,15 +191,15 @@
                     <Grid>
                         <TextBlock Text="{Binding Header}" ToolTip="{Binding ToolTip}"/>
                         <Grid.ContextMenu>
-                            <ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                                 <MenuItem Header="Открыть в Блокноте" 
-                                          Command="{Binding DataContext.OpenInNotepadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          Command="{Binding DataContext.OpenInNotepadCommand, Source={x:Reference MainWin}}"
                                           CommandParameter="{Binding FilePath}"/>
                                 <MenuItem Header="Открыть в Notepad++" 
-                                          Command="{Binding DataContext.OpenInNotepadPPCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          Command="{Binding DataContext.OpenInNotepadPPCommand, Source={x:Reference MainWin}}"
                                           CommandParameter="{Binding FilePath}"/>
                                 <MenuItem Header="Показать в проводнике" 
-                                          Command="{Binding DataContext.OpenInExplorerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          Command="{Binding DataContext.OpenInExplorerCommand, Source={x:Reference MainWin}}"
                                           CommandParameter="{Binding FilePath}"/>
                             </ContextMenu>
                         </Grid.ContextMenu>
