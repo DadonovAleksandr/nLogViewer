@@ -43,23 +43,17 @@ internal class LogViewer : ILogViewer, IDisposable
     public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, IProgressReporter progressReporter = null)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами: readerFactory - {readerFactory}, memoryConfig - {memoryConfig}");
-        
         _reader = readerFactory.Create();
         _memoryConfig = memoryConfig;
         _progressReporter = progressReporter;
         
         if (_memoryConfig?.UseCircularBuffer == true)
-        {
             _circularBuffer = new CircularBuffer<ILogEntry>(_memoryConfig.MaxEntriesInMemory);
-        }
         else
-        {
             _logEntries = new List<ILogEntry>();
-        }
         
         _cancellationTokenSource = new CancellationTokenSource();
-
-        TimerCallback tm = new TimerCallback(async obj => await ProcessAsync(obj));
+        var tm = new TimerCallback(async obj => await ProcessAsync(obj));
         _timer = new Timer(tm, null, 0, 2000);
     }
 
@@ -70,13 +64,9 @@ internal class LogViewer : ILogViewer, IDisposable
     {
         _logger.Debug($"Очистка всех событий");
         if (_memoryConfig?.UseCircularBuffer == true)
-        {
             _circularBuffer?.Clear();
-        }
         else
-        {
             _logEntries?.Clear();
-        }
         _reader.Clear();
         _prevEntriesCount = 0;
     }
@@ -85,13 +75,9 @@ internal class LogViewer : ILogViewer, IDisposable
     {
         _logger.Debug($"Асинхронная очистка всех событий");
         if (_memoryConfig?.UseCircularBuffer == true)
-        {
             _circularBuffer?.Clear();
-        }
         else
-        {
             _logEntries?.Clear();
-        }
         await _reader.ClearAsync(_cancellationTokenSource.Token);
         _prevEntriesCount = 0;
     }
@@ -126,7 +112,6 @@ internal class LogViewer : ILogViewer, IDisposable
         _prevEntriesCount = 0;
         _processLock?.Dispose();
         _cancellationTokenSource?.Dispose();
-        
         _disposed = true;
     }
     
@@ -134,15 +119,11 @@ internal class LogViewer : ILogViewer, IDisposable
     {
         if (_memoryConfig?.UseCircularBuffer == true)
         {
-            if (count == 0)
-                return _circularBuffer;
-            return _circularBuffer.Skip(Math.Max(0, _circularBuffer.Count - count));
+            return count == 0 ? _circularBuffer : _circularBuffer.Skip(Math.Max(0, _circularBuffer.Count - count));
         }
         else
         {
-            if (count == 0)
-                return LogEntries;
-            return LogEntries.Skip(Math.Max(0, Count - count));
+            return count == 0 ? LogEntries : LogEntries.Skip(Math.Max(0, Count - count));
         }
     }
     
