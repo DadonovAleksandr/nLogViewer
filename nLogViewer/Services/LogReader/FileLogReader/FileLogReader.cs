@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -164,43 +165,68 @@ internal class FileLogReader : ILogSource
             currentMessage.Append(line);
 
             // Проверяем весь накопленный текст на соответствие паттерну
-            var currentText = currentMessage.ToString().Trim();
-            var match = LogEntryPattern.Match(currentText);
-            if (match.Success)
+            var currentText = currentMessage.ToString();
+            var currentTextSpan = currentText.AsSpan().Trim();
+            
+            // Try fast parsing first (avoids regex overhead)
+            if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
             {
-                _log.Trace($"Найдена полная запись: {currentText}");
-                if (TryParseLogEntry(match, out var entry))
-                {
-                    yield return entry;
-                }
-                else
-                {
-                    _log.Error($"Ошибка парсинга записи: {currentText}");
-                    // Убрано индивидуальное показание ошибок парсинга - используется агрегация
-                }
+                _log.Trace($"Найдена полная запись (быстрый парсинг): {currentTextSpan.ToString()}");
+                yield return fastEntry;
                 currentMessage.Clear();
             }
-            // Если нет соответствия, продолжаем накапливать строки
             else
             {
-                _log.Trace($"Строка добавлена к сообщению, ждем завершения: {line}");
+                // Fallback to regex parsing for complex multi-line entries
+                var match = LogEntryPattern.Match(currentText.Trim());
+                if (match.Success)
+                {
+                    _log.Trace($"Найдена полная запись (регекс): {currentText.Trim()}");
+                    if (TryParseLogEntry(match, out var entry))
+                    {
+                        yield return entry;
+                    }
+                    else
+                    {
+                        _log.Error($"Ошибка парсинга записи: {currentText.Trim()}");
+                        // Убрано индивидуальное показание ошибок парсинга - используется агрегация
+                    }
+                    currentMessage.Clear();
+                }
+                // Если нет соответствия, продолжаем накапливать строки
+                else
+                {
+                    _log.Trace($"Строка добавлена к сообщению, ждем завершения: {line}");
+                }
             }
         }
 
         // Проверяем остаток, если он есть
         if (currentMessage.Length > 0)
         {
-            var finalText = currentMessage.ToString().Trim();
-            var match = LogEntryPattern.Match(finalText);
-            if (match.Success && TryParseLogEntry(match, out var entry))
+            var finalText = currentMessage.ToString();
+            var finalTextSpan = finalText.AsSpan().Trim();
+            
+            // Try fast parsing first
+            if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
             {
-                _log.Trace($"Возвращаем последнюю запись: {finalText}");
-                yield return entry;
+                _log.Trace($"Возвращаем последнюю запись (быстрый парсинг): {finalTextSpan.ToString()}");
+                yield return fastEntry;
             }
             else
             {
-                _log.Error($"Невалидный остаток лога: {finalText}");
-                // Убрано индивидуальное показание ошибок парсинга - используется агрегация
+                // Fallback to regex parsing
+                var match = LogEntryPattern.Match(finalText.Trim());
+                if (match.Success && TryParseLogEntry(match, out var entry))
+                {
+                    _log.Trace($"Возвращаем последнюю запись (регекс): {finalText.Trim()}");
+                    yield return entry;
+                }
+                else
+                {
+                    _log.Error($"Невалидный остаток лога: {finalText.Trim()}");
+                    // Убрано индивидуальное показание ошибок парсинга - используется агрегация
+                }
             }
         }
     }
@@ -208,32 +234,114 @@ internal class FileLogReader : ILogSource
     private bool TryParseLogEntry(Match match, out ILogEntry entry)
     {
         entry = null;
-        if (!DateTime.TryParseExact(match.Groups[1].Value, "yyyy-MM-dd HH:mm:ss.ffff", null, System.Globalization.DateTimeStyles.None, out DateTime parsedDateTime))
+        
+        // Use spans to avoid string allocations
+        var dateTimeSpan = match.Groups[1].ValueSpan;
+        if (!DateTime.TryParseExact(dateTimeSpan, "yyyy-MM-dd HH:mm:ss.ffff".AsSpan(), null, DateTimeStyles.None, out DateTime parsedDateTime))
         {
             _log.Error($"Невозможно распарсить дату: {match.Groups[1].Value}");
             return false;
         }
 
-        DateTime dateTime = new DateTime(
-            parsedDateTime.Year,
-            parsedDateTime.Month,
-            parsedDateTime.Day,
-            parsedDateTime.Hour,
-            parsedDateTime.Minute,
-            parsedDateTime.Second,
-            parsedDateTime.Millisecond);
+        // Avoid unnecessary DateTime construction - use parsed value directly
+        var dateTime = parsedDateTime;
 
-        if (!Enum.TryParse(match.Groups[2].Value, true, out LogEntryType type))
+        var typeSpan = match.Groups[2].ValueSpan;
+        if (!Enum.TryParse(typeSpan, true, out LogEntryType type))
         {
             _log.Error($"Ошибка при парсинге типа: {match.Groups[2].Value}");
             type = LogEntryType.Fatal;
         }
 
-        var message = match.Groups[3].Value.Trim();
-        var source = match.Groups[4].Value;
-        var process = match.Groups[5].Success ? int.Parse(match.Groups[5].Value) : 0;
-        var thread = match.Groups[6].Success ? int.Parse(match.Groups[6].Value) : 0;
+        // Use ValueSpan and trim without allocating new strings
+        var messageSpan = match.Groups[3].ValueSpan.Trim();
+        var message = messageSpan.ToString(); // Only allocate when necessary
+        
+        var sourceSpan = match.Groups[4].ValueSpan;
+        var source = sourceSpan.ToString(); // Only allocate when necessary
+        
+        var process = match.Groups[5].Success ? int.Parse(match.Groups[5].ValueSpan) : 0;
+        var thread = match.Groups[6].Success ? int.Parse(match.Groups[6].ValueSpan) : 0;
 
+        entry = new LogEntry(dateTime, type, message, source, process, thread);
+        return true;
+    }
+
+    internal bool TryParseLogEntryFast(ReadOnlySpan<char> logLine, out ILogEntry entry)
+    {
+        entry = null;
+        
+        // Fast path: parse without regex for better performance
+        // Expected format: "2024-08-21 10:30:45.1234 | INFO | Message text | Source | 1234 | 5678"
+        
+        int pipeIndex1 = logLine.IndexOf('|');
+        if (pipeIndex1 == -1) return false;
+        
+        // Extract and parse datetime
+        var dateTimeSpan = logLine[..pipeIndex1].Trim();
+        if (!DateTime.TryParseExact(dateTimeSpan, "yyyy-MM-dd HH:mm:ss.ffff".AsSpan(), null, DateTimeStyles.None, out DateTime dateTime))
+        {
+            return false;
+        }
+        
+        // Find remaining pipe separators
+        var remaining = logLine[(pipeIndex1 + 1)..];
+        int pipeIndex2 = remaining.IndexOf('|');
+        if (pipeIndex2 == -1) return false;
+        
+        // Extract and parse log level
+        var levelSpan = remaining[..pipeIndex2].Trim();
+        if (!Enum.TryParse(levelSpan, true, out LogEntryType type))
+        {
+            type = LogEntryType.Fatal;
+        }
+        
+        remaining = remaining[(pipeIndex2 + 1)..];
+        int pipeIndex3 = remaining.IndexOf('|');
+        if (pipeIndex3 == -1) return false;
+        
+        // Extract message
+        var messageSpan = remaining[..pipeIndex3].Trim();
+        var message = messageSpan.ToString();
+        
+        remaining = remaining[(pipeIndex3 + 1)..];
+        int pipeIndex4 = remaining.IndexOf('|');
+        if (pipeIndex4 == -1) return false;
+        
+        // Extract source
+        var sourceSpan = remaining[..pipeIndex4].Trim();
+        var source = sourceSpan.ToString();
+        
+        remaining = remaining[(pipeIndex4 + 1)..];
+        int pipeIndex5 = remaining.IndexOf('|');
+        
+        int process = 0, thread = 0;
+        
+        if (pipeIndex5 == -1)
+        {
+            // Only process ID, no thread ID
+            var processSpan = remaining.Trim();
+            if (!processSpan.IsEmpty)
+            {
+                int.TryParse(processSpan, out process);
+            }
+        }
+        else
+        {
+            // Both process and thread IDs
+            var processSpan = remaining[..pipeIndex5].Trim();
+            if (!processSpan.IsEmpty)
+            {
+                int.TryParse(processSpan, out process);
+            }
+            
+            var threadSpan = remaining[(pipeIndex5 + 1)..].Trim();
+            if (!threadSpan.IsEmpty)
+            {
+                int.TryParse(threadSpan, out thread);
+            }
+        }
+        
         entry = new LogEntry(dateTime, type, message, source, process, thread);
         return true;
     }
@@ -447,43 +555,68 @@ internal class FileLogReader : ILogSource
             currentMessage.Append(line);
 
             // Проверяем весь накопленный текст на соответствие паттерну
-            var currentText = currentMessage.ToString().Trim();
-            var match = LogEntryPattern.Match(currentText);
-            if (match.Success)
+            var currentText = currentMessage.ToString();
+            var currentTextSpan = currentText.AsSpan().Trim();
+            
+            // Try fast parsing first (avoids regex overhead)
+            if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
             {
-                _log.Trace($"Найдена полная запись: {currentText}");
-                if (TryParseLogEntry(match, out var entry))
-                {
-                    yield return entry;
-                }
-                else
-                {
-                    _log.Error($"Ошибка парсинга записи: {currentText}");
-                    // Убрано индивидуальное показание ошибок парсинга - используется агрегация
-                }
+                _log.Trace($"Найдена полная запись (быстрый парсинг): {currentTextSpan.ToString()}");
+                yield return fastEntry;
                 currentMessage.Clear();
             }
-            // Если нет соответствия, продолжаем накапливать строки
             else
             {
-                _log.Trace($"Строка добавлена к сообщению, ждем завершения: {line}");
+                // Fallback to regex parsing for complex multi-line entries
+                var match = LogEntryPattern.Match(currentText.Trim());
+                if (match.Success)
+                {
+                    _log.Trace($"Найдена полная запись (регекс): {currentText.Trim()}");
+                    if (TryParseLogEntry(match, out var entry))
+                    {
+                        yield return entry;
+                    }
+                    else
+                    {
+                        _log.Error($"Ошибка парсинга записи: {currentText.Trim()}");
+                        // Убрано индивидуальное показание ошибок парсинга - используется агрегация
+                    }
+                    currentMessage.Clear();
+                }
+                // Если нет соответствия, продолжаем накапливать строки
+                else
+                {
+                    _log.Trace($"Строка добавлена к сообщению, ждем завершения: {line}");
+                }
             }
         }
 
         // Проверяем остаток, если он есть
         if (currentMessage.Length > 0)
         {
-            string finalText = currentMessage.ToString().Trim();
-            var match = LogEntryPattern.Match(finalText);
-            if (match.Success && TryParseLogEntry(match, out var entry))
+            var finalText = currentMessage.ToString();
+            var finalTextSpan = finalText.AsSpan().Trim();
+            
+            // Try fast parsing first
+            if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
             {
-                _log.Trace($"Возвращаем последнюю запись: {finalText}");
-                yield return entry;
+                _log.Trace($"Возвращаем последнюю запись (быстрый парсинг): {finalTextSpan.ToString()}");
+                yield return fastEntry;
             }
             else
             {
-                _log.Error($"Невалидный остаток лога: {finalText}");
-                // Убрано индивидуальное показание ошибок парсинга - используется агрегация
+                // Fallback to regex parsing
+                var match = LogEntryPattern.Match(finalText.Trim());
+                if (match.Success && TryParseLogEntry(match, out var entry))
+                {
+                    _log.Trace($"Возвращаем последнюю запись (регекс): {finalText.Trim()}");
+                    yield return entry;
+                }
+                else
+                {
+                    _log.Error($"Невалидный остаток лога: {finalText.Trim()}");
+                    // Убрано индивидуальное показание ошибок парсинга - используется агрегация
+                }
             }
         }
     }
