@@ -43,6 +43,7 @@ internal class RepositoryLogSource : ILogSource
         return GetNewAsync().ToEnumerable();
     }
 
+    [Obsolete("Use ClearAsync instead to prevent deadlocks")]
     public bool Clear()
     {
         if (!_repository.SupportsClear)
@@ -51,6 +52,7 @@ internal class RepositoryLogSource : ILogSource
             return false;
         }
 
+        // WARNING: This can cause deadlocks - use ClearAsync instead
         return _repository.ClearAsync().GetAwaiter().GetResult();
     }
 
@@ -230,11 +232,16 @@ internal class RepositoryLogSource : ILogSource
 /// </summary>
 internal static class AsyncEnumerableExtensions
 {
+    /// <summary>
+    /// WARNING: Blocking sync conversion of IAsyncEnumerable - can cause deadlocks
+    /// </summary>
+    [Obsolete("This method can cause deadlocks. Use async enumeration where possible.")]
     public static IEnumerable<T> ToEnumerable<T>(this IAsyncEnumerable<T> source)
     {
         var enumerator = source.GetAsyncEnumerator();
         try
         {
+            // WARNING: These blocking calls can cause deadlocks in UI thread
             while (enumerator.MoveNextAsync().GetAwaiter().GetResult())
             {
                 yield return enumerator.Current;

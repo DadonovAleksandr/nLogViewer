@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace nLogViewer.Services.LogReader;
@@ -12,6 +13,7 @@ internal interface ILogSource : ILogReader
     /// Очистка текущего лога
     /// </summary>
     /// <returns></returns>
+    [Obsolete("Use ClearAsync instead to prevent deadlocks")]
     bool Clear();
     
     /// <summary>

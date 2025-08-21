@@ -252,23 +252,40 @@ internal class LogViewerViewModel : BaseViewModel
     public ICommand ClearCommand { get; }
     private void OnClearCommandExecuted(object p)
     {
-        _log.Debug($"Очистка всех событий");
-        if (_viewer != null)
+        // Fire-and-forget async operation to prevent UI blocking
+        _ = Task.Run(() => OnClearCommandExecutedAsync(p));
+    }
+    
+    private async Task OnClearCommandExecutedAsync(object p)
+    {
+        try
         {
-            _viewer.Clear();
+            _log.Debug($"Очистка всех событий");
+            if (_viewer != null)
+            {
+                await _viewer.ClearAsync();
+            }
+            
+            // Update UI on the UI thread
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (_memoryConfig?.EnableDataVirtualization == true)
+                {
+                    _virtualLogEntries?.InvalidateCache();
+                }
+                else
+                {
+                    var logEntries = _filtredLogEntries.Source as List<LogEntryView>;
+                    logEntries?.Clear();
+                }
+                
+                _filtredLogEntries.View.Refresh();
+            });
         }
-        
-        if (_memoryConfig?.EnableDataVirtualization == true)
+        catch (Exception ex)
         {
-            _virtualLogEntries?.InvalidateCache();
+            _log.Error(ex, "Ошибка при очистке логов");
         }
-        else
-        {
-            var logEntries = _filtredLogEntries.Source as List<LogEntryView>;
-            logEntries?.Clear();
-        }
-        
-        _filtredLogEntries.View.Refresh();
     }
     private bool CanClearCommandExecute(object p) => _viewer?.Count > 0;
     #endregion

@@ -78,26 +78,50 @@ internal class LogViewer : ILogViewer, IDisposable
     public void Start() => _start = true;
     public void Stop() => _stop = true;
     public void Pause() => _pause = true;
+    [Obsolete("Use ClearAsync instead to prevent UI blocking")]
     public void Clear()
     {
-        _logger.Debug($"Очистка всех событий");
+        ClearInternal();
+    }
+    
+    private void ClearInternal()
+    {
+        _logger.Debug($"Очистка всех событий (синхронно - НЕ рекомендуется)");
         if (_memoryConfig?.UseCircularBuffer == true)
             _circularBuffer?.Clear();
         else
             _logEntries?.Clear();
+        
+        // WARNING: Synchronous clear fallback - may cause deadlocks
+        #pragma warning disable CS0618 // Type or member is obsolete
         _reader.Clear();
+        #pragma warning restore CS0618 // Type or member is obsolete
         _prevEntriesCount = 0;
+        
+        EntriesChanged?.Invoke();
     }
     
+    /// <summary>
+    /// Асинхронно очищает все записи в логе
+    /// </summary>
+    /// <returns>Task для ожидания завершения операции</returns>
     public async Task ClearAsync()
     {
         _logger.Debug($"Асинхронная очистка всех событий");
+        
+        // Clear memory buffers synchronously (fast operation)
         if (_memoryConfig?.UseCircularBuffer == true)
             _circularBuffer?.Clear();
         else
             _logEntries?.Clear();
-        await _reader.ClearAsync(_cancellationTokenSource.Token);
+        
         _prevEntriesCount = 0;
+        
+        // Clear underlying reader asynchronously
+        await _reader.ClearAsync(_cancellationTokenSource.Token);
+        
+        // Notify about changes
+        EntriesChanged?.Invoke();
     }
     
     public void Dispose()

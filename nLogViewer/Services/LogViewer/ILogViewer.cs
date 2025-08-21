@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using nLogViewer.Model;
 
 namespace nLogViewer.Services.LogViewer;
@@ -16,7 +17,14 @@ public interface ILogViewer : IDisposable
     void Start();
     void Stop();
     void Pause();
+    [Obsolete("Use ClearAsync instead to prevent UI blocking")]
     void Clear();
+    
+    /// <summary>
+    /// Асинхронно очищает все записи в логе
+    /// </summary>
+    /// <returns>Task для ожидания завершения операции</returns>
+    Task ClearAsync();
 
     IEnumerable<ILogEntry> GetEntries(int count = 0);
     
