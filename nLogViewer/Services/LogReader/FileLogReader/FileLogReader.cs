@@ -77,18 +77,21 @@ internal class FileLogReader : ILogSource
         catch (UnauthorizedAccessException ex)
         {
             _log.Error(ex, $"Нет прав на очистку файла {_path}");
+            // Критические ошибки операций FS показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Ошибка очистки: нет прав доступа к файлу {_path}", "Ошибка очистки лога");
             return false;
         }
         catch (IOException ex)
         {
             _log.Error(ex, $"Ошибка ввода-вывода при очистке файла {_path}");
+            // Критические ошибки операций FS показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Ошибка очистки лог-файла: {ex.Message}", "Ошибка очистки лога");
             return false;
         }
         catch (Exception ex)
         {
             _log.Error(ex, $"Неизвестная ошибка при очистке файла {_path}");
+            // Критические ошибки операций FS показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Неизвестная ошибка при очистке лога: {ex.Message}", "Ошибка очистки лога");
             return false;
         }
@@ -155,7 +158,7 @@ internal class FileLogReader : ILogSource
                 if (!DateTimePattern.Match(line).Success)
                 {
                     _log.Error($"Ошибка парсинга записи. Запись будет игнорирована: {line}");
-                    _userDialogService.ShowError($"Ошибка парсинга записи. Запись будет игнорирована: {line}", GetType().Name);
+                    // Убрано индивидуальное показание ошибок - используется агрегация
                     continue;
                 }
             currentMessage.Append(line);
@@ -173,7 +176,7 @@ internal class FileLogReader : ILogSource
                 else
                 {
                     _log.Error($"Ошибка парсинга записи: {currentText}");
-                    _userDialogService.ShowError($"Ошибка парсинга записи: {currentText}", GetType().Name);
+                    // Убрано индивидуальное показание ошибок парсинга - используется агрегация
                 }
                 currentMessage.Clear();
             }
@@ -197,7 +200,7 @@ internal class FileLogReader : ILogSource
             else
             {
                 _log.Error($"Невалидный остаток лога: {finalText}");
-                _userDialogService.ShowError($"Невалидный остаток лога: {finalText}", GetType().Name);
+                // Убрано индивидуальное показание ошибок парсинга - используется агрегация
             }
         }
     }
@@ -343,18 +346,21 @@ internal class FileLogReader : ILogSource
         catch (UnauthorizedAccessException ex)
         {
             _log.Error(ex, $"Нет прав на очистку файла {_path}");
+            // Критические ошибки операций FS показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Ошибка очистки: нет прав доступа к файлу {_path}", "Ошибка очистки лога");
             return false;
         }
         catch (IOException ex)
         {
             _log.Error(ex, $"Ошибка ввода-вывода при очистке файла {_path}");
+            // Критические ошибки операций FS показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Ошибка очистки лог-файла: {ex.Message}", "Ошибка очистки лога");
             return false;
         }
         catch (Exception ex)
         {
             _log.Error(ex, $"Неизвестная ошибка при очистке файла {_path}");
+            // Критические ошибки операций FS показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Неизвестная ошибка при очистке лога: {ex.Message}", "Ошибка очистки лога");
             return false;
         }
@@ -385,6 +391,7 @@ internal class FileLogReader : ILogSource
         catch (Exception ex)
         {
             _log.Error(ex, $"Ошибка открытия файла {_path}");
+            // Критические ошибки открытия файла показываем пользователю (не спам, редкие события)
             _userDialogService.ShowError($"Ошибка открытия файла лога: {ex.Message}", "Ошибка");
             sr?.Dispose();
             fs?.Dispose();
@@ -434,7 +441,7 @@ internal class FileLogReader : ILogSource
                 if (!DateTimePattern.Match(line).Success)
                 {
                     _log.Error($"Ошибка парсинга записи. Запись будет игнорирована: {line}");
-                    _userDialogService.ShowError($"Ошибка парсинга записи. Запись будет игнорирована: {line}", GetType().Name);
+                    // Убрано индивидуальное показание ошибок - используется агрегация
                     continue;
                 }
             currentMessage.Append(line);
@@ -452,7 +459,7 @@ internal class FileLogReader : ILogSource
                 else
                 {
                     _log.Error($"Ошибка парсинга записи: {currentText}");
-                    _userDialogService.ShowError($"Ошибка парсинга записи: {currentText}", GetType().Name);
+                    // Убрано индивидуальное показание ошибок парсинга - используется агрегация
                 }
                 currentMessage.Clear();
             }
@@ -476,7 +483,7 @@ internal class FileLogReader : ILogSource
             else
             {
                 _log.Error($"Невалидный остаток лога: {finalText}");
-                _userDialogService.ShowError($"Невалидный остаток лога: {finalText}", GetType().Name);
+                // Убрано индивидуальное показание ошибок парсинга - используется агрегация
             }
         }
     }

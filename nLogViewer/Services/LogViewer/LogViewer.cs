@@ -31,6 +31,8 @@ internal class LogViewer : ILogViewer, IDisposable
     private bool _disposed;
     private int _totalErrorCount;
     private DateTime _lastErrorReportTime = DateTime.MinValue;
+    private readonly TimeSpan _errorReportThrottleInterval = TimeSpan.FromMinutes(5); // Показывать сводку ошибок не чаще раз в 5 минут
+    private readonly int _maxErrorsBeforeReport = 10; // Показывать сводку после накопления 10 ошибок
     // команды
     private bool _start;
     private bool _stop;
