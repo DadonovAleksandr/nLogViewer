@@ -51,6 +51,7 @@ internal class MainWindowViewModel : BaseViewModel
         DeleteLog = new LambdaCommand(OnDeleteLogExecuted, CanDeleteLogExecute);
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
+        Settings = new LambdaCommand(OnSettingsExecuted, CanSettingsExecute);
         #endregion
     }
     
@@ -141,7 +142,11 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand About { get; }
     private void OnAboutExecuted(object p)
     {
-        Application.Current.Shutdown();
+        _log.Debug("Открытие окна О приложении");
+        var version = ProjectVersion.Get();
+        var aboutMessage = $"{AppConst.Get().AppName} {version}\n\n" +
+                          $"{AppConst.Get().AppDesciption}\n\n";
+        MessageBox.Show(aboutMessage, "О приложении", MessageBoxButton.OK, MessageBoxImage.Information);
     }
     private bool CanAboutExecute(object p) => true;
     #endregion
@@ -150,6 +155,33 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand Exit { get; }
     private void OnExitExecuted(object p) => Application.Current.Shutdown();
     private bool CanExitExecute(object p) => true;
+    #endregion
+    
+    #region Settings
+    public ICommand Settings { get; }
+    private void OnSettingsExecuted(object p)
+    {
+        _log.Debug("Открытие окна настроек");
+        
+        var settingsViewModel = new ViewModels.SettingsVM.SettingsViewModel(_appConfig);
+        var settingsWindow = new Views.SettingsWindow(settingsViewModel)
+        {
+            Owner = Application.Current.MainWindow
+        };
+        
+        var result = settingsWindow.ShowDialog();
+        if (result == true)
+        {
+            _log.Info("Настройки сохранены, требуется перезапуск для применения изменений");
+            MessageBox.Show(
+                "Настройки сохранены!\nДля применения изменений виртуализации перезапустите приложение или перезагрузите лог-файл.",
+                "Настройки",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information
+            );
+        }
+    }
+    private bool CanSettingsExecute(object p) => true;
     #endregion
 
     #endregion

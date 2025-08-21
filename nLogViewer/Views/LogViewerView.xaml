@@ -48,7 +48,8 @@
                 Height="2"
                 CornerRadius="1"
                 Background="CornflowerBlue" />
-        <DataGrid ItemsSource="{Binding FiltredLogEntries}"
+        <DataGrid x:Name="LogDataGrid"
+                  ItemsSource="{Binding FiltredLogEntries}"
                   SelectedItem="{Binding SelectedEntry}"
                   SelectedIndex="{Binding SelectedIndex}"
                   ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"

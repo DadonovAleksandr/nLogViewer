@@ -16,20 +16,26 @@
     <DockPanel>
         <Ribbon DockPanel.Dock="Top" SelectedIndex="0" 
                 ShowQuickAccessToolBarOnTop="False" Margin="0,-22,0,0">
-            <!--<Ribbon.ApplicationMenu>
-                <RibbonApplicationMenu Visibility="Collapsed">
-                    
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu>
                     <RibbonApplicationMenu.SmallImageSource>
                         <DrawingImage>
                             <DrawingImage.Drawing>
                                 <GeometryDrawing>
                                     <GeometryDrawing.Geometry>
-                                        <RectangleGeometry Rect="0,0,20,20"/>
+                                        <RectangleGeometry Rect="0,0,24,24"/>
                                     </GeometryDrawing.Geometry>
                                     <GeometryDrawing.Brush>
                                         <VisualBrush Stretch="Uniform">
                                             <VisualBrush.Visual>
-                                                <TextBlock Text="Файл" FontSize="16" Foreground="White"/>
+                                                <Grid Width="24" Height="24" Background="Transparent"
+                                                      SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                        <Rectangle Width="15" Height="2" RadiusX="1" RadiusY="1" Fill="White" Margin="0,1,0,1"/>
+                                                        <Rectangle Width="15" Height="2" RadiusX="1" RadiusY="1" Fill="White" Margin="0,1,0,1"/>
+                                                        <Rectangle Width="15" Height="2" RadiusX="1" RadiusY="1" Fill="White" Margin="0,1,0,1"/>
+                                                    </StackPanel>
+                                                </Grid>
                                             </VisualBrush.Visual>
                                         </VisualBrush>
                                     </GeometryDrawing.Brush>
@@ -52,11 +58,11 @@
                                                ImageSource="/Infrastructure/Resources/Images/Large/Export.png"
                                                KeyTip="E"/>
                     <RibbonApplicationMenuItem Header="Настройки"
-                                               Command="{Binding DeleteLog}"
+                                               Command="{Binding Settings}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Settings.png"
-                                               CommandParameter="0"
+                                               KeyTip="S"
                                                ToolTip="Открыть диалоговое окно настроек приложения"/>
-                    <RibbonApplicationMenuItem Header="О программе"
+                    <RibbonApplicationMenuItem Header="О приложении"
                                                Command="{Binding About}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Info.png"
                                                KeyTip="A"/>
@@ -100,7 +106,7 @@
                     </RibbonApplicationMenu.AuxiliaryPaneContent>
                     
                 </RibbonApplicationMenu>
-            </Ribbon.ApplicationMenu>-->
+            </Ribbon.ApplicationMenu>
             
             <RibbonTab Header="Главная">
                 <RibbonGroup Header="Общие">
