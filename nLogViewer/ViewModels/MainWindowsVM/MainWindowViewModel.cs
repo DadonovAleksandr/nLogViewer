@@ -142,7 +142,11 @@ internal class MainWindowViewModel : BaseViewModel
     public ICommand About { get; }
     private void OnAboutExecuted(object p)
     {
-        Application.Current.Shutdown();
+        _log.Debug("Открытие окна О приложении");
+        var version = ProjectVersion.Get();
+        var aboutMessage = $"{AppConst.Get().AppName} {version}\n\n" +
+                          $"{AppConst.Get().AppDesciption}\n\n";
+        MessageBox.Show(aboutMessage, "О приложении", MessageBoxButton.OK, MessageBoxImage.Information);
     }
     private bool CanAboutExecute(object p) => true;
     #endregion

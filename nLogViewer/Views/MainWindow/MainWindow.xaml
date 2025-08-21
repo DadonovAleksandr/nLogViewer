@@ -16,9 +16,8 @@
     <DockPanel>
         <Ribbon DockPanel.Dock="Top" SelectedIndex="0" 
                 ShowQuickAccessToolBarOnTop="False" Margin="0,-22,0,0">
-            <!--<Ribbon.ApplicationMenu>
-                <RibbonApplicationMenu Visibility="Collapsed">
-                    
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu>
                     <RibbonApplicationMenu.SmallImageSource>
                         <DrawingImage>
                             <DrawingImage.Drawing>
@@ -52,11 +51,11 @@
                                                ImageSource="/Infrastructure/Resources/Images/Large/Export.png"
                                                KeyTip="E"/>
                     <RibbonApplicationMenuItem Header="Настройки"
-                                               Command="{Binding DeleteLog}"
+                                               Command="{Binding Settings}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Settings.png"
-                                               CommandParameter="0"
+                                               KeyTip="S"
                                                ToolTip="Открыть диалоговое окно настроек приложения"/>
-                    <RibbonApplicationMenuItem Header="О программе"
+                    <RibbonApplicationMenuItem Header="О приложении"
                                                Command="{Binding About}"
                                                ImageSource="/Infrastructure/Resources/Images/Large/Info.png"
                                                KeyTip="A"/>
@@ -100,7 +99,7 @@
                     </RibbonApplicationMenu.AuxiliaryPaneContent>
                     
                 </RibbonApplicationMenu>
-            </Ribbon.ApplicationMenu>-->
+            </Ribbon.ApplicationMenu>
             
             <RibbonTab Header="Главная">
                 <RibbonGroup Header="Общие">
@@ -113,10 +112,6 @@
                     <RibbonButton Label="Удалить лог" Command="{Binding DeleteLog}"
                                   ToolTip="Удалить текущий просмотрщик лога"
                                   SmallImageSource="/Infrastructure/Resources/Images/Small/delete.png"/>
-                    <RibbonSeparator/>
-                    <RibbonButton Label="Настройки" Command="{Binding Settings}"
-                                  ToolTip="Открыть настройки приложения"
-                                  SmallImageSource="/Infrastructure/Resources/Images/Small/Settings.png"/>
                 </RibbonGroup>
 
                 <!-- Фильтры -->
