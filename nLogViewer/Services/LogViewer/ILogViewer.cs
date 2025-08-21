@@ -11,7 +11,7 @@ public interface ILogViewer : IDisposable
 
     int Count { get; }
     LogViewerState State { get; }
-    List<ILogEntry> LogEntries { get; }
+    IReadOnlyList<ILogEntry> LogEntries { get; }
     
     void Start();
     void Stop();

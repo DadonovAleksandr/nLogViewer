@@ -16,6 +16,7 @@ namespace nLogViewer.Services.LogViewer;
 internal class LogViewer : ILogViewer, IDisposable
 {
     private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+    private static readonly IReadOnlyList<ILogEntry> EmptyLogEntries = new List<ILogEntry>().AsReadOnly();
     
     private readonly ILogSource _reader;
     private readonly MemoryConfiguration _memoryConfig;
@@ -38,7 +39,9 @@ internal class LogViewer : ILogViewer, IDisposable
     public event EntriesChanged EntriesChanged;
     public int Count => _memoryConfig?.UseCircularBuffer == true ? _circularBuffer?.Count ?? 0 : _logEntries.Count;
     public LogViewerState State => _state;
-    public List<ILogEntry> LogEntries => _memoryConfig?.UseCircularBuffer == true ? _circularBuffer?.ToList() ?? new List<ILogEntry>() : _logEntries;
+    public IReadOnlyList<ILogEntry> LogEntries => _memoryConfig?.UseCircularBuffer == true 
+        ? _circularBuffer?.ToList().AsReadOnly() ?? EmptyLogEntries 
+        : _logEntries?.AsReadOnly() ?? EmptyLogEntries;
     
     public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, IProgressReporter progressReporter = null)
     {
