@@ -183,8 +183,34 @@
             </RibbonTab>  
             
         </Ribbon>
-        <TabControl x:Name="LogViewersControl">
-            
+        <TabControl x:Name="LogViewersControl" 
+                    ItemsSource="{Binding LogTabs}"
+                    SelectedItem="{Binding SelectedLogTab}">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <TextBlock Text="{Binding Header}" ToolTip="{Binding ToolTip}"/>
+                        <Grid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Открыть в Блокноте" 
+                                          Command="{Binding DataContext.OpenInNotepadCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          CommandParameter="{Binding FilePath}"/>
+                                <MenuItem Header="Открыть в Notepad++" 
+                                          Command="{Binding DataContext.OpenInNotepadPPCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          CommandParameter="{Binding FilePath}"/>
+                                <MenuItem Header="Показать в проводнике" 
+                                          Command="{Binding DataContext.OpenInExplorerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          CommandParameter="{Binding FilePath}"/>
+                            </ContextMenu>
+                        </Grid.ContextMenu>
+                    </Grid>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <ContentPresenter Content="{Binding Content}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
         </TabControl>
     </DockPanel>
 </Window>

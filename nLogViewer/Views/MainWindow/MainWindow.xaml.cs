@@ -16,7 +16,7 @@ namespace nLogViewer
             Loaded += (sender, args) =>
             {
                 if(!(DataContext is MainWindowViewModel mainVm)) return;
-                mainVm.InitLogViewerControl(LogViewersControl);
+                mainVm.InitLogViewerControl();
             };
             
             Closing += (sender, args) =>

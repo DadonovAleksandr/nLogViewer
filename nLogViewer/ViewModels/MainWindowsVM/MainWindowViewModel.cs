@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using nLogViewer.Infrastructure.Commands;
@@ -27,14 +25,24 @@ using Ookii.Dialogs.Wpf;
 
 namespace nLogViewer.ViewModels;
 
+public class LogTabItem
+{
+    public string Header { get; set; }
+    public string ToolTip { get; set; }
+    public string FilePath { get; set; }
+    public LogViewerView Content { get; set; }
+}
+
 internal class MainWindowViewModel : BaseViewModel
 {
-    private Selector _logViewer;
     private IRecentLogsRepository _recentLogs;
     private IAppConfig _appConfig;
     private readonly ILogEntryFilter _filter;
     private readonly IUserDialogService _userDialogService;
     private readonly IWindowProgressService _windowProgressService;
+    
+    private ObservableCollection<LogTabItem> _logTabs;
+    private LogTabItem _selectedLogTab;
     
     public MainWindowViewModel(IUserDialogService userDialogService, IWindowProgressService windowProgressService)
     {
@@ -44,6 +52,8 @@ internal class MainWindowViewModel : BaseViewModel
         _filter = App.Host.Services.GetService<ILogEntryFilter>();
         _userDialogService = userDialogService;
         _windowProgressService = windowProgressService;
+        
+        _logTabs = new ObservableCollection<LogTabItem>();
 
         #region commands
         AddFile = new LambdaCommand(OnAddFileExecuted, CanAddFileExecute);
@@ -52,13 +62,17 @@ internal class MainWindowViewModel : BaseViewModel
         About = new LambdaCommand(OnAboutExecuted, CanAboutExecute);
         Exit = new LambdaCommand(OnExitExecuted, CanExitExecute);
         Settings = new LambdaCommand(OnSettingsExecuted, CanSettingsExecute);
+        
+        // Context menu commands
+        OpenInNotepadCommand = new LambdaCommand(OnOpenInNotepadExecuted, CanOpenInNotepadExecute);
+        OpenInNotepadPPCommand = new LambdaCommand(OnOpenInNotepadPPExecuted, CanOpenInNotepadPPExecute);
+        OpenInExplorerCommand = new LambdaCommand(OnOpenInExplorerExecuted, CanOpenInExplorerExecute);
+        
+        // Application menu commands
+        LoadSession = new LambdaCommand(OnLoadSessionExecuted, CanLoadSessionExecute);
         #endregion
     }
-    
-    #region Pages
-    
-    #endregion
-    
+
     #region Commands
     
     #region Add file
@@ -77,13 +91,9 @@ internal class MainWindowViewModel : BaseViewModel
             _log.Debug("Диалог выбора файла завершился отменой");
             return;
         }
-        if (_logViewer is null)
-        {
-            _log.Error("Просмоторщик логов не инициализирован");
-            return;
-        }
         AddNewLogViewer(ofd.FileName);
         _recentLogs.Add(ofd.FileName);
+        OnPropertyChanged(nameof(RecentFiles));
     }
     
     private bool CanAddFileExecute(object p) => true;
@@ -119,6 +129,7 @@ internal class MainWindowViewModel : BaseViewModel
         
         AddNewLogViewer(filePath);
         _recentLogs.Add(selectedFolder, true);
+        OnPropertyChanged(nameof(RecentFiles));
     }
     private bool CanAddFolderExecute(object p) => true;
     #endregion
@@ -128,14 +139,20 @@ internal class MainWindowViewModel : BaseViewModel
     private void OnDeleteLogExecuted(object p)
     {
         _log.Debug("Команда удалить текущий лог из просмоторщика");
-        if (_logViewer.SelectedItem is TabItem tabItem && tabItem.Content is LogViewerView logViewerView)
+        if (_selectedLogTab?.Content is LogViewerView logViewerView)
         {
             logViewerView.Dispose();
         }
-        _recentLogs.Remove(_recentLogs[_logViewer.SelectedIndex]);
-        _logViewer.Items.Remove(_logViewer.SelectedItem);
+        
+        var selectedIndex = LogTabs.IndexOf(_selectedLogTab);
+        if (selectedIndex >= 0 && selectedIndex < _recentLogs.Count())
+        {
+            _recentLogs.Remove(_recentLogs.ElementAt(selectedIndex));
+        }
+        
+        LogTabs.Remove(_selectedLogTab);
     }
-    private bool CanDeleteLogExecute(object p) => !(_logViewer is null) && _logViewer.Items.Count > 0;
+    private bool CanDeleteLogExecute(object p) => LogTabs.Count > 0 && _selectedLogTab != null;
     #endregion
 
     #region About
@@ -183,6 +200,81 @@ internal class MainWindowViewModel : BaseViewModel
     }
     private bool CanSettingsExecute(object p) => true;
     #endregion
+    
+    #region Context Menu Commands
+    public ICommand OpenInNotepadCommand { get; }
+    private void OnOpenInNotepadExecuted(object parameter)
+    {
+        var filePath = parameter as string ?? _selectedLogTab?.FilePath;
+        if (string.IsNullOrEmpty(filePath)) return;
+        
+        try
+        {
+            Process.Start(new ProcessStartInfo("notepad.exe", $"\"{filePath}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"Не удалось открыть файл в Блокноте: {ex.Message}");
+        }
+    }
+    private bool CanOpenInNotepadExecute(object parameter) => true;
+    
+    public ICommand OpenInNotepadPPCommand { get; }
+    private void OnOpenInNotepadPPExecuted(object parameter)
+    {
+        var filePath = parameter as string ?? _selectedLogTab?.FilePath;
+        if (string.IsNullOrEmpty(filePath)) return;
+        
+        var notepadPlusPlusPath = GetNotepadPlusPlusPath();
+        if (string.IsNullOrEmpty(notepadPlusPlusPath)) return;
+        
+        try
+        {
+            Process.Start(new ProcessStartInfo(notepadPlusPlusPath, $"\"{filePath}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"Не удалось открыть файл в Notepad++: {ex.Message}");
+        }
+    }
+    private bool CanOpenInNotepadPPExecute(object parameter) => !string.IsNullOrEmpty(GetNotepadPlusPlusPath());
+    
+    public ICommand OpenInExplorerCommand { get; }
+    private void OnOpenInExplorerExecuted(object parameter)
+    {
+        var filePath = parameter as string ?? _selectedLogTab?.FilePath;
+        if (string.IsNullOrEmpty(filePath)) return;
+        
+        try
+        {
+            var args = $"/select,\"{filePath}\"";
+            Process.Start(new ProcessStartInfo("explorer.exe", args) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error($"Не удалось открыть проводник: {ex.Message}");
+        }
+    }
+    private bool CanOpenInExplorerExecute(object parameter) => true;
+    
+    public ICommand LoadSession { get; }
+    private void OnLoadSessionExecuted(object parameter)
+    {
+        var filePath = parameter as string;
+        if (string.IsNullOrEmpty(filePath)) return;
+        
+        var recentEntry = _recentLogs.FirstOrDefault(x => x.Path == filePath);
+        if (recentEntry != null)
+        {
+            var path = recentEntry.IsFolder ? FindLastFileInDirectory(recentEntry.Path) : recentEntry.Path;
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            {
+                AddNewLogViewer(path);
+            }
+        }
+    }
+    private bool CanLoadSessionExecute(object parameter) => true;
+    #endregion
 
     #endregion
     
@@ -197,6 +289,32 @@ internal class MainWindowViewModel : BaseViewModel
         get => _title;
         set => Set(ref _title, value);
     }
+    #endregion
+    
+    #region Log Tabs
+    /// <summary>
+    /// Коллекция вкладок с логами
+    /// </summary>
+    public ObservableCollection<LogTabItem> LogTabs
+    {
+        get => _logTabs;
+        set => Set(ref _logTabs, value);
+    }
+    
+    /// <summary>
+    /// Выбранная вкладка
+    /// </summary>
+    public LogTabItem SelectedLogTab
+    {
+        get => _selectedLogTab;
+        set => Set(ref _selectedLogTab, value);
+    }
+    
+    /// <summary>
+    /// Список недавних файлов для меню приложения
+    /// </summary>
+    public IEnumerable<string> RecentFiles => _recentLogs?.Select(x => x.Path) ?? Enumerable.Empty<string>();
+    
     #endregion
     
     #region Фильтр событий
@@ -275,20 +393,14 @@ internal class MainWindowViewModel : BaseViewModel
     /// <summary>
     /// Инициализация просмотощика лога
     /// </summary>
-    /// <param name="control"></param>
-    public void InitLogViewerControl(object control)
+    public void InitLogViewerControl()
     {
-        if (!(control is TabControl tabControl))
-        {
-            _log.Error($"Не возможно ининцилизирвать компонент просмотра лога. Компонент имеет неподходящий тип: {control.GetType().Name}");
-            return;
-        }
-        _logViewer = tabControl;
         _log.Trace("Промотрщик лога инициализирован");
         
         _recentLogs = InitRecentLogsRepository();
         if (_recentLogs.Any())
             ViewRecentLogs();
+        OnPropertyChanged(nameof(RecentFiles));
     }
     
     /// <summary>
@@ -381,18 +493,17 @@ internal class MainWindowViewModel : BaseViewModel
             DataContext = viewModel
         };
         
-        _log.Debug($"Создаем TabItem и добавляем в коллекцию");
-        var tabItem = new TabItem
+        _log.Debug($"Создаем LogTabItem и добавляем в коллекцию");
+        var logTabItem = new LogTabItem
         {
             Header = Path.GetFileName(filePath),
             ToolTip = filePath,
+            FilePath = filePath,
             Content = logViewerView
         };
-        tabItem.Tag = filePath;
-        tabItem.ContextMenu = CreateTabContextMenu(filePath);
         
-        _logViewer.Items.Add(tabItem);
-        _logViewer.SelectedIndex = _logViewer.Items.Count - 1;
+        LogTabs.Add(logTabItem);
+        SelectedLogTab = logTabItem;
         
         // Инициализируем LogViewerViewModel с файлом
         _log.Debug($"Вызываем InitializeWithFileAsync для файла: {filePath}");
@@ -400,57 +511,6 @@ internal class MainWindowViewModel : BaseViewModel
         _log.Debug($"InitializeWithFileAsync завершен");
     }
 
-    private ContextMenu CreateTabContextMenu(string filePath)
-    {
-        var contextMenu = new ContextMenu();
-        
-        var openInNotepad = new MenuItem { Header = "Открыть в Блокноте" };
-        openInNotepad.Click += (s, e) =>
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo("notepad.exe", $"\"{filePath}\"") { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Не удалось открыть файл в Блокноте: {ex.Message}");
-            }
-        };
-        contextMenu.Items.Add(openInNotepad);
-
-        var notepadPlusPlusPath = GetNotepadPlusPlusPath();
-        var openInNpp = new MenuItem { Header = "Открыть в Notepad++", IsEnabled = !string.IsNullOrEmpty(notepadPlusPlusPath) };
-        openInNpp.Click += (s, e) =>
-        {
-            if (string.IsNullOrEmpty(notepadPlusPlusPath)) return;
-            try
-            {
-                Process.Start(new ProcessStartInfo(notepadPlusPlusPath, $"\"{filePath}\"") { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Не удалось открыть файл в Notepad++: {ex.Message}");
-            }
-        };
-        contextMenu.Items.Add(openInNpp);
-
-        var openInExplorer = new MenuItem { Header = "Показать в проводнике" };
-        openInExplorer.Click += (s, e) =>
-        {
-            try
-            {
-                var args = $"/select,\"{filePath}\"";
-                Process.Start(new ProcessStartInfo("explorer.exe", args) { UseShellExecute = true });
-            }
-            catch (Exception ex)
-            {
-                _log.Error($"Не удалось открыть проводник: {ex.Message}");
-            }
-        };
-        contextMenu.Items.Add(openInExplorer);
-        
-        return contextMenu;
-    }
 
     private static string GetNotepadPlusPlusPath()
     {
