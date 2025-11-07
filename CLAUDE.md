@@ -36,9 +36,9 @@ dotnet test nLogViewer.Tests/nLogViewer.Tests.csproj --collect:"XPlat Code Cover
 
 ## Technology Stack
 
-- **Target Framework**: .NET 8.0 Windows (net8.0-windows)
+- **Target Framework**: .NET 9.0 Windows (net9.0-windows)
 - **UI Framework**: WPF (Windows Presentation Foundation)
-- **Language Version**: C# 11
+- **Language Version**: C# 13
 - **Hosting**: Microsoft.Extensions.Hosting with dependency injection
 - **Logging**: NLog with extensions for Microsoft.Extensions.Logging
 - **Configuration**: Config.Net for settings management
