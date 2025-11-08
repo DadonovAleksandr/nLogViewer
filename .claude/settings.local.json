@@ -8,7 +8,8 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(rm:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(mkdir -p tech-debt)"
     ],
     "deny": []
   }
