@@ -8,6 +8,7 @@ public interface IAppConfig
 {
     IFilterConfig FilterConfig { get; set; }
     IUIConfig UIConfig { get; set; }
+    IPerformanceConfig PerformanceConfig { get; set; }
 }
 
 public static class AppConfig

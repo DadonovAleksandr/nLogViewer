@@ -7,6 +7,7 @@ using NLog;
 using nLogViewer.Infrastructure.Collections;
 using nLogViewer.Infrastructure.Configuration;
 using nLogViewer.Model;
+using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Services.LogReader;
 using nLogViewer.Services.LogReader.Factory;
 using nLogViewer.Services.Progress;
@@ -21,6 +22,7 @@ internal class LogViewer : ILogViewer, IDisposable
     private readonly ILogSource _reader;
     private readonly MemoryConfiguration _memoryConfig;
     private readonly IProgressReporter _progressReporter;
+    private readonly IAppConfig _appConfig;
     private LogViewerState _state;
     private List<ILogEntry> _logEntries;
     private CircularBuffer<ILogEntry> _circularBuffer;
@@ -45,23 +47,25 @@ internal class LogViewer : ILogViewer, IDisposable
         ? _circularBuffer?.ToList().AsReadOnly() ?? EmptyLogEntries 
         : _logEntries?.AsReadOnly() ?? EmptyLogEntries;
     
-    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, IProgressReporter progressReporter = null)
+    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, IAppConfig appConfig, IProgressReporter progressReporter = null)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с параметрами: readerFactory - {readerFactory}, memoryConfig - {memoryConfig}");
         _reader = readerFactory.Create();
         _memoryConfig = memoryConfig;
+        _appConfig = appConfig;
         _progressReporter = progressReporter;
-        
+
         Initialize();
     }
-    
-    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, string filePath, IProgressReporter progressReporter = null)
+
+    public LogViewer(ILogReaderFactory readerFactory, MemoryConfiguration memoryConfig, IAppConfig appConfig, string filePath, IProgressReporter progressReporter = null)
     {
         _logger.Debug($"Вызов конструктора {GetType().Name} с файлом: {filePath}");
         _reader = readerFactory.Create(filePath);
         _memoryConfig = memoryConfig;
+        _appConfig = appConfig;
         _progressReporter = progressReporter;
-        
+
         Initialize();
     }
     
@@ -71,10 +75,15 @@ internal class LogViewer : ILogViewer, IDisposable
             _circularBuffer = new CircularBuffer<ILogEntry>(_memoryConfig.MaxEntriesInMemory);
         else
             _logEntries = new List<ILogEntry>();
-        
+
         _cancellationTokenSource = new CancellationTokenSource();
+
+        // Получаем интервал polling из конфигурации, по умолчанию 2000ms
+        var pollingInterval = _appConfig?.PerformanceConfig?.PollingIntervalMs ?? 2000;
+        _logger.Debug($"Использование интервала polling: {pollingInterval}ms");
+
         var tm = new TimerCallback(async obj => await ProcessAsync(obj));
-        _timer = new Timer(tm, null, 0, 2000);
+        _timer = new Timer(tm, null, 0, pollingInterval);
     }
 
     public void Start() => _start = true;

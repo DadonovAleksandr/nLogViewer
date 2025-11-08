@@ -167,9 +167,16 @@ internal class FileLogReader : ILogSource
             // Проверяем весь накопленный текст на соответствие паттерну
             var currentText = currentMessage.ToString();
             var currentTextSpan = currentText.AsSpan().Trim();
-            
-            // Try fast parsing first (avoids regex overhead)
-            if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
+
+            // Сначала пытаемся улучшенный fast parser для многострочных записей
+            if (TryParseLogEntryFastMultiline(currentTextSpan, out var fastMultilineEntry))
+            {
+                _log.Trace($"Найдена полная запись (быстрый многострочный парсинг): {currentTextSpan.ToString()}");
+                yield return fastMultilineEntry;
+                currentMessage.Clear();
+            }
+            // Fallback на простой fast parser (только для однострочных записей)
+            else if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
             {
                 _log.Trace($"Найдена полная запись (быстрый парсинг): {currentTextSpan.ToString()}");
                 yield return fastEntry;
@@ -177,7 +184,7 @@ internal class FileLogReader : ILogSource
             }
             else
             {
-                // Fallback to regex parsing for complex multi-line entries
+                // Последний fallback на regex только для совсем странных случаев
                 var match = LogEntryPattern.Match(currentText.Trim());
                 if (match.Success)
                 {
@@ -206,16 +213,22 @@ internal class FileLogReader : ILogSource
         {
             var finalText = currentMessage.ToString();
             var finalTextSpan = finalText.AsSpan().Trim();
-            
-            // Try fast parsing first
-            if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
+
+            // Пытаемся сначала улучшенный fast parser для многострочных
+            if (TryParseLogEntryFastMultiline(finalTextSpan, out var fastMultilineEntry))
+            {
+                _log.Trace($"Возвращаем последнюю запись (быстрый многострочный парсинг): {finalTextSpan.ToString()}");
+                yield return fastMultilineEntry;
+            }
+            // Fallback на простой fast parser
+            else if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
             {
                 _log.Trace($"Возвращаем последнюю запись (быстрый парсинг): {finalTextSpan.ToString()}");
                 yield return fastEntry;
             }
             else
             {
-                // Fallback to regex parsing
+                // Последний fallback на regex
                 var match = LogEntryPattern.Match(finalText.Trim());
                 if (match.Success && TryParseLogEntry(match, out var entry))
                 {
@@ -341,7 +354,67 @@ internal class FileLogReader : ILogSource
                 int.TryParse(threadSpan, out thread);
             }
         }
-        
+
+        entry = new LogEntry(dateTime, type, message, source, process, thread);
+        return true;
+    }
+
+    /// <summary>
+    /// Быстрый парсинг с поддержкой многострочных записей.
+    /// Ищет pipes с конца строки вместо начала для обработки многострочных сообщений.
+    /// Формат: "2024-08-21 10:30:45.1234 | INFO | Message\nwith\nnewlines | Source | 1234 | 5678"
+    /// </summary>
+    internal bool TryParseLogEntryFastMultiline(ReadOnlySpan<char> logText, out ILogEntry entry)
+    {
+        entry = null;
+
+        // Ищем первый pipe после даты
+        int pipeIndex1 = logText.IndexOf('|');
+        if (pipeIndex1 == -1) return false;
+
+        var dateTimeSpan = logText[..pipeIndex1].Trim();
+        if (!DateTime.TryParseExact(dateTimeSpan, "yyyy-MM-dd HH:mm:ss.ffff".AsSpan(),
+                                     null, DateTimeStyles.None, out DateTime dateTime))
+            return false;
+
+        var remaining = logText[(pipeIndex1 + 1)..];
+        int pipeIndex2 = remaining.IndexOf('|');
+        if (pipeIndex2 == -1) return false;
+
+        var levelSpan = remaining[..pipeIndex2].Trim();
+        if (!Enum.TryParse(levelSpan, true, out LogEntryType type))
+            type = LogEntryType.Fatal;
+
+        remaining = remaining[(pipeIndex2 + 1)..];
+
+        // КЛЮЧЕВОЕ ОТЛИЧИЕ: ищем pipe с КОНЦА строки для ThreadId
+        // Формат: ... | Source | ProcessId | ThreadId
+        //              ↑3       ↑2          ↑1 (последний pipe)
+
+        int lastPipeIndex = remaining.LastIndexOf('|');
+        if (lastPipeIndex == -1) return false;
+
+        var threadSpan = remaining[(lastPipeIndex + 1)..].Trim();
+        int.TryParse(threadSpan, out int thread);
+
+        remaining = remaining[..lastPipeIndex];
+        int secondLastPipeIndex = remaining.LastIndexOf('|');
+        if (secondLastPipeIndex == -1) return false;
+
+        var processSpan = remaining[(secondLastPipeIndex + 1)..].Trim();
+        int.TryParse(processSpan, out int process);
+
+        remaining = remaining[..secondLastPipeIndex];
+        int thirdLastPipeIndex = remaining.LastIndexOf('|');
+        if (thirdLastPipeIndex == -1) return false;
+
+        var sourceSpan = remaining[(thirdLastPipeIndex + 1)..].Trim();
+        var source = sourceSpan.ToString();
+
+        // ВСЕ что осталось - это message (может содержать \n и любые символы!)
+        var messageSpan = remaining[..thirdLastPipeIndex].Trim();
+        var message = messageSpan.ToString();
+
         entry = new LogEntry(dateTime, type, message, source, process, thread);
         return true;
     }
@@ -557,9 +630,16 @@ internal class FileLogReader : ILogSource
             // Проверяем весь накопленный текст на соответствие паттерну
             var currentText = currentMessage.ToString();
             var currentTextSpan = currentText.AsSpan().Trim();
-            
-            // Try fast parsing first (avoids regex overhead)
-            if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
+
+            // Сначала пытаемся улучшенный fast parser для многострочных записей
+            if (TryParseLogEntryFastMultiline(currentTextSpan, out var fastMultilineEntry))
+            {
+                _log.Trace($"Найдена полная запись (быстрый многострочный парсинг): {currentTextSpan.ToString()}");
+                yield return fastMultilineEntry;
+                currentMessage.Clear();
+            }
+            // Fallback на простой fast parser (только для однострочных записей)
+            else if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
             {
                 _log.Trace($"Найдена полная запись (быстрый парсинг): {currentTextSpan.ToString()}");
                 yield return fastEntry;
@@ -567,7 +647,7 @@ internal class FileLogReader : ILogSource
             }
             else
             {
-                // Fallback to regex parsing for complex multi-line entries
+                // Последний fallback на regex только для совсем странных случаев
                 var match = LogEntryPattern.Match(currentText.Trim());
                 if (match.Success)
                 {
@@ -596,16 +676,22 @@ internal class FileLogReader : ILogSource
         {
             var finalText = currentMessage.ToString();
             var finalTextSpan = finalText.AsSpan().Trim();
-            
-            // Try fast parsing first
-            if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
+
+            // Пытаемся сначала улучшенный fast parser для многострочных
+            if (TryParseLogEntryFastMultiline(finalTextSpan, out var fastMultilineEntry))
+            {
+                _log.Trace($"Возвращаем последнюю запись (быстрый многострочный парсинг): {finalTextSpan.ToString()}");
+                yield return fastMultilineEntry;
+            }
+            // Fallback на простой fast parser
+            else if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
             {
                 _log.Trace($"Возвращаем последнюю запись (быстрый парсинг): {finalTextSpan.ToString()}");
                 yield return fastEntry;
             }
             else
             {
-                // Fallback to regex parsing
+                // Последний fallback на regex
                 var match = LogEntryPattern.Match(finalText.Trim());
                 if (match.Success && TryParseLogEntry(match, out var entry))
                 {

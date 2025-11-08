@@ -19,10 +19,10 @@ public static class ServiceRegistration
         services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
         {
             MaxEntriesInMemory = 100_000,
-            EnableDataVirtualization = false, // Временно отключаем для отладки
+            EnableDataVirtualization = false,
             VirtualizationPageSize = 100,
             MaxCachedPages = 10,
-            UseCircularBuffer = false // Временно отключаем для отладки
+            UseCircularBuffer = true // Включено для оптимизации памяти (Фаза 1)
         });
         
         services.AddSingleton<ILogEntryFilter, LogEntryFilter>();

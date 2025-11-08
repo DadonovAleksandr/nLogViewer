@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using nLogViewer.Infrastructure.Configuration;
+using nLogViewer.Model.AppSettings.AppConfig;
 using nLogViewer.Services.LogReader.Factory;
 using nLogViewer.Services.Progress;
 
@@ -22,31 +23,35 @@ internal class LogViewerFactory : ILogViewerFactory
     {
         var readerFactory = _serviceProvider.GetRequiredService<ILogReaderFactory>();
         var memoryConfig = _serviceProvider.GetRequiredService<MemoryConfiguration>();
-        
-        return new LogViewer(readerFactory, memoryConfig);
+        var appConfig = _serviceProvider.GetRequiredService<IAppConfig>();
+
+        return new LogViewer(readerFactory, memoryConfig, appConfig);
     }
-    
+
     public ILogViewer Create(IProgressReporter progressReporter)
     {
         var readerFactory = _serviceProvider.GetRequiredService<ILogReaderFactory>();
         var memoryConfig = _serviceProvider.GetRequiredService<MemoryConfiguration>();
-        
-        return new LogViewer(readerFactory, memoryConfig, progressReporter);
+        var appConfig = _serviceProvider.GetRequiredService<IAppConfig>();
+
+        return new LogViewer(readerFactory, memoryConfig, appConfig, progressReporter);
     }
-    
+
     public ILogViewer Create(string filePath)
     {
         var readerFactory = _serviceProvider.GetRequiredService<ILogReaderFactory>();
         var memoryConfig = _serviceProvider.GetRequiredService<MemoryConfiguration>();
-        
-        return new LogViewer(readerFactory, memoryConfig, filePath);
+        var appConfig = _serviceProvider.GetRequiredService<IAppConfig>();
+
+        return new LogViewer(readerFactory, memoryConfig, appConfig, filePath);
     }
-    
+
     public ILogViewer Create(string filePath, IProgressReporter progressReporter)
     {
         var readerFactory = _serviceProvider.GetRequiredService<ILogReaderFactory>();
         var memoryConfig = _serviceProvider.GetRequiredService<MemoryConfiguration>();
-        
-        return new LogViewer(readerFactory, memoryConfig, filePath, progressReporter);
+        var appConfig = _serviceProvider.GetRequiredService<IAppConfig>();
+
+        return new LogViewer(readerFactory, memoryConfig, appConfig, filePath, progressReporter);
     }
 }
