@@ -217,11 +217,85 @@ while (await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } li
 
 ---
 
-### 1.1 Включить CircularBuffer
+### 1.1 Вынести интервал polling в настройки
+
+**Файлы:** `IAppConfig.cs`, `ServiceRegistration.cs`, `LogViewer.cs`
+
+**Текущая проблема:**
+```csharp
+// LogViewer.cs:77 - хардкод интервала
+_timer = new Timer(tm, null, 0, 2000); // Всегда 2 секунды
+```
+
+**Решение:**
+
+1. Добавить интерфейс для настроек производительности:
+```csharp
+// Новый файл: IPerformanceConfig.cs
+public interface IPerformanceConfig
+{
+    /// <summary>
+    /// Интервал проверки новых записей в файле (миллисекунды)
+    /// По умолчанию: 2000 (2 секунды)
+    /// Рекомендуется: 5000-10000 для снижения нагрузки
+    /// </summary>
+    [DefaultValue(2000)]
+    int PollingIntervalMs { get; set; }
+}
+```
+
+2. Добавить в `IAppConfig`:
+```csharp
+public interface IAppConfig
+{
+    IFilterConfig FilterConfig { get; set; }
+    IUIConfig UIConfig { get; set; }
+    IPerformanceConfig PerformanceConfig { get; set; } // ← Новое
+}
+```
+
+3. Использовать в `LogViewer`:
+```csharp
+private readonly IAppConfig _appConfig;
+
+public LogViewer(ILogReaderFactory readerFactory,
+                 MemoryConfiguration memoryConfig,
+                 IAppConfig appConfig, // ← Inject
+                 IProgressReporter progressReporter = null)
+{
+    _appConfig = appConfig;
+    // ...
+    Initialize();
+}
+
+private void Initialize()
+{
+    // ...
+    var pollingInterval = _appConfig?.PerformanceConfig?.PollingIntervalMs ?? 2000;
+    var tm = new TimerCallback(async obj => await ProcessAsync(obj));
+    _timer = new Timer(tm, null, 0, pollingInterval);
+}
+```
+
+**Преимущества:**
+- ✅ Пользователь может настроить под свои нужды
+- ✅ Простая реализация без сложной логики
+- ✅ Значение по умолчанию 2000ms (обратная совместимость)
+
+**Рекомендуемые значения:**
+- **1000ms** - для активного мониторинга в реальном времени
+- **2000ms** - по умолчанию (текущее поведение)
+- **5000-10000ms** - для снижения нагрузки на CPU
+
+**Эффект:** 🔥 Снижение CPU usage на 50-75% при увеличении интервала до 5-10 секунд
+
+---
+
+### 1.2 Включить CircularBuffer или виртуализацию
 
 **Файл:** `ServiceRegistration.cs`
 
-**Изменение:**
+**Вариант A: CircularBuffer (для real-time мониторинга)**
 ```csharp
 services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
 {
@@ -230,6 +304,18 @@ services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
     VirtualizationPageSize = 100,
     MaxCachedPages = 10,
     UseCircularBuffer = true  // ← Включить!
+});
+```
+
+**Вариант B: Виртуализация (для анализа больших файлов)**
+```csharp
+services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
+{
+    MaxEntriesInMemory = 100_000,
+    EnableDataVirtualization = true,  // ← Включить!
+    VirtualizationPageSize = 100,
+    MaxCachedPages = 10,
+    UseCircularBuffer = false
 });
 ```
 
@@ -262,120 +348,13 @@ services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
 
 **Эффект:** 🔥 Снижение потребления памяти в 10-20 раз
 
----
-
-### 1.2 Включить виртуализацию данных
-
-**Файл:** `ServiceRegistration.cs`
-
-**Изменение:**
-```csharp
-services.AddSingleton<MemoryConfiguration>(provider => new MemoryConfiguration
-{
-    MaxEntriesInMemory = 100_000,
-    EnableDataVirtualization = true,  // ← Включить!
-    VirtualizationPageSize = 100,
-    MaxCachedPages = 10,
-    UseCircularBuffer = false
-});
-```
-
-**Как работает виртуализация:**
-```
-Файл с 1,000,000 записей
-┌────────────────────────────────────────────┐
-│ [0-99]    Page 0  ← в кэше                 │
-│ [100-199] Page 1  ← в кэше                 │
-│ [200-299] Page 2  ← в кэше                 │
-│ ...                                        │
-│ [900-999] Page 9  ← в кэше                 │
-│ [1000+]   ...     ← НЕ ЗАГРУЖЕНО          │
-└────────────────────────────────────────────┘
-
-Пользователь скроллит вниз до записи 500:
-┌────────────────────────────────────────────┐
-│ [0-99]    Page 0  ← ВЫГРУЖЕНО из кэша     │
-│ [400-499] Page 4  ← ЗАГРУЖЕНО в кэш       │
-│ [500-599] Page 5  ← ЗАГРУЖЕНО в кэш       │
-│ ...                                        │
-└────────────────────────────────────────────┘
-```
-
-**Преимущества:**
-- ✅ В памяти всегда только 1000 записей (~100-200 KB)
-- ✅ Мгновенная загрузка файлов любого размера
-- ✅ НЕ теряются старые записи (можно проскроллить к началу)
-
-**Trade-offs:**
-- ⚠️ Подтормаживание при быстром скролле (нужно подгрузить страницы)
-- ⚠️ Сложнее реализация фильтрации
-
-**Эффект:** 🔥 Снижение начального времени загрузки с минут до секунд
-
 **Рекомендация:**
 - Для **просмотра в реальном времени** → `UseCircularBuffer = true`
 - Для **анализа больших файлов** → `EnableDataVirtualization = true`
 
 ---
 
-### 1.3 Адаптивный интервал polling
-
-**Файл:** `LogViewer.cs`
-
-**Текущий код:**
-```csharp
-_timer = new Timer(tm, null, 0, 2000); // Каждые 2 секунды!
-```
-
-**Новый код:**
-```csharp
-private int _currentInterval = 2000;      // Начальный интервал
-private const int MinInterval = 1000;     // Минимум 1 сек
-private const int MaxInterval = 30000;    // Максимум 30 сек
-
-private async Task ProcessAsync(object obj)
-{
-    // ... чтение логов ...
-
-    if (newEntriesCount > 0)
-    {
-        // Есть активность → ускоряем проверку
-        _currentInterval = Math.Max(MinInterval, _currentInterval / 2);
-    }
-    else
-    {
-        // Нет активности → замедляем проверку
-        _currentInterval = Math.Min(MaxInterval, _currentInterval * 2);
-    }
-
-    // Перезапускаем таймер с новым интервалом
-    _timer?.Change(_currentInterval, _currentInterval);
-}
-```
-
-**Как работает:**
-```
-Время │ Интервал │ Активность │ Следующий интервал
-──────┼──────────┼─────────────┼──────────────────
-0s    │ 2s       │ 100 записей │ 1s  (ускоряем!)
-1s    │ 1s       │ 50 записей  │ 1s  (мин. значение)
-2s    │ 1s       │ 20 записей  │ 1s
-3s    │ 1s       │ 0 записей   │ 2s  (замедляем)
-5s    │ 2s       │ 0 записей   │ 4s  (замедляем)
-9s    │ 4s       │ 0 записей   │ 8s  (замедляем)
-17s   │ 8s       │ 5 записей   │ 4s  (активность!)
-```
-
-**Преимущества:**
-- ✅ Быстрая реакция на активные логи (1 сек)
-- ✅ Минимальная нагрузка на неактивные файлы (30 сек)
-- ✅ Экономия CPU и battery на ноутбуках
-
-**Эффект:** 🔥 Снижение CPU usage на 50-80% для неактивных файлов
-
----
-
-### 1.4 Улучшенный fast parser для многострочных записей
+### 1.3 Улучшенный fast parser для многострочных записей
 
 **Файл:** `FileLogReader.cs`
 
@@ -951,10 +930,9 @@ public class LogViewer
 | # | Оптимизация | Сложность | Время | Эффект | Память | CPU | Загрузка |
 |---|-------------|-----------|-------|--------|--------|-----|----------|
 | **ФАЗА 1** | | | **2-3 ч** | | | | |
-| 1.1 | CircularBuffer | ⭐ Легко | 15 мин | 🔥🔥🔥 | -90% | - | - |
-| 1.2 | Виртуализация | ⭐⭐ Средне | 30 мин | 🔥🔥🔥 | -99% | - | -95% |
-| 1.3 | Адаптивный polling | ⭐ Легко | 30 мин | 🔥🔥 | - | -50-80% | - |
-| 1.4 | Fast parser first | ⭐ Легко | 1 час | 🔥🔥🔥 | -20% | -80% | -50% |
+| 1.1 | Polling в настройки | ⭐ Легко | 20 мин | 🔥🔥 | - | -50-75% | - |
+| 1.2 | CircularBuffer/Виртуализация | ⭐⭐ Средне | 30 мин | 🔥🔥🔥 | -90-99% | - | -95% |
+| 1.3 | Fast parser multiline | ⭐⭐ Средне | 1 час | 🔥🔥🔥 | -20% | -80% | -50% |
 | **ФАЗА 2** | | | **4-6 ч** | | | | |
 | 2.1 | Батчинг | ⭐⭐ Средне | 1.5 ч | 🔥🔥 | -10% | -20% | -30% |
 | 2.2 | Memory-mapped | ⭐⭐⭐ Сложно | 2 ч | 🔥🔥 | -50% | - | -50% (>100MB) |
@@ -971,14 +949,14 @@ public class LogViewer
 ### Начать с ФАЗЫ 1 (2-3 часа)
 
 **Обязательно:**
-1. ✅ Включить виртуализацию (`EnableDataVirtualization = true`)
-2. ✅ Адаптивный polling интервал
+1. ✅ Вынести интервал polling в настройки приложения (`IPerformanceConfig`)
+2. ✅ Включить CircularBuffer или виртуализацию (`ServiceRegistration.cs`)
 3. ✅ Улучшить fast parser для многострочных записей
 
 **Ожидаемый результат:**
 - Снижение памяти на 90-99%
 - Ускорение загрузки больших файлов в 10-20 раз
-- Снижение CPU usage на 50-70%
+- Снижение CPU usage на 50-75%
 
 ---
 
@@ -1005,13 +983,25 @@ public class LogViewer
 ## 📝 Чеклист реализации
 
 ### Фаза 1
-- [ ] Изменить `ServiceRegistration.cs`: включить `EnableDataVirtualization` или `UseCircularBuffer`
-- [ ] Добавить адаптивный интервал в `LogViewer.cs`
-- [ ] Реализовать `TryParseLogEntryFastMultiline` в `FileLogReader.cs`
-- [ ] Заменить порядок вызова парсеров (fast first, regex fallback)
-- [ ] Протестировать на файлах разных размеров (1MB, 10MB, 100MB, 1GB)
-- [ ] Замерить потребление памяти до/после
-- [ ] Замерить время загрузки до/после
+- [ ] **1.1 Polling в настройки:**
+  - [ ] Создать `IPerformanceConfig.cs` с параметром `PollingIntervalMs`
+  - [ ] Добавить `IPerformanceConfig` в `IAppConfig`
+  - [ ] Inject `IAppConfig` в `LogViewer` конструктор
+  - [ ] Использовать значение из конфига в `Initialize()`
+  - [ ] Добавить UI для настройки интервала (опционально)
+- [ ] **1.2 CircularBuffer или виртуализация:**
+  - [ ] Изменить `ServiceRegistration.cs`: включить `UseCircularBuffer = true` ИЛИ `EnableDataVirtualization = true`
+  - [ ] Протестировать оба варианта на файлах >100MB
+  - [ ] Выбрать подходящий вариант для use case
+- [ ] **1.3 Fast parser multiline:**
+  - [ ] Реализовать `TryParseLogEntryFastMultiline` в `FileLogReader.cs`
+  - [ ] Заменить порядок вызова: multiline fast first, потом regex fallback
+  - [ ] Протестировать на многострочных логах
+- [ ] **Тестирование:**
+  - [ ] Протестировать на файлах разных размеров (1MB, 10MB, 100MB, 1GB)
+  - [ ] Замерить потребление памяти до/после
+  - [ ] Замерить время загрузки до/после
+  - [ ] Замерить CPU usage в idle состоянии
 
 ### Фаза 2
 - [ ] Реализовать `ReadLogFileBatchedAsync` в `FileLogReader.cs`
@@ -1037,6 +1027,8 @@ public class LogViewer
 - `nLogViewer/Services/LogReader/Repository/CompositeLogRepository.cs` - мульти-файл
 - `nLogViewer/Infrastructure/Collections/CircularBuffer.cs` - кольцевой буфер
 - `nLogViewer/Infrastructure/Collections/VirtualizingLogCollection.cs` - виртуализация
+- `nLogViewer/Model/AppSettings/AppConfig/IAppConfig.cs` - интерфейс конфигурации
+- `nLogViewer/Model/AppSettings/AppConfig/IPerformanceConfig.cs` - **[СОЗДАТЬ]** настройки производительности
 
 ---
 
