@@ -42,8 +42,16 @@
 - `LogViewerFactory.cs`: 4, 26, 35, 44, 53
 
 **Как использовать:**
+
+**Вариант 1: Через UI (рекомендуется)**
+- Открыть окно настроек приложения (меню → Настройки)
+- Перейти на вкладку "Чтение логов"
+- Выбрать пресет или ввести значение вручную
+- Нажать "Сохранить"
+
+**Вариант 2: Вручную через файл настроек**
 ```json
-// appsettings.json
+// %APPDATA%\nLogViewer\settings.json
 {
   "PerformanceConfig": {
     "PollingIntervalMs": 5000  // 5 секунд вместо 2
@@ -54,7 +62,7 @@
 **UI Настройки (коммит 768947a):**
 - Добавлена вкладка "Чтение логов" в окно настроек приложения
 - Доступны пресеты: 1 сек, 2 сек, 5 сек, 10 сек, 30 сек
-- Настройка сохраняется в appsettings.json
+- Настройка автоматически сохраняется в `%APPDATA%\nLogViewer\settings.json` через Config.Net
 - ⚠️ Требуется перезапуск просмотра файла для применения изменений
 
 **Ожидаемый эффект:** 🔥🔥 Снижение CPU usage на 50-75% при увеличении интервала до 5-10 секунд
@@ -1141,6 +1149,7 @@ public class LogViewer
 
 ## 🔗 Связанные файлы
 
+### Код
 - `nLogViewer/Services/ServiceRegistration.cs` - конфигурация памяти
 - `nLogViewer/Services/LogViewer/LogViewer.cs` - основная логика чтения
 - `nLogViewer/Services/LogReader/FileLogReader/FileLogReader.cs` - парсинг файлов
@@ -1149,6 +1158,14 @@ public class LogViewer
 - `nLogViewer/Infrastructure/Collections/VirtualizingLogCollection.cs` - виртуализация
 - `nLogViewer/Model/AppSettings/AppConfig/IAppConfig.cs` - интерфейс конфигурации
 - `nLogViewer/Model/AppSettings/AppConfig/IPerformanceConfig.cs` - ✅ настройки производительности
+- `nLogViewer/ViewModels/SettingsVM/SettingsViewModel.cs` - ✅ ViewModel окна настроек
+- `nLogViewer/Views/SettingsWindow.xaml` - ✅ UI окна настроек
+
+### Конфигурация
+- **`%APPDATA%\nLogViewer\settings.json`** - ⚠️ **ВАЖНО!** Реальный файл настроек пользователя (создается автоматически)
+  - Здесь сохраняются все настройки через Config.Net
+  - Структура: `{ "PerformanceConfig": { "PollingIntervalMs": 2000 }, "UIConfig": {...}, "FilterConfig": {...} }`
+- `nLogViewer/appsettings.json` - конфигурация логирования приложения (НЕ используется для настроек UI/Performance)
 
 ---
 
@@ -1171,6 +1188,12 @@ public class LogViewer
 
 ## 📅 История изменений
 
+### 2025-11-09 - v1.2
+- 🔧 Исправлена документация: уточнен путь сохранения настроек
+  - Настройки сохраняются в `%APPDATA%\nLogViewer\settings.json` через Config.Net
+  - Файл `appsettings.json` используется только для логирования
+  - Удалены лишние секции из `appsettings.json`
+
 ### 2025-11-09 - v1.1
 - ✅ Фаза 1 полностью реализована и закоммичена (604fc67, 768947a)
 - Создан IPerformanceConfig для настройки интервала polling
@@ -1180,7 +1203,7 @@ public class LogViewer
   - Новая вкладка "Чтение логов" в окне настроек
   - 5 предустановленных пресетов интервала (1, 2, 5, 10, 30 сек)
   - Визуальная информация о реализованных оптимизациях
-  - Обновлен appsettings.json с дефолтными значениями
+  - Настройки автоматически сохраняются через Config.Net
 - Создана ветка `feature/perfomance-phase-1` и запушена на GitHub
 - Ожидается тестирование на Windows для подтверждения улучшений
 
