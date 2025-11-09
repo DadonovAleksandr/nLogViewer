@@ -8,7 +8,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\nLogViewer.Tester\nLogViewer.Tester.csproj" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="NLog" Version="5.2.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\nLogViewer\Model\LogEntry\LogEntry.cs" Link="Model\LogEntry.cs" />
+    <Compile Include="..\nLogViewer\Model\LogEntry\ILogEntry.cs" Link="Model\ILogEntry.cs" />
+    <Compile Include="..\nLogViewer\Model\LogEntry\LogEntryType.cs" Link="Model\LogEntryType.cs" />
+    <Compile Include="..\nLogViewer\Services\LogReader\FileLogReader\FileLogReader.cs" Link="Services\FileLogReader.cs" />
+    <Compile Include="..\nLogViewer\Services\LogReader\ILogReader.cs" Link="Services\ILogReader.cs" />
+    <Compile Include="..\nLogViewer\Services\LogReader\ILogSource.cs" Link="Services\ILogSource.cs" />
+    <Compile Include="..\nLogViewer\Services\UserDialogService\IUserDialogService.cs" Link="Services\IUserDialogService.cs" />
+    <Compile Include="..\nLogViewer\Services\Progress\IProgressReporter.cs" Link="Services\IProgressReporter.cs" />
+    <Compile Include="..\nLogViewer\Infrastructure\Extensions\AsyncEnumerableExtensions.cs" Link="Infrastructure\AsyncEnumerableExtensions.cs" />
   </ItemGroup>
 
 </Project>

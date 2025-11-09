@@ -1,266 +1,333 @@
-using System.Diagnostics;
-using System.Text.Json;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Reports;
+using BenchmarkDotNet.Columns;
+using BenchmarkDotNet.Exporters;
 
 namespace nLogViewer.Benchmark;
 
 class Program
 {
-    static async Task<int> Main(string[] args)
+    static void Main(string[] args)
+    {
+        PrintHeader();
+
+        // Проверяем аргументы командной строки
+        if (args.Length > 0 && args[0] == "--quick")
+        {
+            RunQuickBenchmark();
+        }
+        else if (args.Length > 0 && args[0] == "--full")
+        {
+            RunFullBenchmark();
+        }
+        else
+        {
+            ShowMenu();
+        }
+    }
+
+    static void PrintHeader()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("═══════════════════════════════════════════════════════════════");
         Console.WriteLine("        nLogViewer Performance Benchmark Suite");
-        Console.WriteLine("        Phase 1 Optimization Testing");
+        Console.WriteLine("        Тестирование производительности чтения логов");
         Console.WriteLine("═══════════════════════════════════════════════════════════════");
         Console.ResetColor();
         Console.WriteLine();
+    }
 
-        // Проверяем доступность nLogViewer.Tester
-        var testerPath = GetTesterPath();
-        if (!File.Exists(testerPath))
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Error: nLogViewer.Tester not found at {testerPath}");
-            Console.WriteLine("Please build the solution first: dotnet build");
-            Console.ResetColor();
-            return 1;
-        }
+    static void ShowMenu()
+    {
+        Console.WriteLine("Выберите режим тестирования:");
+        Console.WriteLine();
+        Console.WriteLine("  1. Быстрый тест (рекомендуется для разработки)");
+        Console.WriteLine("     - Тестирование с небольшими объемами данных");
+        Console.WriteLine("     - Время выполнения: ~5 минут");
+        Console.WriteLine();
+        Console.WriteLine("  2. Полный тест (для финальной проверки)");
+        Console.WriteLine("     - Полное тестирование со всеми объемами данных");
+        Console.WriteLine("     - Время выполнения: ~30 минут");
+        Console.WriteLine();
+        Console.WriteLine("  3. Парсинг (тест производительности парсеров)");
+        Console.WriteLine("     - Сравнение производительности разных методов парсинга");
+        Console.WriteLine("     - Время выполнения: ~2 минуты");
+        Console.WriteLine();
+        Console.Write("Ваш выбор (1-3): ");
 
-        // Создаем директорию для результатов
-        var resultsDir = Path.Combine(Directory.GetCurrentDirectory(), "benchmark-results");
-        Directory.CreateDirectory(resultsDir);
-        Console.WriteLine($"Results directory: {resultsDir}");
+        var choice = Console.ReadLine();
         Console.WriteLine();
 
-        var tests = new[]
+        switch (choice)
         {
-            new BenchmarkTest
-            {
-                Name = "[1/4] Test 10k entries",
-                GenerateArgs = "benchmark generate test-10k.log 10000",
-                CompareArgs = "benchmark compare test-10k.log --output results-10k.json"
-            },
-            new BenchmarkTest
-            {
-                Name = "[2/4] Test 100k entries",
-                GenerateArgs = "benchmark generate test-100k.log 100000",
-                CompareArgs = "benchmark compare test-100k.log --output results-100k.json"
-            },
-            new BenchmarkTest
-            {
-                Name = "[3/4] Test 1M entries (this may take a while)",
-                GenerateArgs = "benchmark generate test-1m.log 1000000",
-                CompareArgs = "benchmark compare test-1m.log --output results-1m.json"
-            },
-            new BenchmarkTest
-            {
-                Name = "[4/4] Test multiline entries",
-                GenerateArgs = "benchmark generate test-multiline.log 100000 --multiline",
-                CompareArgs = "benchmark compare test-multiline.log --output results-multiline.json"
-            }
+            case "1":
+                RunQuickBenchmark();
+                break;
+            case "2":
+                RunFullBenchmark();
+                break;
+            case "3":
+                RunParsingBenchmark();
+                break;
+            default:
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Неверный выбор. Запуск быстрого теста по умолчанию.");
+                Console.ResetColor();
+                Console.WriteLine();
+                RunQuickBenchmark();
+                break;
+        }
+    }
+
+    static void RunQuickBenchmark()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("→ Запуск быстрого теста...");
+        Console.ResetColor();
+        Console.WriteLine();
+
+        var config = ManualConfig.Create(DefaultConfig.Instance)
+            .AddJob(Job.Default.WithIterationCount(5))
+            .AddExporter(new ConsoleResultExporter())
+            .HideColumns(Column.Error, Column.StdDev, Column.RatioSD);
+
+        // Запускаем только базовые бенчмарки с 10k и 100k записей
+        var summary = BenchmarkRunner.Run<LogReaderBenchmarks>(config);
+
+        PrintSummaryTable(summary);
+        WaitForExit();
+    }
+
+    static void RunFullBenchmark()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("→ Запуск полного теста...");
+        Console.ResetColor();
+        Console.WriteLine();
+
+        var config = ManualConfig.Create(DefaultConfig.Instance)
+            .AddExporter(new ConsoleResultExporter())
+            .HideColumns(Column.Error, Column.StdDev);
+
+        // Запускаем все бенчмарки
+        var summaries = new List<Summary>
+        {
+            BenchmarkRunner.Run<LogReaderBenchmarks>(config),
+            BenchmarkRunner.Run<MultilineLogReaderBenchmarks>(config)
         };
 
-        int totalTests = tests.Length;
-        int passedTests = 0;
-        int failedTests = 0;
-
-        foreach (var test in tests)
-        {
-            if (await RunTest(test, testerPath, resultsDir))
-            {
-                passedTests++;
-            }
-            else
-            {
-                failedTests++;
-            }
-        }
-
-        // Итоговый отчет
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Cyan;
         Console.WriteLine("═══════════════════════════════════════════════════════════════");
-        Console.WriteLine("                    BENCHMARK SUITE SUMMARY");
+        Console.WriteLine("                  ИТОГОВЫЕ РЕЗУЛЬТАТЫ");
         Console.WriteLine("═══════════════════════════════════════════════════════════════");
         Console.ResetColor();
         Console.WriteLine();
-        Console.WriteLine($"Total tests:    {totalTests}");
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Passed:         {passedTests}");
-        Console.ResetColor();
 
-        if (failedTests > 0)
+        foreach (var summary in summaries)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Failed:         {failedTests}");
-            Console.ResetColor();
+            PrintSummaryTable(summary);
+            Console.WriteLine();
         }
-        else
-        {
-            Console.WriteLine($"Failed:         {failedTests}");
-        }
-        Console.WriteLine();
 
-        if (failedTests == 0)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("✓ All tests completed successfully!");
-            Console.ResetColor();
-            Console.WriteLine();
-            Console.WriteLine($"Results saved in: {resultsDir}");
-            Console.WriteLine();
-            Console.WriteLine("JSON files:");
-            foreach (var file in Directory.GetFiles(resultsDir, "results-*.json"))
-            {
-                Console.WriteLine($"  - {Path.GetFileName(file)}");
-            }
-            Console.WriteLine();
-            Console.WriteLine("Log files:");
-            foreach (var file in Directory.GetFiles(resultsDir, "test-*.log"))
-            {
-                Console.WriteLine($"  - {Path.GetFileName(file)}");
-            }
-            Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Next steps:");
-            Console.ResetColor();
-            Console.WriteLine("1. Review the results in JSON files");
-            Console.WriteLine("2. Verify that Memory Used < 20 MB for all tests");
-            Console.WriteLine("3. Verify that Throughput > 40,000 entries/sec");
-            Console.WriteLine("4. Commit the results to git");
-            Console.WriteLine();
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
-            return 0;
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("✗ Some tests failed. Please review the errors above.");
-            Console.ResetColor();
-            Console.WriteLine();
-            Console.WriteLine("Common issues:");
-            Console.WriteLine("- Missing .NET SDK or WPF workload");
-            Console.WriteLine("- Run: dotnet workload install wpf");
-            Console.WriteLine();
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
-            return 1;
-        }
+        WaitForExit();
     }
 
-    static async Task<bool> RunTest(BenchmarkTest test, string testerPath, string resultsDir)
+    static void RunParsingBenchmark()
     {
-        Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        Console.WriteLine($"Running: {test.Name}");
-        Console.WriteLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        Console.WriteLine("→ Запуск теста производительности парсинга...");
         Console.ResetColor();
+        Console.WriteLine();
 
-        try
-        {
-            // Генерация файла
-            if (!await RunTesterCommand(testerPath, test.GenerateArgs, resultsDir))
-            {
-                throw new Exception("Generate failed");
-            }
+        var config = ManualConfig.Create(DefaultConfig.Instance)
+            .AddJob(Job.Default.WithIterationCount(10))
+            .AddExporter(new ConsoleResultExporter())
+            .HideColumns(Column.Error, Column.StdDev);
 
-            // Запуск теста
-            if (!await RunTesterCommand(testerPath, test.CompareArgs, resultsDir))
-            {
-                throw new Exception("Compare failed");
-            }
+        var summary = BenchmarkRunner.Run<ParsingBenchmarks>(config);
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"✓ {test.Name} completed successfully");
-            Console.ResetColor();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"✗ {test.Name} failed: {ex.Message}");
-            Console.ResetColor();
-            return false;
-        }
+        PrintSummaryTable(summary);
+        WaitForExit();
     }
 
-    static async Task<bool> RunTesterCommand(string testerPath, string args, string workingDir)
+    static void PrintSummaryTable(Summary summary)
     {
-        Console.ForegroundColor = ConsoleColor.Gray;
-        Console.WriteLine($"Executing: dotnet {testerPath} {args}");
+        if (!summary.Reports.Any())
+        {
+            Console.WriteLine("Нет результатов для отображения.");
+            return;
+        }
+
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"Результаты: {summary.Title}");
+        Console.ResetColor();
+        Console.WriteLine();
+
+        // Заголовок таблицы
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("┌──────────────────────────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐");
+        Console.WriteLine("│ Метод                                │ Записей      │ Время        │ Память       │ Скорость     │");
+        Console.WriteLine("├──────────────────────────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤");
         Console.ResetColor();
 
-        var startInfo = new ProcessStartInfo
+        foreach (var report in summary.Reports.OrderBy(r => r.BenchmarkCase.Parameters["EntryCount"] ?? 0))
         {
-            FileName = "dotnet",
-            Arguments = $"\"{testerPath}\" {args}",
-            WorkingDirectory = workingDir,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
+            var method = report.BenchmarkCase.Descriptor.WorkloadMethodDisplayInfo;
+            var entryCount = report.BenchmarkCase.Parameters.Items.FirstOrDefault(p => p.Name == "EntryCount")?.Value ?? "N/A";
+            var mean = report.ResultStatistics?.Mean ?? 0;
+            var memory = report.GcStats.GetTotalAllocatedBytes(false) ?? 0;
 
-        using var process = new Process { StartInfo = startInfo };
-
-        process.OutputDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
+            // Расчет скорости (записей в секунду)
+            var entriesPerSecond = 0.0;
+            if (mean > 0 && int.TryParse(entryCount.ToString(), out var entries))
             {
-                Console.WriteLine(e.Data);
+                entriesPerSecond = entries / (mean / 1_000_000_000); // mean в наносекундах
             }
-        };
 
-        process.ErrorDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-            {
+            // Форматирование
+            var methodStr = TruncateOrPad(method, 36);
+            var entriesStr = FormatNumber(entryCount.ToString()!).PadLeft(12);
+            var timeStr = FormatTime(mean).PadLeft(12);
+            var memoryStr = FormatBytes(memory).PadLeft(12);
+            var speedStr = FormatSpeed(entriesPerSecond).PadLeft(12);
+
+            // Цветовое кодирование результатов
+            Console.Write("│ ");
+            Console.Write(methodStr);
+            Console.Write(" │ ");
+            Console.Write(entriesStr);
+            Console.Write(" │ ");
+
+            // Время: зеленый если быстро, желтый если средне, красный если медленно
+            if (mean < 100_000_000) // < 100ms
+                Console.ForegroundColor = ConsoleColor.Green;
+            else if (mean < 1_000_000_000) // < 1s
+                Console.ForegroundColor = ConsoleColor.Yellow;
+            else
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(e.Data);
-                Console.ResetColor();
-            }
-        };
+            Console.Write(timeStr);
+            Console.ResetColor();
 
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        await process.WaitForExitAsync();
+            Console.Write(" │ ");
 
-        return process.ExitCode == 0;
-    }
+            // Память: зеленый если мало, желтый если средне, красный если много
+            if (memory < 20_000_000) // < 20 MB
+                Console.ForegroundColor = ConsoleColor.Green;
+            else if (memory < 100_000_000) // < 100 MB
+                Console.ForegroundColor = ConsoleColor.Yellow;
+            else
+                Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(memoryStr);
+            Console.ResetColor();
 
-    static string GetTesterPath()
-    {
-        // Пробуем найти скомпилированный nLogViewer.Tester.dll
-        var baseDir = AppContext.BaseDirectory;
-        var configuration = baseDir.Contains("Debug") ? "Debug" : "Release";
+            Console.Write(" │ ");
 
-        var possiblePaths = new[]
-        {
-            Path.Combine(baseDir, "..", "..", "..", "..", "nLogViewer.Tester", "bin", configuration, "net9.0-windows", "nLogViewer.Tester.dll"),
-            Path.Combine(baseDir, "..", "..", "..", "..", "nLogViewer.Tester", "bin", "Debug", "net9.0-windows", "nLogViewer.Tester.dll"),
-            Path.Combine(baseDir, "..", "..", "..", "..", "nLogViewer.Tester", "bin", "Release", "net9.0-windows", "nLogViewer.Tester.dll")
-        };
+            // Скорость: зеленый если быстро, желтый если средне, красный если медленно
+            if (entriesPerSecond > 100_000) // > 100k entries/sec
+                Console.ForegroundColor = ConsoleColor.Green;
+            else if (entriesPerSecond > 40_000) // > 40k entries/sec
+                Console.ForegroundColor = ConsoleColor.Yellow;
+            else
+                Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(speedStr);
+            Console.ResetColor();
 
-        foreach (var path in possiblePaths)
-        {
-            var fullPath = Path.GetFullPath(path);
-            if (File.Exists(fullPath))
-            {
-                return fullPath;
-            }
+            Console.WriteLine(" │");
         }
 
-        // Если не нашли, возвращаем путь по умолчанию
-        return Path.GetFullPath(possiblePaths[0]);
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("└──────────────────────────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘");
+        Console.ResetColor();
+        Console.WriteLine();
+
+        // Выводим цели производительности
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("Цели производительности (Phase 1):");
+        Console.ResetColor();
+        Console.WriteLine("  • Память: < 20 MB для всех тестов");
+        Console.WriteLine("  • Скорость: > 40,000 записей/сек");
+        Console.WriteLine();
+    }
+
+    static string TruncateOrPad(string str, int length)
+    {
+        if (str.Length > length)
+            return str.Substring(0, length - 3) + "...";
+        return str.PadRight(length);
+    }
+
+    static string FormatNumber(string number)
+    {
+        if (long.TryParse(number, out var n))
+        {
+            if (n >= 1_000_000)
+                return $"{n / 1_000_000.0:F1}M";
+            if (n >= 1_000)
+                return $"{n / 1_000.0:F0}K";
+            return n.ToString();
+        }
+        return number;
+    }
+
+    static string FormatTime(double nanoseconds)
+    {
+        if (nanoseconds >= 1_000_000_000)
+            return $"{nanoseconds / 1_000_000_000:F2} s";
+        if (nanoseconds >= 1_000_000)
+            return $"{nanoseconds / 1_000_000:F2} ms";
+        if (nanoseconds >= 1_000)
+            return $"{nanoseconds / 1_000:F2} μs";
+        return $"{nanoseconds:F2} ns";
+    }
+
+    static string FormatBytes(long bytes)
+    {
+        if (bytes >= 1_073_741_824)
+            return $"{bytes / 1_073_741_824.0:F2} GB";
+        if (bytes >= 1_048_576)
+            return $"{bytes / 1_048_576.0:F2} MB";
+        if (bytes >= 1_024)
+            return $"{bytes / 1_024.0:F2} KB";
+        return $"{bytes} B";
+    }
+
+    static string FormatSpeed(double entriesPerSecond)
+    {
+        if (entriesPerSecond >= 1_000_000)
+            return $"{entriesPerSecond / 1_000_000:F2}M/s";
+        if (entriesPerSecond >= 1_000)
+            return $"{entriesPerSecond / 1_000:F0}K/s";
+        return $"{entriesPerSecond:F0}/s";
+    }
+
+    static void WaitForExit()
+    {
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.WriteLine("Нажмите любую клавишу для выхода...");
+        Console.ResetColor();
+        Console.ReadKey();
     }
 }
 
-class BenchmarkTest
+/// <summary>
+/// Кастомный экспортер для красивого вывода в консоль
+/// </summary>
+class ConsoleResultExporter : IExporter
 {
-    public string Name { get; set; } = "";
-    public string GenerateArgs { get; set; } = "";
-    public string CompareArgs { get; set; } = "";
+    public string Name => "ConsoleResult";
+
+    public void ExportToLog(Summary summary, BenchmarkDotNet.Loggers.ILogger logger)
+    {
+        // Логирование не требуется
+    }
+
+    public IEnumerable<string> ExportToFiles(Summary summary, BenchmarkDotNet.Loggers.ILogger consoleLogger)
+    {
+        return Array.Empty<string>();
+    }
 }
