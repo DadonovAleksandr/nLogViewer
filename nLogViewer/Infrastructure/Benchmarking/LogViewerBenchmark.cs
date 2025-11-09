@@ -5,6 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using nLogViewer.Infrastructure.Collections;
 using nLogViewer.Infrastructure.Configuration;
+using nLogViewer.Services.LogReader;
+using nLogViewer.Services.LogReader.Factory;
+using nLogViewer.Services.LogReader.FileLogReader;
 using nLogViewer.Services.LogReader.Repository;
 using nLogViewer.Services.LogViewer;
 
@@ -54,23 +57,27 @@ internal class LogViewerBenchmark
 
         using var metricsCollector = new MetricsCollector();
 
+        // Создаем LogReaderFactory с репозиторием
+        var repositoryFactory = new LogRepositoryFactory();
+        var readerFactory = new BenchmarkLogReaderFactory(_testFilePath, repositoryFactory);
+
         // Создаем LogViewer с настройками
-        var repository = new FileLogRepository(_testFilePath);
         var viewer = new Services.LogViewer.LogViewer(
-            repository,
+            readerFactory,
             _memoryConfig,
             null, // appConfig - не нужен для бенчмарка
             null  // progressReporter
         );
 
         // Запускаем чтение
-        await viewer.StartAsync();
+        viewer.Start();
 
-        // Ждем завершения загрузки
+        // Ждем завершения загрузки (переход в состояние ReadNewMsg означает завершение начальной загрузки)
         var timeout = TimeSpan.FromMinutes(5);
         var startTime = DateTime.UtcNow;
 
-        while (viewer.State == LogViewerState.ReadAllMsg || viewer.State == LogViewerState.ReadNewMsg)
+        // Ждем пока не перейдем в состояние ReadNewMsg (начальная загрузка завершена)
+        while (viewer.State != LogViewerState.ReadNewMsg)
         {
             await Task.Delay(100);
 
@@ -90,7 +97,12 @@ internal class LogViewerBenchmark
         result.TotalEntries = viewer.LogEntries.Count;
 
         // Останавливаем viewer
-        await viewer.StopAsync();
+        viewer.Stop();
+
+        // Даем время на остановку
+        await Task.Delay(500);
+
+        viewer.Dispose();
 
         return result;
     }
@@ -220,5 +232,32 @@ internal class LogViewerBenchmark
 
         await File.WriteAllTextAsync(outputPath, json);
         Console.WriteLine($"\nResults saved to: {outputPath}");
+    }
+}
+
+/// <summary>
+/// Простая реализация ILogReaderFactory для бенчмарков
+/// </summary>
+internal class BenchmarkLogReaderFactory : ILogReaderFactory
+{
+    private readonly string _filePath;
+    private readonly ILogRepositoryFactory _repositoryFactory;
+
+    public BenchmarkLogReaderFactory(string filePath, ILogRepositoryFactory repositoryFactory)
+    {
+        _filePath = filePath;
+        _repositoryFactory = repositoryFactory;
+    }
+
+    public ILogSource Create()
+    {
+        var repository = _repositoryFactory.Create(LogSourceType.File, _filePath);
+        return new RepositoryLogSource(repository);
+    }
+
+    public ILogSource Create(string filePath)
+    {
+        var repository = _repositoryFactory.Create(LogSourceType.File, filePath);
+        return new RepositoryLogSource(repository);
     }
 }
