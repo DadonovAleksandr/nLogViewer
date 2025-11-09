@@ -9,7 +9,8 @@
       "Bash(rg:*)",
       "Bash(rm:*)",
       "Bash(git commit:*)",
-      "Bash(mkdir -p tech-debt)"
+      "Bash(mkdir -p tech-debt)",
+      "Bash(git push -u origin feature/perfomance-phase-1)"
     ],
     "deny": []
   }
