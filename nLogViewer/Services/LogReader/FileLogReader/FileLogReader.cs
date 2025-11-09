@@ -28,6 +28,8 @@ internal class FileLogReader : ILogSource
         RegexOptions.Singleline);
     private static readonly Regex DateTimePattern = new(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4}");
 
+    public string SourceDescription => _path;
+
     public FileLogReader(string path, IUserDialogService userDialogService)
     {
         _log.Debug($"Вызов конструктора {GetType().Name} с параметрами");

@@ -10,6 +10,11 @@ namespace nLogViewer.Services.LogReader;
 internal interface ILogReader : IDisposable
 {
     /// <summary>
+    /// Описание источника логов (путь к файлу, URL и т.д.)
+    /// </summary>
+    string SourceDescription { get; }
+
+    /// <summary>
     /// Получить все записи
     /// </summary>
     /// <returns></returns>

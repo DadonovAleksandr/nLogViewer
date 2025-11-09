@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,6 +29,10 @@ internal class LogViewer : ILogViewer, IDisposable
     private CircularBuffer<ILogEntry> _circularBuffer;
     private int  _prevEntriesCount;
     private Timer _timer;
+    private Timer _fallbackTimer;
+    private FileSystemWatcher _fileWatcher;
+    private CancellationTokenSource _debounceCts;
+    private DateTime _lastProcessedTime = DateTime.UtcNow;
     private readonly SemaphoreSlim _processLock = new SemaphoreSlim(1, 1);
     private CancellationTokenSource _cancellationTokenSource;
     private bool _disposed;
@@ -82,8 +87,179 @@ internal class LogViewer : ILogViewer, IDisposable
         var pollingInterval = _appConfig?.PerformanceConfig?.PollingIntervalMs ?? 2000;
         _logger.Debug($"Использование интервала polling: {pollingInterval}ms");
 
+        // Инициализируем FileSystemWatcher для реального времени
+        InitializeFileWatcher();
+
+        // Fallback timer на случай пропущенных событий (каждые 30 секунд)
+        _fallbackTimer = new Timer(async _ => await CheckForMissedChanges(), null, 30000, 30000);
+        _logger.Debug($"Инициализирован fallback timer с интервалом 30 секунд");
+
+        // Основной таймер для начальной загрузки
         var tm = new TimerCallback(async obj => await ProcessAsync(obj));
         _timer = new Timer(tm, null, 0, pollingInterval);
+    }
+
+    private void InitializeFileWatcher()
+    {
+        try
+        {
+            var sourcePath = _reader?.SourceDescription;
+            if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
+            {
+                _logger.Debug($"FileSystemWatcher не инициализирован: путь к файлу пустой или файл не существует ({sourcePath})");
+                return;
+            }
+
+            var directory = Path.GetDirectoryName(sourcePath);
+            var fileName = Path.GetFileName(sourcePath);
+
+            if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(fileName))
+            {
+                _logger.Warn($"Невозможно определить директорию или имя файла для FileSystemWatcher: {sourcePath}");
+                return;
+            }
+
+            _fileWatcher = new FileSystemWatcher(directory, fileName)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                EnableRaisingEvents = true
+            };
+
+            _fileWatcher.Changed += OnFileChanged;
+            _fileWatcher.Error += OnFileWatcherError;
+
+            _logger.Info($"FileSystemWatcher успешно инициализирован для файла: {sourcePath}");
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn(ex, $"Не удалось инициализировать FileSystemWatcher, используется только polling");
+        }
+    }
+
+    private void OnFileChanged(object sender, FileSystemEventArgs e)
+    {
+        _logger.Trace($"FileSystemWatcher обнаружил изменение файла: {e.FullPath}");
+
+        // Debouncing: игнорируем события в течение 200ms
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+        var token = _debounceCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(200, token); // Debounce delay
+
+                if (!await _processLock.WaitAsync(0))
+                {
+                    _logger.Trace($"Процесс обработки уже выполняется, пропускаем событие FileSystemWatcher");
+                    return; // Уже обрабатывается
+                }
+
+                try
+                {
+                    await ProcessNewEntriesAsync();
+                    _lastProcessedTime = DateTime.UtcNow;
+                }
+                finally
+                {
+                    _processLock.Release();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.Trace($"Debounce отменен для FileSystemWatcher");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Ошибка обработки изменений из FileSystemWatcher");
+            }
+        }, token);
+    }
+
+    private void OnFileWatcherError(object sender, ErrorEventArgs e)
+    {
+        _logger.Error(e.GetException(), "Ошибка FileSystemWatcher");
+    }
+
+    private async Task CheckForMissedChanges()
+    {
+        // Проверяем, не пропустили ли мы изменения
+        if (_state != LogViewerState.ReadNewMsg)
+            return;
+
+        if (!await _processLock.WaitAsync(0))
+            return; // Уже обрабатывается
+
+        try
+        {
+            await ProcessNewEntriesAsync();
+            _lastProcessedTime = DateTime.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Ошибка при проверке пропущенных изменений");
+        }
+        finally
+        {
+            _processLock.Release();
+        }
+    }
+
+    private async Task ProcessNewEntriesAsync()
+    {
+        if (_reader is null || _disposed)
+            return;
+
+        var cancellationToken = _cancellationTokenSource.Token;
+        var newErrors = new List<Exception>();
+        var newEntriesCount = 0;
+
+        try
+        {
+            await foreach (var entry in _reader.GetNewAsync(_progressReporter, cancellationToken))
+            {
+                try
+                {
+                    if (_memoryConfig?.UseCircularBuffer == true)
+                    {
+                        _circularBuffer.Add(entry);
+                    }
+                    else
+                    {
+                        _logEntries.Add(entry);
+                    }
+
+                    newEntriesCount++;
+                }
+                catch (Exception ex)
+                {
+                    newErrors.Add(ex);
+                    _logger.Warn(ex, $"Ошибка при добавлении новой записи #{Count + newEntriesCount}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            newErrors.Add(ex);
+            _logger.Error(ex, "Критическая ошибка при чтении новых записей");
+        }
+
+        _logger.Trace($"Считывание новых событий ({newEntriesCount} успешно, {newErrors.Count} ошибок)");
+
+        if (newErrors.Count > 0)
+        {
+            _totalErrorCount += newErrors.Count;
+            var aggregateException = new AggregateException($"Произошло {newErrors.Count} ошибок при чтении новых логов", newErrors);
+            _logger.Error(aggregateException, $"Агрегированные ошибки при чтении новых записей");
+            ReportAccumulatedErrors();
+        }
+
+        if (newEntriesCount > 0)
+        {
+            CheckEntriesChange();
+        }
     }
 
     public void Start() => _start = true;
@@ -156,15 +332,32 @@ internal class LogViewer : ILogViewer, IDisposable
     {
         if (_disposed)
             return;
-            
+
         _logger.Debug($"Освобождение ресурсов LogViewer");
-        
-        // Сначала отменяем операции и останавливаем таймер
+
+        // Сначала отменяем операции и останавливаем таймеры
         _cancellationTokenSource?.Cancel();
+        _debounceCts?.Cancel();
+
         _timer?.Change(Timeout.Infinite, 0);
         _timer?.Dispose();
         _timer = null;
-        
+
+        _fallbackTimer?.Change(Timeout.Infinite, 0);
+        _fallbackTimer?.Dispose();
+        _fallbackTimer = null;
+
+        // Останавливаем FileSystemWatcher
+        if (_fileWatcher != null)
+        {
+            _fileWatcher.EnableRaisingEvents = false;
+            _fileWatcher.Changed -= OnFileChanged;
+            _fileWatcher.Error -= OnFileWatcherError;
+            _fileWatcher.Dispose();
+            _fileWatcher = null;
+            _logger.Debug($"FileSystemWatcher освобожден");
+        }
+
         // Ждем завершения текущей операции
         try
         {
@@ -174,7 +367,7 @@ internal class LogViewer : ILogViewer, IDisposable
         {
             // Игнорируем, если уже освобожден
         }
-        
+
         // Теперь освобождаем остальные ресурсы
         _reader?.Dispose();
         _logEntries?.Clear();
@@ -182,6 +375,7 @@ internal class LogViewer : ILogViewer, IDisposable
         _prevEntriesCount = 0;
         _processLock?.Dispose();
         _cancellationTokenSource?.Dispose();
+        _debounceCts?.Dispose();
         _disposed = true;
     }
     

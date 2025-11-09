@@ -21,11 +21,13 @@ internal class RepositoryLogSource : ILogSource
     private static readonly Logger _log = LogManager.GetCurrentClassLogger();
     private readonly ILogRepository _repository;
     private bool _disposed;
-    
+
     private static readonly Regex LogEntryPattern = new(
         @"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4})\s*\|\s*(\w+)\s*\|\s*(.*?)\s*\|\s*([.\w]+)\s*\|\s*(\d+)\s*\|\s*(\d+)?$",
         RegexOptions.Singleline);
     private static readonly Regex DateTimePattern = new(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{4}");
+
+    public string SourceDescription => _repository.SourceDescription;
 
     public RepositoryLogSource(ILogRepository repository)
     {
