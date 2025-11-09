@@ -10,40 +10,50 @@
         <c:LogEntryTypeToStringConvertor x:Key="EntryTypeToString"></c:LogEntryTypeToStringConvertor>
     </UserControl.Resources>
     <DockPanel>
-        <ToolBar DockPanel.Dock="Top">
-            <ToggleButton Command="{Binding AutoscrollCommand}" 
-                          IsChecked="{Binding EnabledAutoscroll}"
-                          MinWidth="120">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="/Infrastructure/Resources/Images/Small/ScrollDown.png" Height="20"/>
-                    <TextBlock Text="Автопрокрутка"
-                               VerticalAlignment="Center"
-                               Padding="2,0,0,0"/>
-                </StackPanel>
-            </ToggleButton>
-            <Separator/>
-            <Button Command="{Binding ClearCommand}" MinWidth="120">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="/Infrastructure/Resources/Images/Small/Clear.png" Height="20"/>
-                    <TextBlock Text="Очистить"
-                               VerticalAlignment="Center"
-                               Padding="2,0,0,0"/>
-                </StackPanel>
-            </Button>
-            <Separator/>
+        <DockPanel DockPanel.Dock="Top">
+            <!-- Счетчик записей справа -->
+            <TextBlock DockPanel.Dock="Right"
+                       Text="{Binding EntryCount, StringFormat='Записей: {0:N0}'}"
+                       VerticalAlignment="Center"
+                       FontWeight="SemiBold"
+                       Margin="10,4,10,4"/>
 
-            <ToggleButton Command="{Binding PauseCommand}" 
-                          IsChecked="{Binding EnabledPause, Mode=OneWay}"
-                          MinWidth="120" >
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="/Infrastructure/Resources/Images/Small/Pause.png" Height="20"/>
-                    <TextBlock Text="Пауза"
-                               VerticalAlignment="Center"
-                               Padding="2,0,0,0"/>
-                </StackPanel>
-            </ToggleButton>
-            <Separator/>
-        </ToolBar>
+            <!-- Основная панель инструментов -->
+            <ToolBar>
+                <ToggleButton Command="{Binding AutoscrollCommand}"
+                              IsChecked="{Binding EnabledAutoscroll}"
+                              MinWidth="120">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Infrastructure/Resources/Images/Small/ScrollDown.png" Height="20"/>
+                        <TextBlock Text="Автопрокрутка"
+                                   VerticalAlignment="Center"
+                                   Padding="2,0,0,0"/>
+                    </StackPanel>
+                </ToggleButton>
+                <Separator/>
+                <Button Command="{Binding ClearCommand}" MinWidth="120">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Infrastructure/Resources/Images/Small/Clear.png" Height="20"/>
+                        <TextBlock Text="Очистить"
+                                   VerticalAlignment="Center"
+                                   Padding="2,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Separator/>
+
+                <ToggleButton Command="{Binding PauseCommand}"
+                              IsChecked="{Binding EnabledPause, Mode=OneWay}"
+                              MinWidth="120" >
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Infrastructure/Resources/Images/Small/Pause.png" Height="20"/>
+                        <TextBlock Text="Пауза"
+                                   VerticalAlignment="Center"
+                                   Padding="2,0,0,0"/>
+                    </StackPanel>
+                </ToggleButton>
+                <Separator/>
+            </ToolBar>
+        </DockPanel>
         <Border DockPanel.Dock="Top" 
                 Height="2"
                 CornerRadius="1"

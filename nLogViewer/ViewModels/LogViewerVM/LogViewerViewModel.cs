@@ -238,6 +238,9 @@ internal class LogViewerViewModel : BaseViewModel
         {
             FiltredLogEntriesRefresh();
         }
+
+        // Обновляем счетчик записей
+        OnPropertyChanged(nameof(EntryCount));
     }
     
     #region Commands
@@ -278,8 +281,11 @@ internal class LogViewerViewModel : BaseViewModel
                     var logEntries = _filtredLogEntries.Source as List<LogEntryView>;
                     logEntries?.Clear();
                 }
-                
+
                 _filtredLogEntries.View.Refresh();
+
+                // Обновляем счетчик записей
+                OnPropertyChanged(nameof(EntryCount));
             });
         }
         catch (Exception ex)
@@ -314,7 +320,7 @@ internal class LogViewerViewModel : BaseViewModel
     #endregion
 
     #region Toolbar
-    
+
     private bool _autoscroll;
     /// <summary>
     /// Включение автопрокрутки
@@ -334,6 +340,11 @@ internal class LogViewerViewModel : BaseViewModel
     //     get => _pause;
     //     set => Set(ref _pause, value);
     // }
+
+    /// <summary>
+    /// Количество записей в логе
+    /// </summary>
+    public int EntryCount => _viewer?.Count ?? 0;
 
     #endregion
 
