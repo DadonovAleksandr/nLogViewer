@@ -14,15 +14,37 @@
 
 ## Запуск
 
-### Быстрый запуск
+### Windows
 
-```bash
+**Вариант 1: Через батник (самый простой)**
+```cmd
+run-benchmarks.bat          :: Интерактивное меню
+run-benchmarks.bat --quick  :: Быстрый тест (~5 минут)
+run-benchmarks.bat --full   :: Полный тест (~30 минут)
+```
+
+**Вариант 2: Через PowerShell/CMD**
+```powershell
 # Из корневой директории решения
 dotnet run --project nLogViewer.Benchmark
 
 # Или с параметрами
-dotnet run --project nLogViewer.Benchmark -- --quick    # Быстрый тест (~5 минут)
-dotnet run --project nLogViewer.Benchmark -- --full     # Полный тест (~30 минут)
+dotnet run --project nLogViewer.Benchmark -- --quick    # Быстрый тест
+dotnet run --project nLogViewer.Benchmark -- --full     # Полный тест
+```
+
+### Linux/macOS
+
+```bash
+# Через скрипт
+./run-benchmarks.sh          # Интерактивное меню
+./run-benchmarks.sh --quick  # Быстрый тест
+./run-benchmarks.sh --full   # Полный тест
+
+# Или напрямую через dotnet
+dotnet run --project nLogViewer.Benchmark
+dotnet run --project nLogViewer.Benchmark -- --quick
+dotnet run --project nLogViewer.Benchmark -- --full
 ```
 
 ### Интерактивное меню
