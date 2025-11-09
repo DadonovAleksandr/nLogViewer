@@ -72,74 +72,123 @@ internal class CompositeLogRepository : ILogRepository
 
     public async IAsyncEnumerable<string> ReadAllLinesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _log.Trace($"Чтение всех строк из {_repositories.Count} источников");
-        
-        // Читаем из всех источников параллельно и объединяем результаты
-        var tasks = _repositories.Select(r => ReadAllFromRepositoryAsync(r, cancellationToken)).ToList();
-        
-        // Объединяем все строки из всех источников
-        var allLines = new List<(DateTime timestamp, string line, string sourceId)>();
-        
-        foreach (var task in tasks)
+        _log.Trace($"Чтение всех строк из {_repositories.Count} источников с K-way merge");
+
+        // K-way merge: объединяем несколько отсортированных потоков без загрузки в память
+        // Используем PriorityQueue для эффективного поиска минимума
+        var pq = new PriorityQueue<
+            (IAsyncEnumerator<(DateTime timestamp, string line, string sourceId)> enumerator, DateTime timestamp, string line, string sourceId),
+            DateTime>();
+
+        var enumerators = new List<IAsyncEnumerator<(DateTime timestamp, string line, string sourceId)>>();
+
+        try
         {
-            await foreach (var item in task)
+            // Инициализация: читаем первую строку из каждого источника
+            foreach (var repo in _repositories)
             {
-                allLines.Add(item);
+                var enumerator = ReadAllFromRepositoryAsync(repo, cancellationToken).GetAsyncEnumerator(cancellationToken);
+                enumerators.Add(enumerator);
+
+                if (await enumerator.MoveNextAsync())
+                {
+                    var item = enumerator.Current;
+                    pq.Enqueue((enumerator, item.timestamp, item.line, item.sourceId), item.timestamp);
+                }
+            }
+
+            // K-way merge: всегда выбираем строку с минимальным timestamp
+            while (pq.Count > 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var (enumerator, timestamp, line, sourceId) = pq.Dequeue();
+                yield return line;
+
+                // Читаем следующую строку из этого источника
+                if (await enumerator.MoveNextAsync())
+                {
+                    var nextItem = enumerator.Current;
+                    pq.Enqueue((enumerator, nextItem.timestamp, nextItem.line, nextItem.sourceId), nextItem.timestamp);
+                }
             }
         }
-        
-        // Сортируем по времени и возвращаем
-        foreach (var item in allLines.OrderBy(x => x.timestamp))
+        finally
         {
-            yield return item.line;
+            // Освобождаем все enumerator'ы
+            foreach (var enumerator in enumerators)
+            {
+                await enumerator.DisposeAsync();
+            }
         }
     }
 
     public async IAsyncEnumerable<string> ReadAllLinesAsync(IProgressReporter progressReporter, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        _log.Trace($"Чтение всех строк из {_repositories.Count} источников с отчетом о прогрессе");
-        
-        // Читаем из всех источников параллельно и объединяем результаты
-        var tasks = _repositories.Select(r => ReadAllFromRepositoryAsync(r, progressReporter, cancellationToken)).ToList();
-        
-        // Объединяем все строки из всех источников
-        var allLines = new List<(DateTime timestamp, string line, string sourceId)>();
-        var processedRepositories = 0;
-        
-        foreach (var task in tasks)
+        _log.Trace($"Чтение всех строк из {_repositories.Count} источников с K-way merge и отчетом о прогрессе");
+
+        // K-way merge: объединяем несколько отсортированных потоков без загрузки в память
+        var pq = new PriorityQueue<
+            (IAsyncEnumerator<(DateTime timestamp, string line, string sourceId)> enumerator, DateTime timestamp, string line, string sourceId),
+            DateTime>();
+
+        var enumerators = new List<IAsyncEnumerator<(DateTime timestamp, string line, string sourceId)>>();
+        var processedLines = 0;
+
+        try
         {
-            await foreach (var item in task)
+            // Инициализация: читаем первую строку из каждого источника
+            foreach (var repo in _repositories)
             {
-                allLines.Add(item);
+                var enumerator = ReadAllFromRepositoryAsync(repo, progressReporter, cancellationToken).GetAsyncEnumerator(cancellationToken);
+                enumerators.Add(enumerator);
+
+                if (await enumerator.MoveNextAsync())
+                {
+                    var item = enumerator.Current;
+                    pq.Enqueue((enumerator, item.timestamp, item.line, item.sourceId), item.timestamp);
+                }
             }
-            
-            processedRepositories++;
+
             if (progressReporter != null)
             {
-                var progress = (double)processedRepositories / _repositories.Count * 50; // Первые 50% на чтение
-                progressReporter.ReportPercentage((int)progress, $"Обработан источник {processedRepositories}/{_repositories.Count}");
+                progressReporter.ReportPercentage(10, $"Инициализировано {_repositories.Count} источников");
             }
-        }
-        
-        // Сортируем по времени и возвращаем
-        var sortedLines = allLines.OrderBy(x => x.timestamp).ToList();
-        var processedLines = 0;
-        
-        foreach (var item in sortedLines)
-        {
-            processedLines++;
-            if (progressReporter != null && processedLines % 100 == 0)
+
+            // K-way merge: всегда выбираем строку с минимальным timestamp
+            while (pq.Count > 0)
             {
-                var progress = 50 + (double)processedLines / sortedLines.Count * 50; // Вторые 50% на сортировку и возврат
-                progressReporter.ReportPercentage((int)progress, $"Отсортировано {processedLines}/{sortedLines.Count} строк");
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var (enumerator, timestamp, line, sourceId) = pq.Dequeue();
+                yield return line;
+
+                processedLines++;
+                if (progressReporter != null && processedLines % 100 == 0)
+                {
+                    progressReporter.ReportPercentage(50, $"Обработано {processedLines} строк из {_repositories.Count} источников");
+                }
+
+                // Читаем следующую строку из этого источника
+                if (await enumerator.MoveNextAsync())
+                {
+                    var nextItem = enumerator.Current;
+                    pq.Enqueue((enumerator, nextItem.timestamp, nextItem.line, nextItem.sourceId), nextItem.timestamp);
+                }
             }
-            
-            yield return item.line;
+
+            if (progressReporter != null)
+            {
+                progressReporter.ReportPercentage(100, $"Завершено. Обработано {processedLines} строк из {_repositories.Count} источников");
+            }
         }
-        
-        if (progressReporter != null)
+        finally
         {
-            progressReporter.ReportPercentage(100, $"Завершено. Обработано {sortedLines.Count} строк из {_repositories.Count} источников");
+            // Освобождаем все enumerator'ы
+            foreach (var enumerator in enumerators)
+            {
+                await enumerator.DisposeAsync();
+            }
         }
     }
 

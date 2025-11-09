@@ -547,6 +547,93 @@ internal class FileLogReader : ILogSource
         }
     }
     
+    /// <summary>
+    /// Читает файл пакетами вместо построчного чтения для повышения производительности
+    /// </summary>
+    /// <param name="batchSize">Размер пакета (количество строк)</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <param name="progressReporter">Репортер прогресса</param>
+    /// <returns>Асинхронный поток пакетов строк</returns>
+    private async IAsyncEnumerable<IReadOnlyList<string>> ReadLogFileBatchedAsync(
+        int batchSize = 1000,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default,
+        IProgressReporter progressReporter = null)
+    {
+        if (!File.Exists(_path))
+        {
+            _log.Debug($"Файл лога не найден {_path}");
+            yield break;
+        }
+
+        FileStream fs = null;
+        StreamReader sr = null;
+
+        try
+        {
+            fs = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            sr = new StreamReader(fs, Encoding.UTF8);
+
+            // Переходим к сохранённой позиции
+            if (_pos > 0 && fs.Length >= _pos)
+            {
+                fs.Seek(_pos, SeekOrigin.Begin);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, $"Ошибка открытия файла {_path}");
+            // Критические ошибки открытия файла показываем пользователю (не спам, редкие события)
+            _userDialogService.ShowError($"Ошибка открытия файла лога: {ex.Message}", "Ошибка");
+            sr?.Dispose();
+            fs?.Dispose();
+            throw;
+        }
+
+        try
+        {
+            var batch = new List<string>(batchSize);
+
+            while (await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                _lineCount++;
+                batch.Add(line);
+
+                // Когда пакет заполнен, возвращаем его
+                if (batch.Count >= batchSize)
+                {
+                    _log.Trace($"Возвращаем пакет из {batch.Count} строк");
+                    yield return batch;
+
+                    // Отчитываемся о прогрессе
+                    if (progressReporter != null)
+                    {
+                        progressReporter.Report(fs.Position, fs.Length, $"Обработано {_lineCount} строк");
+                    }
+
+                    batch = new List<string>(batchSize);
+                }
+            }
+
+            // Возвращаем остаток, если он есть
+            if (batch.Count > 0)
+            {
+                _log.Trace($"Возвращаем последний пакет из {batch.Count} строк");
+                yield return batch;
+            }
+
+            // Сохраняем позицию для следующего чтения
+            _pos = fs.Position;
+            _log.Trace($"Прочитано {_lineCount} строк из файла {_path}, новая позиция: {_pos}");
+        }
+        finally
+        {
+            sr?.Dispose();
+            fs?.Dispose();
+        }
+    }
+
     private async IAsyncEnumerable<string> ReadLogFileAsync([EnumeratorCancellation] CancellationToken cancellationToken = default, IProgressReporter progressReporter = null)
     {
         if (!File.Exists(_path))
@@ -557,7 +644,7 @@ internal class FileLogReader : ILogSource
 
         FileStream fs = null;
         StreamReader sr = null;
-        
+
         try
         {
             fs = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -584,10 +671,10 @@ internal class FileLogReader : ILogSource
             while (await sr.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 _lineCount++;
                 yield return line;
-                
+
                 // Отчитываемся о прогрессе каждые 1000 строк
                 if (progressReporter != null && _lineCount % 1000 == 0)
                 {
@@ -606,6 +693,109 @@ internal class FileLogReader : ILogSource
         }
     }
     
+    /// <summary>
+    /// Парсинг пакетов строк в записи лога (оптимизированная версия с батчингом)
+    /// </summary>
+    private async IAsyncEnumerable<ILogEntry> ParseLogEntriesBatchedAsync(
+        IAsyncEnumerable<IReadOnlyList<string>> batches,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _log.Trace($"Асинхронный парсинг пакетов записей");
+        var currentMessage = new StringBuilder();
+
+        await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(false))
+        {
+            _log.Trace($"Обработка пакета из {batch.Count} строк");
+
+            // Обрабатываем все строки в пакете
+            foreach (var line in batch)
+            {
+                // Добавляем новую строку к текущему сообщению
+                if (currentMessage.Length > 0)
+                    currentMessage.AppendLine();
+                else
+                    if (!DateTimePattern.Match(line).Success)
+                    {
+                        _log.Error($"Ошибка парсинга записи. Запись будет игнорирована: {line}");
+                        continue;
+                    }
+                currentMessage.Append(line);
+
+                // Проверяем весь накопленный текст на соответствие паттерну
+                var currentText = currentMessage.ToString();
+                var currentTextSpan = currentText.AsSpan().Trim();
+
+                // Сначала пытаемся улучшенный fast parser для многострочных записей
+                if (TryParseLogEntryFastMultiline(currentTextSpan, out var fastMultilineEntry))
+                {
+                    _log.Trace($"Найдена полная запись (быстрый многострочный парсинг)");
+                    yield return fastMultilineEntry;
+                    currentMessage.Clear();
+                }
+                // Fallback на простой fast parser (только для однострочных записей)
+                else if (TryParseLogEntryFast(currentTextSpan, out var fastEntry))
+                {
+                    _log.Trace($"Найдена полная запись (быстрый парсинг)");
+                    yield return fastEntry;
+                    currentMessage.Clear();
+                }
+                else
+                {
+                    // Последний fallback на regex только для совсем странных случаев
+                    var match = LogEntryPattern.Match(currentText.Trim());
+                    if (match.Success)
+                    {
+                        _log.Trace($"Найдена полная запись (регекс)");
+                        if (TryParseLogEntry(match, out var entry))
+                        {
+                            yield return entry;
+                        }
+                        else
+                        {
+                            _log.Error($"Ошибка парсинга записи: {currentText.Trim()}");
+                        }
+                        currentMessage.Clear();
+                    }
+                    // Если нет соответствия, продолжаем накапливать строки
+                }
+            }
+        }
+
+        // Проверяем остаток, если он есть
+        if (currentMessage.Length > 0)
+        {
+            var finalText = currentMessage.ToString();
+            var finalTextSpan = finalText.AsSpan().Trim();
+
+            // Пытаемся сначала улучшенный fast parser для многострочных
+            if (TryParseLogEntryFastMultiline(finalTextSpan, out var fastMultilineEntry))
+            {
+                _log.Trace($"Возвращаем последнюю запись (быстрый многострочный парсинг)");
+                yield return fastMultilineEntry;
+            }
+            // Fallback на простой fast parser
+            else if (TryParseLogEntryFast(finalTextSpan, out var fastEntry))
+            {
+                _log.Trace($"Возвращаем последнюю запись (быстрый парсинг)");
+                yield return fastEntry;
+            }
+            else
+            {
+                // Последний fallback на regex
+                var match = LogEntryPattern.Match(finalText.Trim());
+                if (match.Success && TryParseLogEntry(match, out var entry))
+                {
+                    _log.Trace($"Возвращаем последнюю запись (регекс)");
+                    yield return entry;
+                }
+                else
+                {
+                    _log.Error($"Невалидный остаток лога: {finalText.Trim()}");
+                }
+            }
+        }
+    }
+
     private async IAsyncEnumerable<ILogEntry> ParseLogEntriesAsync(IAsyncEnumerable<string> lines, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         _log.Trace($"Асинхронный парсинг записей из строк");
