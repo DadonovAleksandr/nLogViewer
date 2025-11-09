@@ -83,23 +83,33 @@ internal class LogViewer : ILogViewer, IDisposable
 
         _cancellationTokenSource = new CancellationTokenSource();
 
-        // Получаем интервал polling из конфигурации, по умолчанию 2000ms
-        var pollingInterval = _appConfig?.PerformanceConfig?.PollingIntervalMs ?? 2000;
-        _logger.Debug($"Использование интервала polling: {pollingInterval}ms");
-
         // Инициализируем FileSystemWatcher для реального времени
-        InitializeFileWatcher();
+        var fileWatcherInitialized = InitializeFileWatcher();
 
-        // Fallback timer на случай пропущенных событий (каждые 30 секунд)
-        _fallbackTimer = new Timer(async _ => await CheckForMissedChanges(), null, 30000, 30000);
-        _logger.Debug($"Инициализирован fallback timer с интервалом 30 секунд");
+        if (fileWatcherInitialized)
+        {
+            // FileSystemWatcher инициализирован успешно
+            // Fallback timer на случай пропущенных событий (каждые 30 секунд)
+            _fallbackTimer = new Timer(async _ => await CheckForMissedChanges(), null, 30000, 30000);
+            _logger.Info($"Инициализирован fallback timer с интервалом 30 секунд");
 
-        // Основной таймер для начальной загрузки
-        var tm = new TimerCallback(async obj => await ProcessAsync(obj));
-        _timer = new Timer(tm, null, 0, pollingInterval);
+            // Основной таймер используется только для начальной загрузки (one-shot)
+            var tm = new TimerCallback(async obj => await ProcessAsync(obj));
+            _timer = new Timer(tm, null, 0, Timeout.Infinite);
+            _logger.Info($"Основной таймер используется только для начальной загрузки (FileSystemWatcher активен)");
+        }
+        else
+        {
+            // FileSystemWatcher не удалось инициализировать - используем только polling
+            var pollingInterval = _appConfig?.PerformanceConfig?.PollingIntervalMs ?? 2000;
+            _logger.Warn($"FileSystemWatcher недоступен, используется polling с интервалом {pollingInterval}ms");
+
+            var tm = new TimerCallback(async obj => await ProcessAsync(obj));
+            _timer = new Timer(tm, null, 0, pollingInterval);
+        }
     }
 
-    private void InitializeFileWatcher()
+    private bool InitializeFileWatcher()
     {
         try
         {
@@ -107,7 +117,7 @@ internal class LogViewer : ILogViewer, IDisposable
             if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
             {
                 _logger.Debug($"FileSystemWatcher не инициализирован: путь к файлу пустой или файл не существует ({sourcePath})");
-                return;
+                return false;
             }
 
             var directory = Path.GetDirectoryName(sourcePath);
@@ -116,7 +126,7 @@ internal class LogViewer : ILogViewer, IDisposable
             if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(fileName))
             {
                 _logger.Warn($"Невозможно определить директорию или имя файла для FileSystemWatcher: {sourcePath}");
-                return;
+                return false;
             }
 
             _fileWatcher = new FileSystemWatcher(directory, fileName)
@@ -129,10 +139,12 @@ internal class LogViewer : ILogViewer, IDisposable
             _fileWatcher.Error += OnFileWatcherError;
 
             _logger.Info($"FileSystemWatcher успешно инициализирован для файла: {sourcePath}");
+            return true;
         }
         catch (Exception ex)
         {
             _logger.Warn(ex, $"Не удалось инициализировать FileSystemWatcher, используется только polling");
+            return false;
         }
     }
 
