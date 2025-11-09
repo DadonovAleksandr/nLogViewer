@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using nLogViewer.Infrastructure.Collections;
-using nLogViewer.Model.Logging.LogEntry;
+using nLogViewer.Infrastructure.Configuration;
 using nLogViewer.Services.LogReader.Repository;
 using nLogViewer.Services.LogViewer;
 
@@ -8,7 +13,7 @@ namespace nLogViewer.Infrastructure.Benchmarking;
 /// <summary>
 /// Бенчмаркинг LogViewer для измерения производительности оптимизаций
 /// </summary>
-public class LogViewerBenchmark
+internal class LogViewerBenchmark
 {
     private readonly string _testFilePath;
     private readonly MemoryConfiguration _memoryConfig;
