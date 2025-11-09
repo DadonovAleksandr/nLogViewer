@@ -16,7 +16,7 @@ namespace nLogViewer.Infrastructure.Benchmarking;
 /// <summary>
 /// Бенчмаркинг LogViewer для измерения производительности оптимизаций
 /// </summary>
-internal class LogViewerBenchmark
+public class LogViewerBenchmark
 {
     private readonly string _testFilePath;
     private readonly MemoryConfiguration _memoryConfig;

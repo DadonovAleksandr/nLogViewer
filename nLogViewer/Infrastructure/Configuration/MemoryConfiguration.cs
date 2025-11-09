@@ -3,7 +3,7 @@
 /// <summary>
 /// Конфигурация для управления использованием памяти
 /// </summary>
-internal class MemoryConfiguration
+public class MemoryConfiguration
 {
     /// <summary>
     /// Максимальное количество записей в памяти
