@@ -337,6 +337,16 @@ internal class LogViewerViewModel : BaseViewModel
 
     #endregion
 
+    /// <summary>
+    /// Обновляет интервал опроса файла логов
+    /// </summary>
+    /// <param name="intervalMs">Новый интервал в миллисекундах</param>
+    public void UpdatePollingInterval(int intervalMs)
+    {
+        _log.Debug($"Обновление интервала polling для viewer на {intervalMs}ms");
+        _viewer?.UpdatePollingInterval(intervalMs);
+    }
+
     public void Dispose()
     {
         _log.Debug($"Освобождение ресурсов LogViewerViewModel");

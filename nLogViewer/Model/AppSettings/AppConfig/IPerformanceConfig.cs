@@ -9,9 +9,9 @@ public interface IPerformanceConfig
 {
     /// <summary>
     /// Интервал проверки новых записей в файле (миллисекунды)
-    /// По умолчанию: 2000 (2 секунды)
+    /// По умолчанию: 10000 (10 секунд)
     /// Рекомендуется: 5000-10000 для снижения нагрузки на CPU
     /// </summary>
-    [DefaultValue(2000)]
+    [DefaultValue(10000)]
     int PollingIntervalMs { get; set; }
 }

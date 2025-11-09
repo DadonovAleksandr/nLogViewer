@@ -134,7 +134,24 @@ internal class LogViewer : ILogViewer, IDisposable
         // Notify about changes
         EntriesChanged?.Invoke();
     }
-    
+
+    public void UpdatePollingInterval(int intervalMs)
+    {
+        if (intervalMs <= 0)
+        {
+            _logger.Warn($"Попытка установить некорректный интервал polling: {intervalMs}ms. Игнорируется.");
+            return;
+        }
+
+        _logger.Info($"Обновление интервала polling с текущего на {intervalMs}ms");
+
+        // Используем Timer.Change для изменения интервала без пересоздания таймера
+        // dueTime = 0 - начать немедленно, period = intervalMs - новый интервал
+        _timer?.Change(0, intervalMs);
+
+        _logger.Debug($"Интервал polling успешно обновлен на {intervalMs}ms");
+    }
+
     public void Dispose()
     {
         if (_disposed)

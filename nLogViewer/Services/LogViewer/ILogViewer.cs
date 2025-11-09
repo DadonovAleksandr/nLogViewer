@@ -35,4 +35,10 @@ public interface ILogViewer : IDisposable
     /// <param name="count">Количество записей</param>
     /// <returns>Записи в заданном диапазоне</returns>
     IEnumerable<ILogEntry> GetEntriesRange(int startIndex, int count);
+
+    /// <summary>
+    /// Обновляет интервал опроса файла логов без перезапуска
+    /// </summary>
+    /// <param name="intervalMs">Новый интервал в миллисекундах</param>
+    void UpdatePollingInterval(int intervalMs);
 }

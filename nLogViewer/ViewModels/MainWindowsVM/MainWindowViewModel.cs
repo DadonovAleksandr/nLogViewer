@@ -189,9 +189,21 @@ internal class MainWindowViewModel : BaseViewModel
         var result = settingsWindow.ShowDialog();
         if (result == true)
         {
-            _log.Info("Настройки сохранены, требуется перезапуск для применения изменений");
+            _log.Info("Настройки сохранены, применяем изменения интервала polling");
+
+            // Обновляем интервал polling для всех открытых вкладок
+            var pollingInterval = _appConfig?.PerformanceConfig?.PollingIntervalMs ?? 10000;
+            foreach (var tab in _logTabs ?? Enumerable.Empty<LogTabItem>())
+            {
+                if (tab.Content?.DataContext is LogViewerVM.LogViewerViewModel viewModel)
+                {
+                    _log.Debug($"Обновление интервала polling для вкладки '{tab.Header}' на {pollingInterval}ms");
+                    viewModel.UpdatePollingInterval(pollingInterval);
+                }
+            }
+
             MessageBox.Show(
-                "Настройки сохранены!\nДля применения изменений виртуализации перезапустите приложение или перезагрузите лог-файл.",
+                "Настройки сохранены и применены!\n\nИнтервал опроса файла обновлен немедленно.\nДля применения изменений виртуализации перезапустите приложение или перезагрузите лог-файл.",
                 "Настройки",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information
